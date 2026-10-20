@@ -3543,19 +3543,57 @@
       document.getElementById('lblScanStatus').textContent = statusMsg;
       document.getElementById('lblTotalQueueStep2').textContent = urls.length;
 
-      // Gửi tín hiệu sang Background Extension (nếu có)
+      appendTerminalLogStep2({
+        stage: 'KHỞI ĐỘNG',
+        text: `🚀 Yêu cầu Chrome Extension mở Worker Tab chạy ngầm (active: false) để cào từ dòng ${startIdx + 1} đến ${endIdx + 1} (Tổng: ${totalRange} hồ sơ)...`,
+        level: 'info'
+      });
+
+      let bridgeTriggered = false;
+
+      // 1. Gửi qua Window PostMessage Bridge (Content Script lắng nghe trên http://127.0.0.1:8000)
+      window.postMessage({
+        type: 'START_STEP2_SCAN_VIA_EXTENSION',
+        links: urls,
+        options: { startIndex: startIdx, endIndex: endIdx }
+      }, '*');
+      bridgeTriggered = true;
+
+      // 2. Gửi qua Chrome Runtime API nếu đang mở trong tab extension
       if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.sendMessage === 'function') {
         try {
           chrome.runtime.sendMessage({
-            action: 'START_STEP2_DIRECT_SCAN',
+            action: 'EXECUTE_STEP2_BROWSER_SCAN',
             links: urls,
             options: { startIndex: startIdx, endIndex: endIdx }
-          }).catch(() => {});
+          }, (res) => {
+            if (!chrome.runtime.lastError && res && res.status === 'started') {
+              bridgeTriggered = true;
+            }
+          });
         } catch (_) {}
       }
 
-      // Luôn kích hoạt trình cào trực tiếp để giao diện, terminal và tiến trình chạy 100% không bị treo
-      runDirectProfileScrapingLoop(urls, startIdx, endIdx);
+      // 3. Nếu có quyền chrome.tabs trực tiếp (trong extension tab)
+      if (window.chrome && chrome.tabs && chrome.tabs.create) {
+        runDirectProfileScrapingLoop(urls, startIdx, endIdx);
+        bridgeTriggered = true;
+      }
+
+      // 4. Watchdog kiểm tra kết nối Extension sau 3.5 giây: Nếu Extension chưa bật -> Hướng dẫn rõ ràng
+      setTimeout(() => {
+        const currentDone = parseInt(document.getElementById('lblScrapedCountStep2')?.textContent || '0', 10);
+        if (currentDone === 0 && isDirectScrapingRunning && !isDirectScrapingPaused) {
+          const checkStatus = document.getElementById('lblScanStatus')?.textContent || '';
+          if (checkStatus.includes('Đang cào bóc tách') && document.querySelectorAll('#step2TerminalLogs div').length <= 2) {
+            appendTerminalLogStep2({
+              stage: 'CẢNH BÁO',
+              text: '⚠️ Đang đợi Chrome Extension kết nối... Vui lòng đảm bảo tiện ích "FB Following Scraper" đã được BẬT trong chrome://extensions.',
+              level: 'err'
+            });
+          }
+        }
+      }, 3500);
     }
 
     function pauseDirectScraping() {
@@ -3594,8 +3632,9 @@
         level: 'err'
       });
 
-      if (window.chrome && chrome.runtime && chrome.runtime.sendMessage) {
-        chrome.runtime.sendMessage({ action: 'PAUSE_STEP2_DIRECT_SCAN' }).catch(() => {});
+      window.postMessage({ type: 'STOP_STEP2_SCAN_VIA_EXTENSION' }, '*');
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+        try { chrome.runtime.sendMessage({ action: 'STOP_STEP2_BROWSER_SCAN' }); } catch (_) {}
       }
     }
 
@@ -4046,204 +4085,20 @@
 
       funnelStage = 1;
       updateFunnelBadges();
-      funnelAllLeads = [];
-      funnelHasWebLeads = [];
-      funnelNoWebLeads = [];
 
-      const btn = document.getElementById('btnRunFunnelStage1');
-      const originalText = document.getElementById('txtBtnRunStage1').textContent;
-      if (btn) {
-        btn.disabled = true;
-        document.getElementById('txtBtnRunStage1').textContent = currentLang === 'zh' ? '⏳ 正在抓取第1层FB主页...' : '⏳ Đang quét Tầng 1 FB...';
+      const txtBulk = document.getElementById('txtBulkLinks');
+      if (txtBulk) {
+        txtBulk.value = rawLinks.map(l => typeof l === 'object' ? (l.url || `https://www.facebook.com/profile.php?id=${l.fb_id}`) : l).join('\n');
+        updateStep2LinkCount();
       }
 
-      const total = rawLinks.length;
-      const tabId = await ensureWorkerTab();
-
       appendTerminalLogStep2({
-        stage: currentLang === 'zh' ? '第1层: FB主页' : 'TẦNG 1: FB PROFILE',
-        text: currentLang === 'zh'
-          ? `🚀 开始执行第1层: 提取 ${total} 个Facebook主页 (简介Bio, 电话, 地址与最新发帖时间)...`
-          : `🚀 Bắt đầu thực thi Tầng 1: Quét ${total} hồ sơ Facebook (Bio, SĐT, Vị trí & Bài đăng gần nhất)...`,
+        stage: 'TẦNG 1: FB PROFILE',
+        text: `🚀 Kích hoạt Tầng 1: Mở Tab ngầm quét từng trang Facebook Bio, SĐT, Vị trí & Bài đăng gần nhất...`,
         level: 'info'
       });
 
-      try {
-        for (let i = 0; i < total; i++) {
-          const item = rawLinks[i];
-          const rawUrl = typeof item === 'object' ? (item.url || `https://www.facebook.com/profile.php?id=${item.fb_id}`) : item;
-          const initialName = typeof item === 'object' ? (item.name || '') : '';
-          const initialFbId = typeof item === 'object' ? (item.fb_id || '') : '';
-          const initialAvatar = typeof item === 'object' ? (item.avatar_url || '') : '';
-
-          const pct = Math.round(((i + 1) / total) * 100);
-          document.getElementById('bulkProgressFill').style.width = `${pct}%`;
-          document.getElementById('lblScanPercent').textContent = `${pct}%`;
-          document.getElementById('lblScanStatus').textContent = currentLang === 'zh'
-            ? `[第1层 ${i+1}/${total}] 正在提取: ${initialName || rawUrl.slice(0, 30)}...`
-            : `[Tầng 1 ${i+1}/${total}] Đang quét FB: ${initialName || rawUrl.slice(0, 30)}...`;
-
-          let fbData = null;
-          if (tabId && window.chrome && chrome.tabs) {
-            try {
-              await chrome.tabs.update(tabId, { url: rawUrl, active: false });
-              await waitForTabLoaded(tabId, 10000);
-              await chrome.scripting.executeScript({
-                target: { tabId: tabId },
-                func: () => { window.scrollBy({ top: 380, behavior: 'smooth' }); }
-              });
-              await new Promise(r => setTimeout(r, 600));
-
-              const resArr = await chrome.scripting.executeScript({
-                target: { tabId: tabId },
-                func: domScrapeFacebookProfile,
-                args: [initialName, initialFbId, initialAvatar]
-              });
-              if (resArr && resArr[0] && resArr[0].result) {
-                fbData = resArr[0].result;
-              }
-            } catch (e) {}
-          }
-
-          if (!fbData || !fbData.name) {
-            fbData = {
-              name: initialName || 'Dog Breeder Profile',
-              owner: '',
-              profile_id: initialFbId || '',
-              avatar_url: initialAvatar || '',
-              category: 'Dog Breeder / Kennel (B2B)',
-              has_amazon: false,
-              amazon_url: '',
-              amz_cat: 'Amazon link not found',
-              intro: { bio: '', phone: '', email: '', website: '', city: '', state: '', country: 'United States' },
-              latest_post: { publish_time: new Date().toISOString(), publish_human: 'Gần đây', relative_time: '1-3 ngày trước', activity_status: '✓ TÍCH CỰC' },
-              sales_intelligence: { puppy_available: false, recommended_product: 'Puppy Starter Kit V3' }
-            };
-          }
-
-          // 1. Tên trại / Doanh nghiệp (Loại trừ "Facebook" hoặc chuỗi rác)
-          let kennelName = fbData.name;
-          if (!kennelName || isGarbageName(kennelName) || kennelName.toLowerCase() === 'facebook') {
-            kennelName = initialName || 'Dog Breeder Profile';
-          }
-
-          // 2. Tên chủ trại đại diện (Owner - Tách biệt với Tên Trại)
-          let finalOwner = fbData.owner;
-          if (!finalOwner || isGarbageName(finalOwner) || finalOwner.toLowerCase() === 'facebook' || finalOwner.includes('Facebook (Chủ trại)')) {
-            finalOwner = (kennelName && !isGarbageName(kennelName) && kennelName.toLowerCase() !== 'facebook')
-              ? kennelName
-              : (initialName || 'Dog Breeder');
-          }
-
-          // 3. Tách biệt hoàn toàn Website chính thức và Kênh Amazon
-          let website = (fbData.intro && fbData.intro.website) ? fbData.intro.website.trim() : '';
-          let amazonUrl = fbData.amazon_url || '';
-          let hasAmazon = fbData.has_amazon || !!amazonUrl;
-
-          // Nếu trường website bị nhầm lẫn chứa link Amazon hoặc link MXH/Bản đồ/Mail
-          if (website) {
-            if (/amazon\.com|amzn\.to/i.test(website)) {
-              if (!amazonUrl) amazonUrl = website;
-              hasAmazon = true;
-              website = '';
-            } else if (/facebook\.com|fb\.me|instagram\.com|threads\.net|tiktok\.com|youtube\.com|bing\.com|yahoo\.com|gmail\.com|google\.[^/]+\/maps/i.test(website)) {
-              website = '';
-            }
-          }
-
-          const hasWeb = !!website && (website.startsWith('http') || website.includes('.')) && !/amazon\.com|amzn\.to/i.test(website);
-
-          // 4. Numeric FB_ID (Loại trừ tuyệt đối ID của người dùng đang đăng nhập '100060157728939')
-          let resolvedId = fbData.profile_id || initialFbId || '';
-          if (resolvedId === '100060157728939') {
-            resolvedId = (initialFbId && initialFbId !== '100060157728939') ? initialFbId : '';
-          }
-
-          // 5. Avatar HD nguyên bản từ Facebook kết hợp tra cứu pool Bước 1
-          let finalAvatar = resolveAvatarFallback(resolvedId, rawUrl, fbData.avatar_url || initialAvatar || '');
-
-          // 6. GIỮ NGUYÊN 100% CÁC TRƯỜNG THỜI GIAN ĐĂNG BÀI
-          const pubTime = fbData.latest_post.publish_human || fbData.latest_post.publish_time || 'Gần đây';
-          const relTime = fbData.latest_post.relative_time || 'Gần đây';
-
-          const leadObj = {
-            stt: `LEAD-US-${funnelAllLeads.length + 1}`,
-            owner: finalOwner,
-            name: kennelName,
-            fb_id: resolvedId,
-            url: rawUrl,
-            avatar_url: finalAvatar,
-            website: website,
-            has_website: hasWeb,
-            has_amazon: hasAmazon,
-            amazon_url: amazonUrl,
-            amazon_group: hasAmazon ? 'detected' : 'none',
-            phone: fbData.intro.phone || '',
-            email: fbData.intro.email || '',
-            city: fbData.intro.city || '',
-            state: fbData.intro.state || '',
-            country: fbData.intro.country || 'United States',
-            cat: fbData.category || 'Dog Breeder / Kennel (B2B)',
-            amz_cat: hasAmazon ? (fbData.amz_cat || 'Có Amazon (Chờ Tầng 3 phân loại)') : (currentLang === 'zh' ? '第1层未发现' : 'Chờ quét Tầng 2'),
-            publish_time: pubTime,
-            relative_time: relTime,
-            activity_status: fbData.latest_post.activity_status || '✓ TÍCH CỰC',
-            latest_post: fbData.latest_post,
-            product_fit: fbData.sales_intelligence.recommended_product || 'Puppy Starter Kit V3 (Thảm Cỏ Cún + Khay Potty)',
-            score: computeLeadScore(fbData, finalOwner),
-            rank_tier: (hasWeb && hasAmazon) ? 'Tier S' : (hasWeb || hasAmazon ? 'Tier A' : 'Tier B'),
-            sales_action: hasAmazon ? 'Khai thác ngách phụ kiện/cỏ trên Amazon' : 'Chào giải pháp thảm cỏ cún & khay huấn luyện vệ sinh'
-          };
-
-          funnelAllLeads.push(leadObj);
-          if (hasWeb) {
-            funnelHasWebLeads.push(leadObj);
-          } else {
-            funnelNoWebLeads.push(leadObj);
-          }
-          if (hasAmazon) {
-            funnelHasAmzLeads.push(leadObj);
-          }
-
-          // Live card preview & nhấp vào để mở liên kết
-          document.getElementById('bulkLeadPreviewRow').style.display = 'flex';
-          document.getElementById('bulkLeadName').textContent = leadObj.name;
-          document.getElementById('bulkLeadOwner').textContent = `${currentLang === 'zh' ? '主理人' : 'Chủ trại'}: ${leadObj.owner}`;
-          document.getElementById('bulkLeadFbid').textContent = `ID: ${leadObj.fb_id || '---'}`;
-          const avEl = document.getElementById('bulkLeadAvatar');
-          if (avEl && leadObj.avatar_url) avEl.src = leadObj.avatar_url;
-          const wrapEl = document.getElementById('bulkLeadAvatarWrap');
-          if (wrapEl) {
-            wrapEl.style.cursor = 'pointer';
-            wrapEl.title = currentLang === 'zh' ? '点击打开Facebook主页' : 'Nhấp để mở trang Facebook cá nhân';
-            wrapEl.onclick = () => { window.open(rawUrl, '_blank'); };
-          }
-
-          appendTerminalLogStep2({
-            stage: currentLang === 'zh' ? '第1层: FB完成' : 'TẦNG 1: FB PROFILE',
-            text: currentLang === 'zh'
-              ? `[${i+1}/${total}] 已提取: ${leadObj.name} | 主理人: ${leadObj.owner} | 发帖时间: ${pubTime} | 官网: ${hasWeb ? ('✅ 有 (' + website + ')') : '❌ 无'} | 亚马逊: ${hasAmazon ? ('🛒 有 (' + amazonUrl + ')') : '❌ 无'} (进度: ${pct}%)`
-              : `[${i+1}/${total}] Đã quét FB: ${leadObj.name} | Chủ trại: ${leadObj.owner} | Ngày đăng: ${pubTime} | Website: ${hasWeb ? ('✅ CÓ (' + website + ')') : '❌ KHÔNG'} | Amazon: ${hasAmazon ? ('🛒 CÓ (' + amazonUrl + ')') : '❌ KHÔNG'} (Tiến độ: ${pct}%)`,
-            level: hasWeb || hasAmazon ? 'success' : 'info'
-          });
-
-          updateFunnelBadges();
-        }
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          document.getElementById('txtBtnRunStage1').textContent = originalText;
-        }
-      }
-
-      funnelStage = 2;
-      updateFunnelBadges();
-      renderFilteredFunnelTable();
-
-      const finishMsgVi = `✓ Hoàn tất Tầng 1: Đã quét ${funnelAllLeads.length} hồ sơ (Có Website: ${funnelHasWebLeads.length}, Không Website: ${funnelNoWebLeads.length})! Tiếp tục bấm nút Tầng 2 để duyệt Website.`;
-      const finishMsgZh = `✓ 第1层抓取完成: 共 ${funnelAllLeads.length} 份档案 (有官网: ${funnelHasWebLeads.length}, 无官网: ${funnelNoWebLeads.length})！请继续点击第2层按钮深度挖掘。`;
-      showToast(currentLang === 'zh' ? finishMsgZh : finishMsgVi);
-      document.getElementById('lblScanStatus').textContent = currentLang === 'zh' ? finishMsgZh : finishMsgVi;
+      startDirectScraping(false);
     }
 
     async function executeFunnelStage2() {
@@ -5066,52 +4921,57 @@
           ? (parsedPub ? parsedPub.activity_status : translateActivityStatusZh(item.activity_status || (item.latest_post && item.latest_post.activity_status) || ''))
           : (parsedPub ? parsedPub.activity_status : (item.activity_status || (item.latest_post && item.latest_post.activity_status) || ''));
 
+        const sttDisplay = item.stt || `LEAD-US-${String(index+1).padStart(5, '0')}`;
         tr.innerHTML = `
-          <td style="font-family:var(--mono); font-size:11px; color:var(--text-muted);">${item.stt || `LEAD-US-${index+1}`}</td>
+          <td style="font-size:12px; font-weight:700; color:#0284c7; white-space:nowrap;">
+            <span style="background:#e0f2fe; border:1px solid #bae6fd; padding:3px 7px; border-radius:6px; font-family:var(--mono);">
+              ${sttDisplay}
+            </span>
+          </td>
           <td>
-            <div class="circle-avatar-box" style="width:44px; height:44px; min-width:44px; cursor:pointer;" title="${currentLang === 'zh' ? '点击打开Facebook主页' : 'Mở trang Facebook cá nhân'}" onclick="window.open('${profileUrl}', '_blank')">
+            <div class="circle-avatar-box" style="width:42px; height:42px; min-width:42px; cursor:pointer;" title="${currentLang === 'zh' ? '点击打开Facebook主页' : 'Mở trang Facebook cá nhân'}" onclick="window.open('${profileUrl}', '_blank')">
               <img class="circle-avatar-img" src="${avatarUrl}" referrerpolicy="no-referrer" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='${defaultUiAvatar}'" />
             </div>
           </td>
           <td>
-            <strong style="color:var(--text); font-size:13.5px; font-weight:800;">${escapeHtml(ownerDisplay)}</strong>
+            <strong style="color:var(--text); font-size:13px; font-weight:750;">${escapeHtml(ownerDisplay)}</strong>
           </td>
           <td>
-            <div style="font-weight:700; color:var(--text); font-size:12.5px;">${escapeHtml(item.name || '---')}</div>
+            <div style="font-weight:650; color:var(--text); font-size:12.5px;">${escapeHtml(item.name || '---')}</div>
           </td>
           <td>
-            <span class="badge-fbid" onclick="copyText('${fbId}')" title="${currentLang === 'zh' ? '点击复制纯数字ID' : 'Sao chép ID số'}" style="cursor:pointer; font-weight:750;">
+            <span class="badge-fbid" onclick="copyText('${fbId}')" title="${currentLang === 'zh' ? '点击复制纯数字ID' : 'Sao chép ID số'}" style="cursor:pointer; font-weight:700; font-size:11.5px;">
               # ${fbId || '---'}
             </span>
           </td>
-          <td style="font-family:var(--mono); color:#0284c7; font-size:12px; font-weight:750;">
+          <td style="font-family:var(--mono); color:#0369a1; font-size:12px; font-weight:700;">
             ${escapeHtml(phone)}
           </td>
           <td>
-            ${cleanWeb ? `<a href="${cleanWeb}" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:none; font-weight:600; font-size:11.5px;">🌐 ${escapeHtml(cleanWeb.replace(/^https?:\/\//, '').split('/')[0])}</a>` : '<span style="color:var(--text-muted);">---</span>'}
+            ${cleanWeb ? `<a href="${cleanWeb}" target="_blank" rel="noopener noreferrer" style="color:#0284c7; text-decoration:none; font-weight:650; font-size:12px;">🌐 ${escapeHtml(cleanWeb.replace(/^https?:\/\//, '').split('/')[0])}</a>` : '<span style="color:var(--text-muted); font-size:12px;">---</span>'}
           </td>
           <td style="color:#334155; font-size:12px; font-weight:600;">
             ${escapeHtml(location)}
           </td>
           <td>
             <div style="font-weight:750; color:#0284c7; font-size:12px;">${escapeHtml(pubTimeDisplay)}</div>
-            <div style="font-size:11px; margin-top:2px;">
-              ${relTimeDisplay ? `<span style="color:#94a3b8; font-size:10px; margin-right:4px;">⏱️ ${escapeHtml(relTimeDisplay)}</span>` : ''}
-              ${actStatusText ? `<span style="font-size:10px; padding:1px 6px; border-radius:4px; font-weight:700; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); color:#38bdf8;">${escapeHtml(actStatusText)}</span>` : ''}
+            <div style="font-size:11px; margin-top:3px; display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+              ${relTimeDisplay ? `<span style="color:#64748b; font-size:11px; font-weight:600;">⏱️ ${escapeHtml(relTimeDisplay)}</span>` : ''}
+              ${actStatusText ? `<span style="font-size:10.5px; padding:2px 7px; border-radius:5px; font-weight:750; background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46;">${escapeHtml(actStatusText)}</span>` : ''}
             </div>
-            ${item.latest_post && item.latest_post.post_text ? `<div style="font-size:10.5px; color:#94a3b8; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;" title="${escapeHtml(item.latest_post.post_text)}">"${escapeHtml(item.latest_post.post_text)}"</div>` : ''}
+            ${item.latest_post && item.latest_post.post_text ? `<div style="font-size:11px; color:#64748b; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;" title="${escapeHtml(item.latest_post.post_text)}">"${escapeHtml(item.latest_post.post_text)}"</div>` : ''}
           </td>
           <td>
-            <span style="font-size:11px; color:#cbd5e1; background:rgba(30,41,59,0.8); border:1px solid rgba(255,255,255,0.08); padding:3px 7px; border-radius:6px; display:inline-block; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(category)}">${escapeHtml(category)}</span>
+            <span style="font-size:11.5px; color:#334155; background:#f1f5f9; border:1px solid #cbd5e1; padding:3px 8px; border-radius:6px; display:inline-block; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600;" title="${escapeHtml(category)}">${escapeHtml(category)}</span>
           </td>
           <td>
             ${amzBadge}
           </td>
           <td>
-            <span class="badge-product" title="${escapeHtml(productDisplay)}">${escapeHtml(productDisplay)}</span>
+            <span class="badge-product" style="font-size:11.5px; font-weight:600;" title="${escapeHtml(productDisplay)}">${escapeHtml(productDisplay)}</span>
           </td>
           <td>
-            <span class="badge-tier" style="color:${tierColor}; background:${tierBg}; border:1px solid ${tierBorder};">${tier} (${score}đ)</span>
+            <span class="badge-tier" style="color:${tierColor}; background:${tierBg}; border:1px solid ${tierBorder}; font-size:11.5px; font-weight:750;">${tier} (${score}đ)</span>
           </td>
           <td>
             <div style="display:flex; gap:6px;">
@@ -5312,110 +5172,118 @@
         return;
       }
     });
+    // Nhận sự kiện từ Content Script Bridge (khi trang chạy từ http://127.0.0.1:8000)
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'PET_LEAD_STEP2_EVENT' && event.data.payload) {
+        handleStep2DirectMessage(event.data.payload);
+      }
+    });
 
-    // =========================================================================
-    // LẮNG NGHE SỰ KIỆN TRUYỀN TIN 2 CHIỀU TỪ BACKGROUND EXTENSION (STEP 2 DIRECT)
-    // =========================================================================
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
-      chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-        if (!msg || !msg.action) return;
-
-        if (msg.action === 'STEP2_LOG') {
-          const l = msg.log || {};
-          appendTerminalLogStep2({
-            stage: l.stage || 'TIẾN ĐỘ',
-            text: l.text || '',
-            level: l.level || 'info'
-          });
-        }
-        else if (msg.action === 'STEP2_PROGRESS') {
-          const cur = msg.current || 0;
-          const tot = msg.total || 0;
-          const pct = msg.percent !== undefined ? msg.percent : Math.round((cur / Math.max(1, tot)) * 100);
-          const fill = document.getElementById('bulkProgressFill');
-          if (fill) fill.style.width = `${pct}%`;
-          const lblPct = document.getElementById('lblScanPercent');
-          if (lblPct) lblPct.textContent = `${pct}%`;
-          const lblCnt = document.getElementById('lblScrapedCountStep2');
-          if (lblCnt) lblCnt.textContent = cur;
-          const lblTot = document.getElementById('lblTotalQueueStep2');
-          if (lblTot) lblTot.textContent = tot;
-          const lblStat = document.getElementById('lblScanStatus');
-          if (lblStat && msg.status) lblStat.textContent = msg.status;
-        }
-        else if (msg.action === 'STEP2_LEAD_DONE') {
-          const item = msg.lead || {};
-          if (item && (item.fb_id || item.url || item.name)) {
-            const prevRow = document.getElementById('bulkLeadPreviewRow');
-            if (prevRow) prevRow.style.display = 'flex';
-            const bName = document.getElementById('bulkLeadName');
-            if (bName) bName.textContent = item.name || 'Dog Breeder';
-            const bOwner = document.getElementById('bulkLeadOwner');
-            if (bOwner) bOwner.textContent = `Chủ trại: ${item.owner || item.owner_name || 'Dog Breeder'}`;
-            const bFbid = document.getElementById('bulkLeadFbid');
-            if (bFbid) bFbid.textContent = `ID: ${item.fb_id || item.profile_id || '---'}`;
-            const bAv = document.getElementById('bulkLeadAvatar');
-            if (bAv && item.avatar_url) bAv.src = item.avatar_url;
-
-            const exIdx = crmLeads.findIndex(l => (item.fb_id && l.fb_id === item.fb_id) || (item.url && l.url === item.url));
-            if (exIdx !== -1) {
-              crmLeads[exIdx] = { ...crmLeads[exIdx], ...item, stt: crmLeads[exIdx].stt };
-            } else {
-              crmLeads.unshift(item);
-            }
-
-            renderCrmTable(crmLeads);
-            updateCrmKpis(crmLeads);
-            syncFunnelFromCrmLeads();
-          }
-        }
-        else if (msg.action === 'STEP2_ALL_DONE') {
-          isDirectScrapingRunning = false;
-          isDirectScrapingPaused = false;
-          const btnStart = document.getElementById('btnStartDirectScrape');
-          const btnPause = document.getElementById('btnPauseDirectScrape');
-          const btnResume = document.getElementById('btnResumeDirectScrape');
-          if (btnStart) btnStart.style.display = 'inline-flex';
-          if (btnPause) btnPause.style.display = 'none';
-          if (btnResume) btnResume.style.display = 'none';
-
-          const txtBulk = document.getElementById('txtBulkLinks');
-          const fromInp = document.getElementById('fromLineStep2');
-          const toInp = document.getElementById('toLineStep2');
-          if (txtBulk) txtBulk.disabled = false;
-          if (fromInp) fromInp.disabled = false;
-          if (toInp) toInp.disabled = false;
-
-          const fill = document.getElementById('bulkProgressFill');
-          if (fill) fill.style.width = '100%';
-          const lblPct = document.getElementById('lblScanPercent');
-          if (lblPct) lblPct.textContent = '100%';
-
-          const doneMsg = currentLang === 'zh' ? '🎉 采集完成！' : `🎉 HOÀN TẤT BƯỚC 2: Đã bóc tách thành công toàn bộ hồ sơ!`;
-          const lblStat = document.getElementById('lblScanStatus');
-          if (lblStat) lblStat.textContent = doneMsg;
-
-          appendTerminalLogStep2({
-            stage: 'HỆ THỐNG',
-            text: `🎉 HOÀN TẤT BƯỚC 2: ĐÃ BÓC TÁCH HOÀN TOÀN CÁC HỒ SƠ!`,
-            level: 'success'
-          });
-
-          playCompletionChime();
-          showToast(doneMsg);
-        }
-        else if (msg.action === 'STEP2_PAUSED') {
-          isDirectScrapingRunning = false;
-          isDirectScrapingPaused = true;
-          const btnPause = document.getElementById('btnPauseDirectScrape');
-          const btnResume = document.getElementById('btnResumeDirectScrape');
-          if (btnPause) btnPause.style.display = 'none';
-          if (btnResume) {
-            btnResume.style.display = 'inline-flex';
-            const cur = msg.currentIndex || (directScrapeCurrentIdx + 1);
-            btnResume.querySelector('span:last-child').textContent = `TIẾP TỤC CÀO (Dòng ${cur})`;
-          }
+      chrome.runtime.onMessage.addListener((msg) => {
+        if (msg && msg.action && msg.action.startsWith('STEP2_')) {
+          handleStep2DirectMessage(msg);
         }
       });
     }
 
+    function handleStep2DirectMessage(msg) {
+      if (!msg || !msg.action) return;
+
+      if (msg.action === 'STEP2_LOG') {
+        const l = msg.log || {};
+        appendTerminalLogStep2({
+          stage: l.stage || 'TIẾN ĐỘ',
+          text: l.text || '',
+          level: l.level || 'info'
+        });
+      }
+      else if (msg.action === 'STEP2_PROGRESS') {
+        const cur = msg.current || 0;
+        const tot = msg.total || 0;
+        const pct = msg.percent !== undefined ? msg.percent : Math.round((cur / Math.max(1, tot)) * 100);
+        const fill = document.getElementById('bulkProgressFill');
+        if (fill) fill.style.width = `${pct}%`;
+        const lblPct = document.getElementById('lblScanPercent');
+        if (lblPct) lblPct.textContent = `${pct}%`;
+        const lblCnt = document.getElementById('lblScrapedCountStep2');
+        if (lblCnt) lblCnt.textContent = cur;
+        const lblTot = document.getElementById('lblTotalQueueStep2');
+        if (lblTot) lblTot.textContent = tot;
+        const lblStat = document.getElementById('lblScanStatus');
+        if (lblStat && msg.status) lblStat.textContent = msg.status;
+      }
+      else if (msg.action === 'STEP2_LEAD_DONE') {
+        const item = msg.lead || {};
+        if (item && (item.fb_id || item.url || item.name)) {
+          const prevRow = document.getElementById('bulkLeadPreviewRow');
+          if (prevRow) prevRow.style.display = 'flex';
+          const bName = document.getElementById('bulkLeadName');
+          if (bName) bName.textContent = item.name || 'Dog Breeder';
+          const bOwner = document.getElementById('bulkLeadOwner');
+          if (bOwner) bOwner.textContent = `Chủ trại: ${item.owner || item.owner_name || 'Dog Breeder'}`;
+          const bFbid = document.getElementById('bulkLeadFbid');
+          if (bFbid) bFbid.textContent = `ID: ${item.fb_id || item.profile_id || '---'}`;
+          const bAv = document.getElementById('bulkLeadAvatar');
+          if (bAv && item.avatar_url) bAv.src = item.avatar_url;
+
+          const exIdx = crmLeads.findIndex(l => (item.fb_id && l.fb_id === item.fb_id) || (item.url && l.url === item.url));
+          if (exIdx !== -1) {
+            crmLeads[exIdx] = { ...crmLeads[exIdx], ...item, stt: crmLeads[exIdx].stt };
+          } else {
+            crmLeads.unshift(item);
+          }
+
+          renderCrmTable(crmLeads);
+          updateCrmKpis(crmLeads);
+          syncFunnelFromCrmLeads();
+        }
+      }
+      else if (msg.action === 'STEP2_ALL_DONE') {
+        isDirectScrapingRunning = false;
+        isDirectScrapingPaused = false;
+        const btnStart = document.getElementById('btnStartDirectScrape');
+        const btnPause = document.getElementById('btnPauseDirectScrape');
+        const btnResume = document.getElementById('btnResumeDirectScrape');
+        if (btnStart) btnStart.style.display = 'inline-flex';
+        if (btnPause) btnPause.style.display = 'none';
+        if (btnResume) btnResume.style.display = 'none';
+
+        const txtBulk = document.getElementById('txtBulkLinks');
+        const fromInp = document.getElementById('fromLineStep2');
+        const toInp = document.getElementById('toLineStep2');
+        if (txtBulk) txtBulk.disabled = false;
+        if (fromInp) fromInp.disabled = false;
+        if (toInp) toInp.disabled = false;
+
+        const fill = document.getElementById('bulkProgressFill');
+        if (fill) fill.style.width = '100%';
+        const lblPct = document.getElementById('lblScanPercent');
+        if (lblPct) lblPct.textContent = '100%';
+
+        const doneMsg = currentLang === 'zh' ? '🎉 采集完成！' : `🎉 HOÀN TẤT BƯỚC 2: Đã bóc tách thành công toàn bộ hồ sơ!`;
+        const lblStat = document.getElementById('lblScanStatus');
+        if (lblStat) lblStat.textContent = doneMsg;
+
+        appendTerminalLogStep2({
+          stage: 'HỆ THỐNG',
+          text: `🎉 HOÀN TẤT BƯỚC 2: ĐÃ BÓC TÁCH HOÀN TOÀN CÁC HỒ SƠ!`,
+          level: 'success'
+        });
+
+        playCompletionChime();
+        showToast(doneMsg);
+      }
+      else if (msg.action === 'STEP2_PAUSED') {
+        isDirectScrapingRunning = false;
+        isDirectScrapingPaused = true;
+        const btnPause = document.getElementById('btnPauseDirectScrape');
+        const btnResume = document.getElementById('btnResumeDirectScrape');
+        if (btnPause) btnPause.style.display = 'none';
+        if (btnResume) {
+          btnResume.style.display = 'inline-flex';
+          const cur = msg.currentIndex || (directScrapeCurrentIdx + 1);
+          btnResume.querySelector('span:last-child').textContent = `TIẾP TỤC CÀO (Dòng ${cur})`;
+        }
+      }
+    }

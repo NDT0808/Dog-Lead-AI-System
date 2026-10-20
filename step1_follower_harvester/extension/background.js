@@ -762,22 +762,7 @@ async function executeStep2BrowserScan(links, options = {}) {
     const initialFbId = typeof item === 'object' ? (item.fb_id || '') : '';
     const initialAvatar = typeof item === 'object' ? (item.avatar_url || '') : '';
 
-    // Bỏ qua avatar đơn điệu / default silhouette
-    const avLower = (initialAvatar || '').toLowerCase();
-    const isDefaultSilhouette = avLower && [
-      't1.30497-1', '453178253', '825352834', 'blank_profile', 'ui-avatars', 'rsrc.php'
-    ].some(pat => avLower.includes(pat));
-
-    if (isDefaultSilhouette) {
-      emitLog('LOẠI BỎ', `❌ [BỎ QUA] ${initialName || rawUrl} do ảnh đại diện đơn điệu / silhouette mặc định Facebook!`, 'warn');
-      sendToDashboard('STEP2_PROGRESS', {
-        current: i + 1,
-        total,
-        percent: Math.round(((i + 1 - startIdx) / (endIdx - startIdx + 1)) * 100),
-        status: `[Bỏ qua ${i+1}/${total}] Ảnh đại diện đơn điệu: ${initialName}`
-      });
-      continue;
-    }
+    // Luôn mở worker tab quét bóc tách trực tiếp toàn bộ hồ sơ trong danh sách
 
     sendToDashboard('STEP2_PROGRESS', {
       current: i + 1,
