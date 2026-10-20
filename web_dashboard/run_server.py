@@ -154,8 +154,8 @@ class DashboardApiHandler(http.server.SimpleHTTPRequestHandler):
 
     def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, *')
         self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
         super().end_headers()
 
@@ -666,13 +666,17 @@ def main():
     print("=" * 75)
     print(">>> Nhấn [Ctrl + C] để dừng Web Server khi không dùng nữa.\n")
 
-    try:
-        webbrowser.open(url_local)
-    except Exception:
-        pass
-
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("0.0.0.0", port), DashboardApiHandler) as httpd:
+        def open_browser():
+            time.sleep(0.6)
+            try:
+                webbrowser.open(url_local)
+            except Exception:
+                pass
+
+        threading.Thread(target=open_browser, daemon=True).start()
+
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
