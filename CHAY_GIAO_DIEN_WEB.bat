@@ -2,37 +2,39 @@
 cd /d "%~dp0"
 title PET LEAD AI - WEB DASHBOARD LAUNCHER
 
-:: 1. Uu tien chon Python san co
-set "PY_BIN="
+:: 1. Uu tien chay bang Python 3.11 san co
 py -3.11 -c "import sys" >nul 2>&1
 if not errorlevel 1 (
-    set "PY_BIN=py -3.11"
-    goto :run
+    py -3.11 web_dashboard\run_server.py
+    goto :end
 )
 
 if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" (
-    set "PY_BIN=%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
-    goto :run
+    "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" web_dashboard\run_server.py
+    goto :end
 )
 
 python -c "import sys" >nul 2>&1
 if not errorlevel 1 (
-    set "PY_BIN=python"
-    goto :run
+    python web_dashboard\run_server.py
+    goto :end
 )
 
 py -c "import sys" >nul 2>&1
 if not errorlevel 1 (
-    set "PY_BIN=py"
-    goto :run
+    py web_dashboard\run_server.py
+    goto :end
 )
 
-:: Neu khong tim thay python, mo truc tiep bang trinh duyet mac dinh
-echo [!] Khong tim thay Python, dang mo truc tiep bang trinh duyet...
+echo.
+echo ========================================================
+echo [!] Khong tim thay Python tren he thong!
+echo Vui long cai dat Python 3.10 hoac 3.11 de su dung AI.
+echo Dang mo truc tiep giao dien bang trinh duyet mac dinh...
+echo ========================================================
+echo.
 start "" "%~dp0web_dashboard\index.html"
-exit /b 0
 
-:run
-"%PY_BIN%" web_dashboard\run_server.py
+:end
 echo.
 pause
