@@ -215,8 +215,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const btnOpenAi = document.getElementById('btnOpenAiDashboard');
   if (btnOpenAi) {
-    btnOpenAi.addEventListener('click', () => {
-      chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
+    btnOpenAi.addEventListener('click', async () => {
+      let targetUrl = chrome.runtime.getURL('dashboard.html');
+      try {
+        const stored = await chrome.storage.local.get(['pet_lead_server_url']);
+        const serverUrl = (stored && stored.pet_lead_server_url) ? stored.pet_lead_server_url.trim().replace(/\/+$/, '') : 'http://127.0.0.1:8000';
+        const ping = await fetch(`${serverUrl}/api/system-status`, { method: 'GET', signal: AbortSignal.timeout(1200) });
+        if (ping.ok) {
+          targetUrl = `${serverUrl}/index.html`;
+        }
+      } catch (e) {}
+      chrome.tabs.create({ url: targetUrl });
     });
   }
 });

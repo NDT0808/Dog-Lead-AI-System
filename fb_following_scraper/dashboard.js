@@ -1,5 +1,53 @@
 
     // =========================================================================
+    // THEME MANAGEMENT (LIGHT / DARK) - DEFAULT: LIGHT (WHITE THEME)
+    // =========================================================================
+    function setAppTheme(theme) {
+      if (!theme) {
+        theme = localStorage.getItem('pet_lead_theme') || 'light';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      if (document.body) {
+        document.body.setAttribute('data-theme', theme);
+      }
+      localStorage.setItem('pet_lead_theme', theme);
+
+      const btnLight = document.getElementById('btnThemeLight');
+      const btnDark = document.getElementById('btnThemeDark');
+      if (btnLight) btnLight.classList.toggle('active', theme === 'light');
+      if (btnDark) btnDark.classList.toggle('active', theme === 'dark');
+
+      const banner = document.getElementById('serverOfflineBanner');
+      if (banner) {
+        const isDark = (theme === 'dark');
+        banner.style.background = isDark ? 'linear-gradient(90deg, #1e293b, #0f172a)' : '#fffbeb';
+        banner.style.borderBottom = '2px solid #f59e0b';
+        banner.style.color = isDark ? '#f8fafc' : '#78350f';
+        banner.style.boxShadow = isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(15,23,42,0.08)';
+
+        const bTitle = document.getElementById('bannerTitle');
+        if (bTitle) bTitle.style.color = isDark ? '#fbbf24' : '#b45309';
+
+        const bDesc = document.getElementById('bannerDesc');
+        if (bDesc) bDesc.style.color = isDark ? '#cbd5e1' : '#78350f';
+
+        const bInp = document.getElementById('inpCustomServerUrl');
+        if (bInp) {
+          bInp.style.background = isDark ? '#0f172a' : '#ffffff';
+          bInp.style.borderColor = isDark ? '#475569' : '#cbd5e1';
+          bInp.style.color = isDark ? '#fff' : '#0f172a';
+        }
+      }
+    }
+
+    // Apply theme immediately
+    try {
+      const initialTheme = localStorage.getItem('pet_lead_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', initialTheme);
+    } catch(e) {}
+
+
+    // =========================================================================
     // 0. SERVER STATUS MONITOR & NOTIFICATION BANNER
     // =========================================================================
     function getStoredServerUrl() {
@@ -33,25 +81,29 @@
       if (!banner) {
         banner = document.createElement('div');
         banner.id = 'serverOfflineBanner';
-        banner.style.cssText = 'background: linear-gradient(90deg, #1e293b, #0f172a); border-bottom: 2px solid #f59e0b; padding: 12px 24px; color: #f8fafc; display: none; flex-direction: column; gap: 10px; font-size: 13px; z-index: 9999; position: sticky; top: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.4);';
+        const isDark = (localStorage.getItem('pet_lead_theme') === 'dark');
+        const bgStyle = isDark 
+          ? 'background: linear-gradient(90deg, #1e293b, #0f172a); border-bottom: 2px solid #f59e0b; padding: 12px 24px; color: #f8fafc; display: none; flex-direction: column; gap: 10px; font-size: 13px; z-index: 9999; position: sticky; top: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.4);'
+          : 'background: #fffbeb; border-bottom: 2px solid #f59e0b; padding: 12px 24px; color: #78350f; display: none; flex-direction: column; gap: 10px; font-size: 13px; z-index: 9999; position: sticky; top: 0; box-shadow: 0 4px 16px rgba(15,23,42,0.08);';
+        banner.style.cssText = bgStyle;
         banner.innerHTML = `
           <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
             <div style="display:flex; align-items:center; gap:12px;">
               <span style="font-size:22px;">⚠️</span>
               <div>
-                <span id="bannerTitle" style="font-weight:700; color:#fbbf24;">Máy chủ Python AI chưa được kết nối!</span>
-                <span id="bannerDesc" style="color:#cbd5e1; margin-left:8px;">Vui lòng mở file <strong>CHAY_GIAO_DIEN_WEB.bat</strong> trên máy chủ. Nếu chạy trên Server/VPS khác, hãy nhập URL/IP bên dưới.</span>
+                <span id="bannerTitle" style="font-weight:700; color:${isDark ? '#fbbf24' : '#b45309'};">Máy chủ Python AI chưa được kết nối!</span>
+                <span id="bannerDesc" style="color:${isDark ? '#cbd5e1' : '#78350f'}; margin-left:8px;">Vui lòng mở file <strong>CHAY_GIAO_DIEN_WEB.bat</strong> trên máy chủ. Nếu chạy trên Server/VPS khác, hãy nhập URL/IP bên dưới.</span>
               </div>
             </div>
             <div style="display:flex; gap:8px; align-items:center;">
-              <button id="btnRetryServerConn" style="background:#f59e0b; color:#0f172a; font-weight:700; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:12px; transition:all 0.2s;">🔄 Thử kết nối lại (Retry)</button>
+              <button id="btnRetryServerConn" style="background:#f59e0b; color:#0f172a; font-weight:700; border:none; border-radius:8px; padding:7px 16px; cursor:pointer; font-size:12px; transition:all 0.2s;">🔄 Thử kết nối lại (Retry)</button>
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:rgba(0,0,0,0.25); padding:8px 12px; border-radius:8px; border:1px solid rgba(245,158,11,0.3);">
-            <span style="font-weight:700; color:#fbbf24; font-size:12px;">⚙️ Địa chỉ Máy chủ (Server URL / IP):</span>
-            <input id="inpCustomServerUrl" type="text" placeholder="http://127.0.0.1:8000 hoặc http://IP-Server:8000" style="background:#0f172a; border:1px solid #475569; color:#fff; padding:5px 10px; border-radius:6px; font-size:12px; min-width:280px; flex:1;" value="${API_BASE}" />
-            <button id="btnSaveCustomServerUrl" style="background:#10b981; color:#fff; font-weight:700; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:12px; transition:all 0.2s;">💾 Lưu & Kết Nối</button>
-            <button id="btnResetLocalServerUrl" style="background:#475569; color:#fff; font-weight:700; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:12px; transition:all 0.2s;" title="Xóa cấu hình từ xa và chạy trên máy tính này">🏠 Về Localhost (127.0.0.1)</button>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:${isDark ? 'rgba(0,0,0,0.25)' : 'rgba(254,243,199,0.7)'}; padding:8px 12px; border-radius:10px; border:1px solid ${isDark ? 'rgba(245,158,11,0.3)' : '#fde68a'};">
+            <span style="font-weight:700; color:${isDark ? '#fbbf24' : '#92400e'}; font-size:12px;">⚙️ Địa chỉ Máy chủ (Server URL / IP):</span>
+            <input id="inpCustomServerUrl" type="text" placeholder="http://127.0.0.1:8000 hoặc http://IP-Server:8000" style="background:${isDark ? '#0f172a' : '#ffffff'}; border:1px solid ${isDark ? '#475569' : '#cbd5e1'}; color:${isDark ? '#fff' : '#0f172a'}; padding:6px 12px; border-radius:7px; font-size:12px; min-width:280px; flex:1;" value="${API_BASE}" />
+            <button id="btnSaveCustomServerUrl" style="background:#059669; color:#fff; font-weight:700; border:none; border-radius:8px; padding:7px 16px; cursor:pointer; font-size:12px; transition:all 0.2s;">💾 Lưu & Kết Nối</button>
+            <button id="btnResetLocalServerUrl" style="background:#64748b; color:#fff; font-weight:700; border:none; border-radius:8px; padding:7px 16px; cursor:pointer; font-size:12px; transition:all 0.2s;" title="Xóa cấu hình từ xa và chạy trên máy tính này">🏠 Về Localhost (127.0.0.1)</button>
           </div>
         `;
         document.body.insertBefore(banner, document.body.firstChild);
@@ -5201,7 +5253,7 @@
     }
 
     // Start
-    window.addEventListener('DOMContentLoaded', loadDefaultData);
+    window.addEventListener('DOMContentLoaded', () => { setAppTheme(); loadDefaultData(); });
 
 
     // =========================================================================
@@ -5210,6 +5262,8 @@
     document.addEventListener('click', (e) => {
       if (e.target.closest('#tabBtn1')) { switchTab(1); return; }
       if (e.target.closest('#tabBtn2')) { switchTab(2); return; }
+      if (e.target.closest('#btnThemeLight')) { setAppTheme('light'); return; }
+      if (e.target.closest('#btnThemeDark')) { setAppTheme('dark'); return; }
       if (e.target.closest('#btnAppLangVi')) { setAppLang('vi'); return; }
       if (e.target.closest('#btnAppLangZh')) { setAppLang('zh'); return; }
       if (e.target.closest('#btnRetryServerConn')) { retryServerConnection(); return; }
