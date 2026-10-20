@@ -335,14 +335,47 @@ function formatRelativeTime(ts) {
 }
 
 /**
+ * Kiểm tra chuỗi text hoặc thẻ DOM có chứa nội dung thông báo / bình luận rác không
+ */
+function isNotificationOrCommentGarbage(txt) {
+    if (!txt || typeof txt !== 'string') return true;
+    const t = txt.toLowerCase();
+    return (
+        t.includes('đã nhắc đến bạn') ||
+        t.includes('đã bình luận') ||
+        t.includes('đã thích') ||
+        t.includes('đã chia sẻ') ||
+        t.includes('mentioned you') ||
+        t.includes('commented on') ||
+        t.includes('reacted to') ||
+        t.includes('shared your') ||
+        t.includes('chưa đọc') ||
+        t.includes('unread') ||
+        t.includes('thông báo') ||
+        t.includes('notifications') ||
+        t.includes('bình luận')
+    );
+}
+
+function isNotificationOrGarbageElement(el) {
+    if (!el) return true;
+    if (el.closest('div[role="dialog"], div[role="menu"], [aria-modal="true"], header, nav, [role="navigation"], [role="banner"], [aria-label*="Thông báo"], [aria-label*="Notification"]')) {
+        return true;
+    }
+    const txt = (el.innerText || el.getAttribute('aria-label') || '');
+    return isNotificationOrCommentGarbage(txt);
+}
+
+/**
  * Bóc tách thời gian đăng bài từ một khối DOM bài viết (article)
  */
 function extractTimeFromArticleElement(article) {
-    if (!article) return null;
+    if (!article || isNotificationOrGarbageElement(article)) return null;
 
     // 1. Kiểm tra thuộc tính data-utime (Facebook mobile / touch / một số desktop build)
     const utimeEls = article.querySelectorAll('[data-utime]');
     for (const el of utimeEls) {
+        if (isNotificationOrGarbageElement(el)) continue;
         const u = parseInt(el.getAttribute('data-utime'), 10);
         if (u && u > 1577836800 && u <= Math.floor(Date.now() / 1000) + 86400) {
             return {
@@ -357,67 +390,56 @@ function extractTimeFromArticleElement(article) {
     const candidateLinks = Array.from(article.querySelectorAll(
         'a[href*="/posts/"], a[href*="permalink.php"], a[href*="story_fbid="], ' +
         'a[href*="/videos/"], a[href*="/photo"], a[href*="/reel/"], a[role="link"]'
-    ));
+    )).filter(a => !isNotificationOrGarbageElement(a));
 
     for (const a of candidateLinks) {
         // 2.1 Kiểm tra aria-label trên thẻ a
         const aria = a.getAttribute('aria-label');
-        if (aria) {
+        if (aria && !isNotificationOrCommentGarbage(aria)) {
             const timeStr = extractTimeFromText(aria);
             if (timeStr) {
                 const ts = parseRelativeTimeToTimestamp(timeStr);
-                if (ts) {
-                    return { relativeTime: timeStr, timestamp: ts, publishTime: formatTimestampToDate(ts) };
+                if (ts && ts > 1577836800) {
+                    return { relativeTime: formatRelativeTime(ts), timestamp: ts, publishTime: formatTimestampToDate(ts) };
                 }
             }
         }
 
         // 2.2 Kiểm tra innerText trên thẻ a
         const txt = (a.innerText || '').trim();
-        if (txt) {
+        if (txt && !isNotificationOrCommentGarbage(txt)) {
             const timeStr = extractTimeFromText(txt);
             if (timeStr) {
                 const ts = parseRelativeTimeToTimestamp(timeStr);
-                if (ts) {
-                    return { relativeTime: timeStr, timestamp: ts, publishTime: formatTimestampToDate(ts) };
+                if (ts && ts > 1577836800) {
+                    return { relativeTime: formatRelativeTime(ts), timestamp: ts, publishTime: formatTimestampToDate(ts) };
                 }
             }
         }
     }
 
-    // 3. Quét các thẻ abbr, span[dir="auto"], span trong vùng đầu của article
-    const spans = Array.from(article.querySelectorAll('abbr, span[dir="auto"], span')).slice(0, 30);
+    // 3. Quét các thẻ abbr, span[dir="auto"], span trong vùng đầu của article (giới hạn 15 phần tử đầu bài viết)
+    const spans = Array.from(article.querySelectorAll('abbr, span[dir="auto"], span')).slice(0, 15);
     for (const s of spans) {
+        if (isNotificationOrGarbageElement(s)) continue;
         const aria = s.getAttribute('aria-label');
-        if (aria) {
+        if (aria && !isNotificationOrCommentGarbage(aria)) {
             const timeStr = extractTimeFromText(aria);
             if (timeStr) {
                 const ts = parseRelativeTimeToTimestamp(timeStr);
-                if (ts) {
-                    return { relativeTime: timeStr, timestamp: ts, publishTime: formatTimestampToDate(ts) };
+                if (ts && ts > 1577836800) {
+                    return { relativeTime: formatRelativeTime(ts), timestamp: ts, publishTime: formatTimestampToDate(ts) };
                 }
             }
         }
         const txt = (s.innerText || '').trim();
-        if (txt && txt.length < 50) {
+        if (txt && txt.length < 50 && !isNotificationOrCommentGarbage(txt)) {
             const timeStr = extractTimeFromText(txt);
             if (timeStr) {
                 const ts = parseRelativeTimeToTimestamp(timeStr);
-                if (ts) {
-                    return { relativeTime: timeStr, timestamp: ts, publishTime: formatTimestampToDate(ts) };
+                if (ts && ts > 1577836800) {
+                    return { relativeTime: formatRelativeTime(ts), timestamp: ts, publishTime: formatTimestampToDate(ts) };
                 }
-            }
-        }
-    }
-
-    // 4. Quét regex trên toàn bộ text của article nếu chưa tìm thấy
-    const articleText = article.innerText || '';
-    if (articleText) {
-        const timeStr = extractTimeFromText(articleText);
-        if (timeStr) {
-            const ts = parseRelativeTimeToTimestamp(timeStr);
-            if (ts) {
-                return { relativeTime: timeStr, timestamp: ts, publishTime: formatTimestampToDate(ts) };
             }
         }
     }
@@ -430,9 +452,9 @@ function extractTimeFromArticleElement(article) {
  */
 function findFirstPostTimeInDOM() {
     // 1. Tìm các article hoặc khối post trong timeline
-    let articles = Array.from(document.querySelectorAll('div[role="article"], div[data-pagelet^="FeedUnit_"]')).filter(el => {
-        // Loại trừ dialog, popup, menu, modal
-        if (el.closest('div[role="dialog"], div[role="menu"], [aria-modal="true"]')) return false;
+    let articles = Array.from(document.querySelectorAll('div[role="article"], div[data-pagelet^="FeedUnit_"], div[data-pagelet^="ProfileTimeline"] div[role="article"]')).filter(el => {
+        // Loại trừ dialog, popup, menu, modal, notification
+        if (isNotificationOrGarbageElement(el)) return false;
         let r = el.getBoundingClientRect();
         let docTop = r.top + window.scrollY;
         // Chiều cao tối thiểu 50px và nằm dưới phần header của trang
@@ -448,7 +470,7 @@ function findFirstPostTimeInDOM() {
 
     let pinnedCandidate = null;
 
-    for (let i = 0; i < Math.min(articles.length, 4); i++) {
+    for (let i = 0; i < Math.min(articles.length, 5); i++) {
         let article = articles[i];
         let articleText = article.innerText || '';
         let isPinned = /(?:đã ghim|pinned post|pinned|置顶|置顶帖子)/i.test(articleText);
@@ -468,14 +490,14 @@ function findFirstPostTimeInDOM() {
         return pinnedCandidate;
     }
 
-    // 2. Fallback: Quét các link bài viết có href đặc trưng trên toàn feed
+    // 2. Fallback: Quét các link bài viết có href đặc trưng trên toàn feed chính (loại trừ sidebar/thông báo)
     let candidateLinks = Array.from(document.querySelectorAll(
-        'a[href*="/posts/"], a[href*="permalink.php"], a[href*="story_fbid="], a[href*="/videos/"], a[href*="/photos/"]'
+        'div[role="main"] a[href*="/posts/"], div[role="main"] a[href*="permalink.php"], div[role="main"] a[href*="story_fbid="], div[role="main"] a[href*="/videos/"]'
     )).filter(el => {
-        if (el.closest('div[role="dialog"], div[role="menu"], [aria-modal="true"]')) return false;
+        if (isNotificationOrGarbageElement(el)) return false;
         let r = el.getBoundingClientRect();
         let docTop = r.top + window.scrollY;
-        return docTop > 200;
+        return docTop > 300;
     });
 
     candidateLinks.sort((a, b) => {
@@ -486,12 +508,12 @@ function findFirstPostTimeInDOM() {
 
     for (let el of candidateLinks) {
         let txt = el.getAttribute('aria-label') || el.innerText || '';
-        if (!txt) continue;
+        if (!txt || isNotificationOrCommentGarbage(txt)) continue;
         let timeStr = extractTimeFromText(txt);
         if (timeStr) {
             let ts = parseRelativeTimeToTimestamp(timeStr);
-            if (ts) {
-                return { relativeTime: timeStr, timestamp: ts, publishTime: formatTimestampToDate(ts) };
+            if (ts && ts > 1577836800) {
+                return { relativeTime: formatRelativeTime(ts), timestamp: ts, publishTime: formatTimestampToDate(ts) };
             }
         }
     }
@@ -499,9 +521,6 @@ function findFirstPostTimeInDOM() {
     return null;
 }
 
-/**
- * Quét trích xuất timestamp từ GraphQL payload trong các thẻ <script> (Chỉ quét bài post thực sự)
- */
 /**
  * Trích xuất chính xác dãy số publish_time (Unix Timestamp) từ Relay/GraphQL JSON và DOM
  * Sau đó phân tích dãy số ra thời gian cụ thể (DD/MM/YYYY HH:mm:ss, X ngày trước, Trạng thái hoạt động)
@@ -511,45 +530,60 @@ function extractFacebookPublishTimeDetailed() {
     const minTs = 1577836800; // 01/01/2020
     const maxTs = nowSec + 86400 * 30; // Chặn tương lai xa
 
-    let candidates = [];
+    // 1. ƯU TIÊN HÀNG ĐẦU: Quét trực tiếp bài viết thực tế đang hiển thị trên DOM timeline
+    const domTime = findFirstPostTimeInDOM();
+    if (domTime && domTime.timestamp && domTime.timestamp >= minTs && domTime.timestamp <= maxTs) {
+        const diffSec = Math.max(0, nowSec - domTime.timestamp);
+        const diffDays = Math.floor(diffSec / 86400);
+        const isActive = diffDays <= 60;
+        const actStatus = isActive ? '✓ TÍCH CỰC (Trại đang hoạt động)' : '⚠️ ÍT HOẠT ĐỘNG (> 60 ngày)';
 
-    // 1. Quét toàn bộ các thẻ <script> chứa RelayPrefetchedStreamCache hoặc GraphQL JSON
+        return {
+            timestamp: domTime.timestamp,
+            publishTime: domTime.publishTime || formatTimestampToDate(domTime.timestamp),
+            relativeTime: formatRelativeTime(domTime.timestamp),
+            activityStatus: actStatus,
+            isoTime: new Date(domTime.timestamp * 1000).toISOString()
+        };
+    }
+
+    // 2. Quét toàn bộ các thẻ <script> chứa RelayPrefetchedStreamCache hoặc GraphQL JSON
+    // ƯU TIÊN nhóm regex chuyên biệt về post_context và story publish_time trước
     const scripts = Array.from(document.querySelectorAll('script')).filter(s => {
         const t = s.textContent || '';
-        return t.includes('publish_time') || t.includes('created_time') || t.includes('creation_time') || t.includes('post_context') || t.includes('creation_story');
+        return t.includes('publish_time') || t.includes('post_context') || t.includes('creation_story');
     });
 
-    const regexList = [
+    let postCandidates = [];
+    const postRegexList = [
         /["\\]*post_context["\\]*[\s\S]{0,300}?["\\]*publish_time["\\]*\s*:\s*(\d{9,12})/g,
         /["\\]*creation_story["\\]*[\s\S]{0,400}?["\\]*publish_time["\\]*\s*:\s*(\d{9,12})/g,
-        /["\\]*publish_time["\\]*\s*:\s*(\d{9,12})/g,
-        /["\\]*created_time["\\]*\s*:\s*(\d{9,12})/g,
-        /["\\]*creation_time["\\]*\s*:\s*(\d{9,12})/g
+        /["\\]*publish_time["\\]*\s*:\s*(\d{9,12})/g
     ];
 
     for (const s of scripts) {
         const text = s.textContent || '';
-        for (const reg of regexList) {
+        for (const reg of postRegexList) {
             for (const m of text.matchAll(reg)) {
                 const ts = parseInt(m[1], 10);
                 if (ts >= minTs && ts <= maxTs) {
-                    candidates.push(ts);
+                    postCandidates.push(ts);
                 }
             }
         }
     }
 
-    // 2. Quét thuộc tính data-utime trên toàn bộ DOM bài viết
-    const utimeEls = document.querySelectorAll('[data-utime]');
+    // Quét thuộc tính data-utime trên toàn bộ DOM bài viết hợp lệ
+    const utimeEls = document.querySelectorAll('div[role="main"] [data-utime]');
     for (const el of utimeEls) {
+        if (isNotificationOrGarbageElement(el)) continue;
         const u = parseInt(el.getAttribute('data-utime'), 10);
-        if (u >= minTs && u <= maxTs) candidates.push(u);
+        if (u >= minTs && u <= maxTs) postCandidates.push(u);
     }
 
-    // 3. Nếu tìm thấy dãy số timestamp hợp lệ -> Lấy bài đăng mới nhất (timestamp lớn nhất)
-    if (candidates.length > 0) {
-        // Loại bỏ trùng lặp và sắp xếp giảm dần (mới nhất lên đầu)
-        const uniqueTs = Array.from(new Set(candidates)).sort((a, b) => b - a);
+    // Nếu tìm thấy bài viết timeline hợp lệ
+    if (postCandidates.length > 0) {
+        const uniqueTs = Array.from(new Set(postCandidates)).sort((a, b) => b - a);
         const targetTs = uniqueTs[0];
 
         const dt = new Date(targetTs * 1000);
@@ -558,14 +592,7 @@ function extractFacebookPublishTimeDetailed() {
 
         const diffSec = Math.max(0, nowSec - targetTs);
         const diffDays = Math.floor(diffSec / 86400);
-        let relText = '';
-        if (diffSec < 60) relText = 'vừa xong';
-        else if (diffSec < 3600) relText = `${Math.floor(diffSec / 60)} phút trước`;
-        else if (diffSec < 86400) relText = `${Math.floor(diffSec / 3600)} giờ trước`;
-        else if (diffDays < 7) relText = `${diffDays} ngày trước`;
-        else if (diffDays < 30) relText = `${Math.floor(diffDays / 7)} tuần trước`;
-        else if (diffDays < 365) relText = `${Math.floor(diffDays / 30)} tháng trước`;
-        else relText = `${Math.floor(diffDays / 365)} năm trước`;
+        const relText = formatRelativeTime(targetTs);
 
         const isActive = diffDays <= 60;
         const actStatus = isActive ? '✓ TÍCH CỰC (Trại đang hoạt động)' : '⚠️ ÍT HOẠT ĐỘNG (> 60 ngày)';
@@ -579,22 +606,11 @@ function extractFacebookPublishTimeDetailed() {
         };
     }
 
-    // 4. Fallback DOM nếu không tìm thấy script timestamp
-    const domTime = findFirstPostTimeInDOM();
-    if (domTime && domTime.timestamp) {
-        return {
-            timestamp: domTime.timestamp,
-            publishTime: domTime.publishTime || formatTimestampToDate(domTime.timestamp),
-            relativeTime: domTime.relativeTime || formatRelativeTime(domTime.timestamp),
-            activityStatus: '✓ TÍCH CỰC (Đang hoạt động)',
-            isoTime: new Date(domTime.timestamp * 1000).toISOString()
-        };
-    }
-
+    // Fallback nếu không có bài đăng nào được bóc tách
     return {
         timestamp: 0,
         publishTime: 'Chưa bóc tách',
-        relativeTime: 'Không xác định',
+        relativeTime: 'Gần đây',
         activityStatus: 'Chưa có bài đăng',
         isoTime: ''
     };
@@ -1464,11 +1480,11 @@ async function scrapePublishTime(targetUrl, stt, taskId) {
     let name = getProfileName();
     let fb_id = extractFacebookID();
 
-    // 3. Cuộn mượt mà 2 nhịp để Facebook Relay nạp toàn bộ streaming chunks & sidebar
-    window.scrollBy({ top: 350, behavior: 'smooth' });
+    // 3. Cuộn sâu qua khỏi vùng header (khoảng 900px) để Facebook kích hoạt nạp bài đăng timeline
+    window.scrollTo({ top: 900, behavior: 'smooth' });
+    await sleep(1500);
+    window.scrollBy({ top: 600, behavior: 'smooth' });
     await sleep(1200);
-    window.scrollBy({ top: 250, behavior: 'smooth' });
-    await sleep(1400);
 
     // Cập nhật lại tên nếu DOM vừa nạp xong
     let refinedName = getProfileName();

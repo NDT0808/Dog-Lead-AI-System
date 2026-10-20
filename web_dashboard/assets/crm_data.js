@@ -1,6 +1,501 @@
 window.CRM_ENRICHED_DATA = [
   {
     "stt": "LEAD-US-000001",
+    "name": "Cocker Spaniel",
+    "owner": "Ascsec",
+    "url": "https://www.facebook.com/profile.php?id=61594731538136",
+    "website": "http://americanspanielclub.org/?fbclid=IwZXh0bgNhZW0CMTAAcGRvZgFicmlkETFUM2FpU1hZY2M2eDhHeVZSc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHm1Sp3ZBL9J-WHt2vhXwhMCiM2iSp0waJKKkd1CT9XPH8X_PAxTqpYDIXB8N_aem_uyxwckGnM8P5KLoC2SHOmw",
+    "phone": "16018781288",
+    "email": "1jg68@gmail.com",
+    "address": "2026 NATIONAL SPECIALTY BEST OF",
+    "city": "North Myrtle Beach",
+    "state": "SC",
+    "zip": "29582",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "61594731538136",
+    "avatar": "https://unavatar.io/facebook/61594731538136?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DCocker%20Spaniel%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/61594731538136?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DCocker%20Spaniel%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/61594731538136?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DCocker%20Spaniel%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/61594731538136?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DCocker%20Spaniel%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/61594731538136?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DCocker%20Spaniel%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/61594731538136?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DCocker%20Spaniel%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "20/10/2026 22:33:19",
+    "publishTimestamp": 1792510399,
+    "relativeTime": "4 giờ trước"
+  },
+  {
+    "stt": "LEAD-US-000002",
+    "name": "free dachshund puppies for adoption and rehoming",
+    "owner": "free dachshund puppies for adoption and rehoming",
+    "url": "https://www.facebook.com/profile.php?id=61595513098587",
+    "website": "",
+    "phone": "",
+    "email": "",
+    "address": "5.0(100+)",
+    "city": "",
+    "state": "",
+    "zip": "",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "61595513098587",
+    "avatar": "https://unavatar.io/facebook/61595513098587?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3Dfree%20dachshund%20puppies%20for%20adoption%20and%20rehoming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/61595513098587?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3Dfree%20dachshund%20puppies%20for%20adoption%20and%20rehoming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/61595513098587?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3Dfree%20dachshund%20puppies%20for%20adoption%20and%20rehoming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/61595513098587?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3Dfree%20dachshund%20puppies%20for%20adoption%20and%20rehoming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/61595513098587?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3Dfree%20dachshund%20puppies%20for%20adoption%20and%20rehoming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/61595513098587?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3Dfree%20dachshund%20puppies%20for%20adoption%20and%20rehoming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "20/10/2026 18:12:57",
+    "publishTimestamp": 1792494777,
+    "relativeTime": "8 giờ trước"
+  },
+  {
+    "stt": "LEAD-US-000003",
+    "name": "Chandra K9 Commando Working Dog Kennel Bengaluru",
+    "owner": "Yadavapc",
+    "url": "https://www.facebook.com/profile.php?id=100082804552805",
+    "website": "",
+    "phone": "",
+    "email": "yadavapc50@gmail.com",
+    "address": "Kaveripura, Bangalore, India, 560079",
+    "city": "Kaveripura",
+    "state": "",
+    "zip": "95388",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "100082804552805",
+    "avatar": "https://unavatar.io/facebook/100082804552805?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DChandra%20K9%20Commando%20Working%20Dog%20Kennel%20Bengaluru%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/100082804552805?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DChandra%20K9%20Commando%20Working%20Dog%20Kennel%20Bengaluru%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/100082804552805?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DChandra%20K9%20Commando%20Working%20Dog%20Kennel%20Bengaluru%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/100082804552805?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DChandra%20K9%20Commando%20Working%20Dog%20Kennel%20Bengaluru%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/100082804552805?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DChandra%20K9%20Commando%20Working%20Dog%20Kennel%20Bengaluru%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/100082804552805?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DChandra%20K9%20Commando%20Working%20Dog%20Kennel%20Bengaluru%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "20/10/2026 21:15:34",
+    "publishTimestamp": 1792505734,
+    "relativeTime": "5 giờ trước"
+  },
+  {
+    "stt": "LEAD-US-000004",
+    "name": "Greenhouse Yorkies",
+    "owner": "Greenhouse Yorkies",
+    "url": "https://www.facebook.com/profile.php?id=61595221846060",
+    "website": "",
+    "phone": "",
+    "email": "",
+    "address": "5.0(100+)",
+    "city": "",
+    "state": "",
+    "zip": "",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "61595221846060",
+    "avatar": "https://unavatar.io/facebook/61595221846060?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGreenhouse%20Yorkies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/61595221846060?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGreenhouse%20Yorkies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/61595221846060?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGreenhouse%20Yorkies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/61595221846060?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGreenhouse%20Yorkies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/61595221846060?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGreenhouse%20Yorkies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/61595221846060?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGreenhouse%20Yorkies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "20/10/2026 06:56:09",
+    "publishTimestamp": 1792454169,
+    "relativeTime": "20 giờ trước"
+  },
+  {
+    "stt": "LEAD-US-000005",
+    "name": "𝐑𝐑𝐨𝐬𝐞𝐰𝐨𝐨𝐝 𝐅𝐚𝐦𝐢𝐥𝐲 𝐏𝐨𝐨𝐝𝐥𝐞𝐬",
+    "owner": "Rosewoodcompanions",
+    "url": "https://www.facebook.com/profile.php?id=61595352087577",
+    "website": "",
+    "phone": "",
+    "email": "rosewoodcompanions880@gmail.com",
+    "address": "5.0(100+)",
+    "city": "",
+    "state": "",
+    "zip": "",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "61595352087577",
+    "avatar": "https://unavatar.io/facebook/61595352087577?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3D%F0%9D%90%91%F0%9D%90%91%F0%9D%90%A8%F0%9D%90%AC%F0%9D%90%9E%F0%9D%90%B0%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D%20%F0%9D%90%85%F0%9D%90%9A%F0%9D%90%A6%F0%9D%90%A2%F0%9D%90%A5%F0%9D%90%B2%20%F0%9D%90%8F%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D%F0%9D%90%A5%F0%9D%90%9E%F0%9D%90%AC%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/61595352087577?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3D%F0%9D%90%91%F0%9D%90%91%F0%9D%90%A8%F0%9D%90%AC%F0%9D%90%9E%F0%9D%90%B0%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D%20%F0%9D%90%85%F0%9D%90%9A%F0%9D%90%A6%F0%9D%90%A2%F0%9D%90%A5%F0%9D%90%B2%20%F0%9D%90%8F%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D%F0%9D%90%A5%F0%9D%90%9E%F0%9D%90%AC%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/61595352087577?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3D%F0%9D%90%91%F0%9D%90%91%F0%9D%90%A8%F0%9D%90%AC%F0%9D%90%9E%F0%9D%90%B0%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D%20%F0%9D%90%85%F0%9D%90%9A%F0%9D%90%A6%F0%9D%90%A2%F0%9D%90%A5%F0%9D%90%B2%20%F0%9D%90%8F%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D%F0%9D%90%A5%F0%9D%90%9E%F0%9D%90%AC%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/61595352087577?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3D%F0%9D%90%91%F0%9D%90%91%F0%9D%90%A8%F0%9D%90%AC%F0%9D%90%9E%F0%9D%90%B0%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D%20%F0%9D%90%85%F0%9D%90%9A%F0%9D%90%A6%F0%9D%90%A2%F0%9D%90%A5%F0%9D%90%B2%20%F0%9D%90%8F%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D%F0%9D%90%A5%F0%9D%90%9E%F0%9D%90%AC%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/61595352087577?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3D%F0%9D%90%91%F0%9D%90%91%F0%9D%90%A8%F0%9D%90%AC%F0%9D%90%9E%F0%9D%90%B0%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D%20%F0%9D%90%85%F0%9D%90%9A%F0%9D%90%A6%F0%9D%90%A2%F0%9D%90%A5%F0%9D%90%B2%20%F0%9D%90%8F%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D%F0%9D%90%A5%F0%9D%90%9E%F0%9D%90%AC%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/61595352087577?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3D%F0%9D%90%91%F0%9D%90%91%F0%9D%90%A8%F0%9D%90%AC%F0%9D%90%9E%F0%9D%90%B0%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D%20%F0%9D%90%85%F0%9D%90%9A%F0%9D%90%A6%F0%9D%90%A2%F0%9D%90%A5%F0%9D%90%B2%20%F0%9D%90%8F%F0%9D%90%A8%F0%9D%90%A8%F0%9D%90%9D%F0%9D%90%A5%F0%9D%90%9E%F0%9D%90%AC%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "20/10/2026 09:03:17",
+    "publishTimestamp": 1792461797,
+    "relativeTime": "18 giờ trước"
+  },
+  {
+    "stt": "LEAD-US-000006",
+    "name": "Dachshund Puppies",
+    "owner": "Juliejowels",
+    "url": "https://www.facebook.com/profile.php?id=61595290116794",
+    "website": "",
+    "phone": "16504680459",
+    "email": "juliejowels@gmail.com",
+    "address": "United States",
+    "city": "",
+    "state": "",
+    "zip": "",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "61595290116794",
+    "avatar": "https://unavatar.io/facebook/61595290116794?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DDachshund%20Puppies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/61595290116794?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DDachshund%20Puppies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/61595290116794?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DDachshund%20Puppies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/61595290116794?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DDachshund%20Puppies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/61595290116794?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DDachshund%20Puppies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/61595290116794?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DDachshund%20Puppies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "20/10/2026 09:46:31",
+    "publishTimestamp": 1792464391,
+    "relativeTime": "17 giờ trước"
+  },
+  {
+    "stt": "LEAD-US-000007",
+    "name": "Paradise Frenchies",
+    "owner": "the Heart",
+    "url": "https://www.facebook.com/profile.php?id=61595289693197",
+    "website": "http://www.paradisefrenchies.com/?fbclid=IwZXh0bgNhZW0CMTAAcGRvZgFicmlkETFUM2FpU1hZY2M2eDhHeVZSc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHpNV3L3FnTork3SqsqTJknxEslXKpDUIzv8EhdLtwndDwpsrrAVF3E67LTRG_aem_5XAyezQp5PKFDXljrx5H4Q",
+    "phone": "18087545542",
+    "email": "paradisefrenchies808@gmail.com",
+    "address": "500 based on pedigree and coat genetics. Find Your Perfect Frenchie We are dedicated to placing our hand-raised puppies in",
+    "city": "",
+    "state": "",
+    "zip": "",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "61595289693197",
+    "avatar": "https://unavatar.io/facebook/61595289693197?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DParadise%20Frenchies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/61595289693197?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DParadise%20Frenchies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/61595289693197?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DParadise%20Frenchies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/61595289693197?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DParadise%20Frenchies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/61595289693197?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DParadise%20Frenchies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/61595289693197?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DParadise%20Frenchies%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "21/10/2026 01:08:31",
+    "publishTimestamp": 1792519711,
+    "relativeTime": "1 giờ trước"
+  },
+  {
+    "stt": "LEAD-US-000008",
+    "name": "German Shepherd World",
+    "owner": "Germansherperdworld",
+    "url": "https://www.facebook.com/profile.php?id=61594332256058",
+    "website": "",
+    "phone": "",
+    "email": "germansherperdworld@gmail.com",
+    "address": "5.0(100+)",
+    "city": "Shepherd in Portland",
+    "state": "ME",
+    "zip": "",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "61594332256058",
+    "avatar": "https://unavatar.io/facebook/61594332256058?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGerman%20Shepherd%20World%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/61594332256058?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGerman%20Shepherd%20World%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/61594332256058?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGerman%20Shepherd%20World%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/61594332256058?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGerman%20Shepherd%20World%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/61594332256058?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGerman%20Shepherd%20World%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/61594332256058?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGerman%20Shepherd%20World%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "20/10/2026 14:40:03",
+    "publishTimestamp": 1792482003,
+    "relativeTime": "12 giờ trước"
+  },
+  {
+    "stt": "LEAD-US-000009",
+    "name": "Golden Acres Poodle Farm",
+    "owner": "Golden Acres Poodle Farm",
+    "url": "https://www.facebook.com/profile.php?id=100076508311524",
+    "website": "",
+    "phone": "",
+    "email": "",
+    "address": "Pasadena, TX, United States, 77505",
+    "city": "Pasadena",
+    "state": "TX",
+    "zip": "77505",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "100076508311524",
+    "avatar": "https://unavatar.io/facebook/100076508311524?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGolden%20Acres%20Poodle%20Farm%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/100076508311524?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGolden%20Acres%20Poodle%20Farm%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/100076508311524?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGolden%20Acres%20Poodle%20Farm%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/100076508311524?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGolden%20Acres%20Poodle%20Farm%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/100076508311524?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGolden%20Acres%20Poodle%20Farm%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/100076508311524?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DGolden%20Acres%20Poodle%20Farm%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "21/10/2026 00:49:09",
+    "publishTimestamp": 1792518549,
+    "relativeTime": "2 giờ trước"
+  },
+  {
+    "stt": "LEAD-US-000010",
+    "name": "ABC VIP DOGS",
+    "owner": "Mymail",
+    "url": "https://www.facebook.com/profile.php?id=61594975678956",
+    "website": "http://FurBabyCrazy.com/?fbclid=IwZXh0bgNhZW0CMTAAcGRvZgFicmlkETFUM2FpU1hZY2M2eDhHeVZSc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHn7lef38lQGAK7imkCKOrmE4ZdLe90s94gowmoyYY6F0_3CLJfGy0ThbjTz0_aem_o0pXXtaNuNtu0OlDfEBHCw",
+    "phone": "14804400083",
+    "email": "furbabycrazy@yahoo.com",
+    "address": "132 S. Catalina Street, Gilbert, AZ, United States, 85233",
+    "city": "132 S. Catalina Street",
+    "state": "AZ",
+    "zip": "85233",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "61594975678956",
+    "avatar": "https://unavatar.io/facebook/61594975678956?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DABC%20VIP%20DOGS%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/61594975678956?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DABC%20VIP%20DOGS%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/61594975678956?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DABC%20VIP%20DOGS%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/61594975678956?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DABC%20VIP%20DOGS%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/61594975678956?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DABC%20VIP%20DOGS%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/61594975678956?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DABC%20VIP%20DOGS%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "21/10/2026 01:30:54",
+    "publishTimestamp": 1792521054,
+    "relativeTime": "1 giờ trước"
+  },
+  {
+    "stt": "LEAD-US-000011",
+    "name": "Lakeland Terrier México “Apolo’s Kennel”",
+    "owner": "Lakeland Terrier México “Apolo’s Kennel”",
+    "url": "https://www.facebook.com/profile.php?id=61595707163197",
+    "website": "",
+    "phone": "525520915686",
+    "email": "",
+    "address": "Tizayuca, Mexico, 43800",
+    "city": "Tizayuca",
+    "state": "",
+    "zip": "43800",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "61595707163197",
+    "avatar": "https://unavatar.io/facebook/61595707163197?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DLakeland%20Terrier%20M%C3%A9xico%20%E2%80%9CApolo%E2%80%99s%20Kennel%E2%80%9D%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/61595707163197?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DLakeland%20Terrier%20M%C3%A9xico%20%E2%80%9CApolo%E2%80%99s%20Kennel%E2%80%9D%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/61595707163197?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DLakeland%20Terrier%20M%C3%A9xico%20%E2%80%9CApolo%E2%80%99s%20Kennel%E2%80%9D%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/61595707163197?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DLakeland%20Terrier%20M%C3%A9xico%20%E2%80%9CApolo%E2%80%99s%20Kennel%E2%80%9D%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/61595707163197?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DLakeland%20Terrier%20M%C3%A9xico%20%E2%80%9CApolo%E2%80%99s%20Kennel%E2%80%9D%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/61595707163197?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DLakeland%20Terrier%20M%C3%A9xico%20%E2%80%9CApolo%E2%80%99s%20Kennel%E2%80%9D%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "19/10/2026 00:15:01",
+    "publishTimestamp": 1792343701,
+    "relativeTime": "2 ngày trước"
+  },
+  {
+    "stt": "LEAD-US-000012",
+    "name": "Lone Wolf Breeders",
+    "owner": "Lonewolfbreeders",
+    "url": "https://www.facebook.com/profile.php?id=61594915838249",
+    "website": "",
+    "phone": "12284931450",
+    "email": "lonewolfbreeders@gmail.com",
+    "address": "Bay Saint Louis, MS, United States, 39520",
+    "city": "Bay Saint Louis",
+    "state": "MS",
+    "zip": "39520",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "61594915838249",
+    "avatar": "https://unavatar.io/facebook/61594915838249?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DLone%20Wolf%20Breeders%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/61594915838249?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DLone%20Wolf%20Breeders%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/61594915838249?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DLone%20Wolf%20Breeders%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/61594915838249?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DLone%20Wolf%20Breeders%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/61594915838249?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DLone%20Wolf%20Breeders%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/61594915838249?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DLone%20Wolf%20Breeders%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "18/10/2026 21:31:48",
+    "publishTimestamp": 1792333908,
+    "relativeTime": "2 ngày trước"
+  },
+  {
+    "stt": "LEAD-US-000013",
+    "name": "Dolly Baby K9",
+    "owner": "Dollybabyk",
+    "url": "https://www.facebook.com/dollybaby.k9",
+    "website": "",
+    "phone": "",
+    "email": "dollybabyk9@gmail.com",
+    "address": "Santaquin, UT, United States, 84655",
+    "city": "Santaquin",
+    "state": "UT",
+    "zip": "84655",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "61595730710917",
+    "avatar": "https://unavatar.io/facebook/61595730710917?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DDolly%20Baby%20K9%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/61595730710917?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DDolly%20Baby%20K9%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/61595730710917?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DDolly%20Baby%20K9%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/61595730710917?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DDolly%20Baby%20K9%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/61595730710917?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DDolly%20Baby%20K9%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/61595730710917?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DDolly%20Baby%20K9%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "20/10/2026 10:17:31",
+    "publishTimestamp": 1792466251,
+    "relativeTime": "16 giờ trước"
+  },
+  {
+    "stt": "LEAD-US-000014",
+    "name": "Elite schnauzers rescue and rehoming",
+    "owner": "Elite schnauzers rescue and rehoming",
+    "url": "https://www.facebook.com/profile.php?id=61590419896312",
+    "website": "",
+    "phone": "",
+    "email": "",
+    "address": "Elite schnauzers rescue and rehoming đang ở United States of America.",
+    "city": "",
+    "state": "",
+    "zip": "",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "61590419896312",
+    "avatar": "https://unavatar.io/facebook/61590419896312?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DElite%20schnauzers%20rescue%20and%20rehoming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/61590419896312?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DElite%20schnauzers%20rescue%20and%20rehoming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/61590419896312?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DElite%20schnauzers%20rescue%20and%20rehoming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/61590419896312?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DElite%20schnauzers%20rescue%20and%20rehoming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/61590419896312?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DElite%20schnauzers%20rescue%20and%20rehoming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/61590419896312?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DElite%20schnauzers%20rescue%20and%20rehoming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "19/10/2026 19:49:23",
+    "publishTimestamp": 1792414163,
+    "relativeTime": "1 ngày trước"
+  },
+  {
+    "stt": "LEAD-US-000015",
+    "name": "Pirate Paws Grooming",
+    "owner": "Pirate Paws Grooming",
+    "url": "https://www.facebook.com/profile.php?id=61595452472675",
+    "website": "",
+    "phone": "17276260174",
+    "email": "",
+    "address": "Saint Petersburg, FL, United States, 33710",
+    "city": "Saint Petersburg",
+    "state": "FL",
+    "zip": "33710",
+    "country": "United States",
+    "cat": "Dog Breeder / Commercial Kennel (B2B)",
+    "cat_code": "breeder",
+    "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+    "amz_link": "",
+    "product_fit": "Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)",
+    "score": 85,
+    "rank_tier": "Tier S",
+    "is_prio": true,
+    "sales_action": "🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày",
+    "fb_id": "61595452472675",
+    "avatar": "https://unavatar.io/facebook/61595452472675?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DPirate%20Paws%20Grooming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "avatar_url": "https://unavatar.io/facebook/61595452472675?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DPirate%20Paws%20Grooming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "image": "https://unavatar.io/facebook/61595452472675?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DPirate%20Paws%20Grooming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "img": "https://unavatar.io/facebook/61595452472675?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DPirate%20Paws%20Grooming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "photo": "https://unavatar.io/facebook/61595452472675?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DPirate%20Paws%20Grooming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "logo": "https://unavatar.io/facebook/61595452472675?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3DPirate%20Paws%20Grooming%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue",
+    "publishTime": "18/10/2026 02:14:12",
+    "publishTimestamp": 1792264452,
+    "relativeTime": "3 ngày trước"
+  },
+  {
+    "stt": "LEAD-US-000016",
     "name": "Pech NumPech",
     "owner": "Pech (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100064177454633",
@@ -36,7 +531,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000002",
+    "stt": "LEAD-US-000017",
     "name": "Jill Harris",
     "owner": "Jill (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=721180694",
@@ -72,7 +567,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000003",
+    "stt": "LEAD-US-000018",
     "name": "มามี๊ปุ๊กกี้",
     "owner": "มามี๊ปุ๊กกี้ (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61557099361471",
@@ -108,7 +603,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000004",
+    "stt": "LEAD-US-000019",
     "name": "Leviathan The Hellion",
     "owner": "Leviathan (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61583530105948",
@@ -144,7 +639,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000005",
+    "stt": "LEAD-US-000020",
     "name": "Incognia Kennels",
     "owner": "Incognia (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100046841782363",
@@ -180,7 +675,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000006",
+    "stt": "LEAD-US-000021",
     "name": "บ้านบีเกิ้ลหมาแสบ",
     "owner": "บ้านบีเกิ้ลหมาแสบ (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61568259789843",
@@ -216,7 +711,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000007",
+    "stt": "LEAD-US-000022",
     "name": "Valerio Gratissi",
     "owner": "Valerio (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100000071636774",
@@ -252,7 +747,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "✓ TÍCH CỰC (Đăng trong 1.5 tháng)"
   },
   {
-    "stt": "LEAD-US-000008",
+    "stt": "LEAD-US-000023",
     "name": "Knockhill Beagles",
     "owner": "Knockhill (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100083348137546",
@@ -288,7 +783,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000009",
+    "stt": "LEAD-US-000024",
     "name": "UP XL Bullies",
     "owner": "UP (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100063452086433",
@@ -324,7 +819,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000010",
+    "stt": "LEAD-US-000025",
     "name": "Dog Breeder",
     "owner": "Dog (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/catherine.alapoop",
@@ -360,7 +855,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "✓ TÍCH CỰC (Trại đang hoạt động)"
   },
   {
-    "stt": "LEAD-US-000011",
+    "stt": "LEAD-US-000026",
     "name": "Cooper T. Golden",
     "owner": "Cooper (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100047929492341",
@@ -396,7 +891,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000012",
+    "stt": "LEAD-US-000027",
     "name": "Marilyn Little",
     "owner": "Marilyn (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100000731351710",
@@ -432,7 +927,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000013",
+    "stt": "LEAD-US-000028",
     "name": "Reggie TheBully",
     "owner": "Reggie (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61586497830084",
@@ -468,7 +963,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000014",
+    "stt": "LEAD-US-000029",
     "name": "Golden Locks Of Love",
     "owner": "Golden (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100076486742395",
@@ -504,7 +999,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000015",
+    "stt": "LEAD-US-000030",
     "name": "Dog Breeder",
     "owner": "Dog (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/kayla.d.parrish",
@@ -540,7 +1035,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "✓ TÍCH CỰC (Trại đang hoạt động)"
   },
   {
-    "stt": "LEAD-US-000016",
+    "stt": "LEAD-US-000031",
     "name": "Five Star Puppies",
     "owner": "Five (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100057267985772",
@@ -576,7 +1071,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000017",
+    "stt": "LEAD-US-000032",
     "name": "Dog Breeder",
     "owner": "Dog (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/erica.hartt",
@@ -612,7 +1107,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "✓ TÍCH CỰC (Trại đang hoạt động)"
   },
   {
-    "stt": "LEAD-US-000018",
+    "stt": "LEAD-US-000033",
     "name": "Racquel Perry",
     "owner": "Racquel (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=1647967647",
@@ -648,7 +1143,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000019",
+    "stt": "LEAD-US-000034",
     "name": "Kayla Saunders",
     "owner": "Kayla (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=520770968",
@@ -684,7 +1179,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000020",
+    "stt": "LEAD-US-000035",
     "name": "Kee and Jo",
     "owner": "Kee (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100067678527292",
@@ -720,7 +1215,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000021",
+    "stt": "LEAD-US-000036",
     "name": "Kade Honolulu Shop",
     "owner": "Kade (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61561686996933",
@@ -756,7 +1251,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000022",
+    "stt": "LEAD-US-000037",
     "name": "Harnack Holland Lops",
     "owner": "Harnack (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100048668575676",
@@ -792,7 +1287,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "⚠️ TRUNG BÌNH (Trong 3 tháng)"
   },
   {
-    "stt": "LEAD-US-000023",
+    "stt": "LEAD-US-000038",
     "name": "Ashley Davis",
     "owner": "Ashley (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100000156877008",
@@ -828,7 +1323,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000024",
+    "stt": "LEAD-US-000039",
     "name": "Peggy Hennebelle",
     "owner": "Peggy (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=1193934213",
@@ -864,7 +1359,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000025",
+    "stt": "LEAD-US-000040",
     "name": "Christeena Strunk",
     "owner": "Christeena (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100088986828560",
@@ -900,7 +1395,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000026",
+    "stt": "LEAD-US-000041",
     "name": "Élevage Des Bulls du Hainaut  &  Educ'Hainaut",
     "owner": "Élevage (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100063592510325",
@@ -936,7 +1431,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000027",
+    "stt": "LEAD-US-000042",
     "name": "Shawn Girardin",
     "owner": "Shawn (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=1434024069",
@@ -972,7 +1467,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000028",
+    "stt": "LEAD-US-000043",
     "name": "Kennel Visendum",
     "owner": "Kennel (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100054535087351",
@@ -1008,7 +1503,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000029",
+    "stt": "LEAD-US-000044",
     "name": "Severine Cottebrune Lesage",
     "owner": "Severine (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=1158221611",
@@ -1044,7 +1539,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "⚠️ TRUNG BÌNH (Trong 3 tháng)"
   },
   {
-    "stt": "LEAD-US-000030",
+    "stt": "LEAD-US-000045",
     "name": "Life With Paddy",
     "owner": "Life (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61566282477822",
@@ -1080,7 +1575,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000031",
+    "stt": "LEAD-US-000046",
     "name": "Evan, the Corgi from Kansas and his angel brothers Henry, Bilbo and Corky",
     "owner": "Evan, (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100064571747468",
@@ -1116,7 +1611,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000032",
+    "stt": "LEAD-US-000047",
     "name": "Solo Spur Ranch",
     "owner": "Solo (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100079689967206",
@@ -1152,7 +1647,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000033",
+    "stt": "LEAD-US-000048",
     "name": "Camp Cocker Rescue",
     "owner": "Camp (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100064529596837",
@@ -1188,7 +1683,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000034",
+    "stt": "LEAD-US-000049",
     "name": "Lucas McCoy",
     "owner": "Lucas (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100001899817222",
@@ -1224,7 +1719,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000035",
+    "stt": "LEAD-US-000050",
     "name": "Eric Beecham",
     "owner": "Eric (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100047049215709",
@@ -1260,7 +1755,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000036",
+    "stt": "LEAD-US-000051",
     "name": "Glasses the Bully",
     "owner": "Glasses (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100083535090833",
@@ -1296,7 +1791,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000037",
+    "stt": "LEAD-US-000052",
     "name": "Percy Boy's Life",
     "owner": "Percy (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61575619850676",
@@ -1332,7 +1827,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000038",
+    "stt": "LEAD-US-000053",
     "name": "Cocobo Paws 4 life",
     "owner": "Cocobo (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100082969316872",
@@ -1368,7 +1863,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000039",
+    "stt": "LEAD-US-000054",
     "name": "Dog Breeder",
     "owner": "Dog (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/nwosugirl",
@@ -1404,7 +1899,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "✓ TÍCH CỰC (Trại đang hoạt động)"
   },
   {
-    "stt": "LEAD-US-000040",
+    "stt": "LEAD-US-000055",
     "name": "Dog Breeder",
     "owner": "Dog (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/elena.markova.949088",
@@ -1440,7 +1935,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "✓ TÍCH CỰC (Trại đang hoạt động)"
   },
   {
-    "stt": "LEAD-US-000041",
+    "stt": "LEAD-US-000056",
     "name": "Dog Breeder",
     "owner": "Dog (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/sara.ridgway.5",
@@ -1476,7 +1971,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "✓ TÍCH CỰC (Trại đang hoạt động)"
   },
   {
-    "stt": "LEAD-US-000042",
+    "stt": "LEAD-US-000057",
     "name": "Stevie Richardaon Jr.",
     "owner": "Stevie (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61572198376360",
@@ -1512,7 +2007,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000043",
+    "stt": "LEAD-US-000058",
     "name": "Stefan Wisłowski",
     "owner": "Stefan (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100001801494195",
@@ -1548,7 +2043,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000044",
+    "stt": "LEAD-US-000059",
     "name": "English Cocker Spaniel Parents",
     "owner": "English (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61583670986481",
@@ -1584,7 +2079,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000045",
+    "stt": "LEAD-US-000060",
     "name": "Quốc Chính",
     "owner": "Quốc (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100029831391407",
@@ -1620,7 +2115,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000046",
+    "stt": "LEAD-US-000061",
     "name": "Anna  Fedulova",
     "owner": "Anna (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100004707780289",
@@ -1656,7 +2151,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000047",
+    "stt": "LEAD-US-000062",
     "name": "Vika Bridges",
     "owner": "Vika (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100069881629677",
@@ -1692,7 +2187,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000048",
+    "stt": "LEAD-US-000063",
     "name": "It's Walter the Weenie",
     "owner": "It's (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61576524857170",
@@ -1728,7 +2223,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000049",
+    "stt": "LEAD-US-000064",
     "name": "Christine McClelland",
     "owner": "Christine (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=10107662251383651",
@@ -1764,7 +2259,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000050",
+    "stt": "LEAD-US-000065",
     "name": "Surachai Kaeokham",
     "owner": "Surachai (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100005160243834",
@@ -1800,7 +2295,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000051",
+    "stt": "LEAD-US-000066",
     "name": "Ricardo Raijmann",
     "owner": "Ricardo (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100000471091367",
@@ -1836,7 +2331,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000052",
+    "stt": "LEAD-US-000067",
     "name": "Puppies Kingdom Team",
     "owner": "Puppies (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100075988733897",
@@ -1872,7 +2367,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000053",
+    "stt": "LEAD-US-000068",
     "name": "Mattis Babyg",
     "owner": "Mattis (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100056860758179",
@@ -1908,7 +2403,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000054",
+    "stt": "LEAD-US-000069",
     "name": "Misadventures with Meeko",
     "owner": "Misadventures (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61592793269294",
@@ -1944,7 +2439,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000055",
+    "stt": "LEAD-US-000070",
     "name": "Tonya Stokley",
     "owner": "Tonya (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61570584000677",
@@ -1980,7 +2475,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000056",
+    "stt": "LEAD-US-000071",
     "name": "Flying B Ranch German Shorthaired Pointers",
     "owner": "Flying (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100027321776480",
@@ -2016,7 +2511,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "⚠️ TRUNG BÌNH (Trong 3 tháng)"
   },
   {
-    "stt": "LEAD-US-000057",
+    "stt": "LEAD-US-000072",
     "name": "Dai Rona sa America",
     "owner": "Dai (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100063540822399",
@@ -2052,7 +2547,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000058",
+    "stt": "LEAD-US-000073",
     "name": "Jamboree Labradors",
     "owner": "Jamboree (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100057522816300",
@@ -2088,7 +2583,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000059",
+    "stt": "LEAD-US-000074",
     "name": "Brad Barfuss",
     "owner": "Brad (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100000505173912",
@@ -2124,7 +2619,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000060",
+    "stt": "LEAD-US-000075",
     "name": "Rippee Creek Beagles",
     "owner": "Rippee (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100063523452059",
@@ -2160,7 +2655,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000061",
+    "stt": "LEAD-US-000076",
     "name": "Angie Townsend",
     "owner": "Angie (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=606741272",
@@ -2196,7 +2691,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000062",
+    "stt": "LEAD-US-000077",
     "name": "Toomtum Pratimakron",
     "owner": "Toomtum (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100039451752194",
@@ -2232,7 +2727,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000063",
+    "stt": "LEAD-US-000078",
     "name": "Dog Breeder",
     "owner": "Dog (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/kiki.shenfeld",
@@ -2268,7 +2763,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "✓ TÍCH CỰC (Trại đang hoạt động)"
   },
   {
-    "stt": "LEAD-US-000064",
+    "stt": "LEAD-US-000079",
     "name": "Golden Paws Diary",
     "owner": "Golden (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61572450787096",
@@ -2304,7 +2799,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000065",
+    "stt": "LEAD-US-000080",
     "name": "Balakajan’s world",
     "owner": "Balakajan’s (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100083302182985",
@@ -2340,7 +2835,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000066",
+    "stt": "LEAD-US-000081",
     "name": "Biscuit's Daily Chaos",
     "owner": "Biscuit's (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61574005173561",
@@ -2376,7 +2871,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000067",
+    "stt": "LEAD-US-000082",
     "name": "Nessi Socher",
     "owner": "Nessi (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61550548670894",
@@ -2412,7 +2907,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000068",
+    "stt": "LEAD-US-000083",
     "name": "Dog Breeder",
     "owner": "Dog (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/pungladda.yimyam",
@@ -2448,7 +2943,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "✓ TÍCH CỰC (Trại đang hoạt động)"
   },
   {
-    "stt": "LEAD-US-000069",
+    "stt": "LEAD-US-000084",
     "name": "Gemini Rendón",
     "owner": "Gemini (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100087855502362",
@@ -2484,7 +2979,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000070",
+    "stt": "LEAD-US-000085",
     "name": "Kayla Coleman",
     "owner": "Kayla (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100002783607070",
@@ -2520,7 +3015,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000071",
+    "stt": "LEAD-US-000086",
     "name": "Pyr Hope Farm",
     "owner": "Pyr (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100071781214030",
@@ -2556,7 +3051,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000072",
+    "stt": "LEAD-US-000087",
     "name": "Dan Moon",
     "owner": "Dan (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100000302589056",
@@ -2592,7 +3087,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000073",
+    "stt": "LEAD-US-000088",
     "name": "Evanelle The Dobie",
     "owner": "Evanelle (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61591248916791",
@@ -2628,7 +3123,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000074",
+    "stt": "LEAD-US-000089",
     "name": "Hot dog with love",
     "owner": "Hot (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=61592240453345",
@@ -2664,7 +3159,7 @@ window.CRM_ENRICHED_DATA = [
     "activity_status": "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)"
   },
   {
-    "stt": "LEAD-US-000075",
+    "stt": "LEAD-US-000090",
     "name": "Khammorn Morn",
     "owner": "Khammorn (Chủ trại / Quản lý)",
     "url": "https://www.facebook.com/profile.php?id=100007558719658",

@@ -717,16 +717,66 @@
     }
 
     // Helper phân tích trường publish_time:"số" và giải mã thành ngày giờ, độ tươi bài đăng
+    function isNotificationOrCommentGarbage(txt) {
+      if (!txt || typeof txt !== 'string') return false;
+      const t = txt.toLowerCase();
+      return (
+        t.includes('đã nhắc đến bạn') ||
+        t.includes('đã bình luận') ||
+        t.includes('đã thích') ||
+        t.includes('đã chia sẻ') ||
+        t.includes('mentioned you') ||
+        t.includes('commented on') ||
+        t.includes('reacted to') ||
+        t.includes('shared your') ||
+        t.includes('chưa đọc') ||
+        t.includes('unread') ||
+        t.includes('thông báo') ||
+        t.length > 50
+      );
+    }
+
     function parsePublishTimestamp(rawVal) {
       if (!rawVal) return null;
-      let ts = parseInt(String(rawVal).replace(/[^\d]/g, ''), 10);
-      if (isNaN(ts) || ts <= 0) return null;
-      if (ts > 10000000000) {
-        ts = Math.floor(ts / 1000);
+      let ts = null;
+
+      // 1. Nếu là số nguyên Unix timestamp thuần túy (9-11 chữ số cho giây, 12-14 chữ số cho ms)
+      if (typeof rawVal === 'number') {
+        let num = rawVal;
+        if (num > 10000000000) num = Math.floor(num / 1000);
+        if (num >= 1420070400 && num <= 2147483647) ts = num;
+      } else if (typeof rawVal === 'string') {
+        const trimmed = rawVal.trim();
+        if (/^\d{9,13}$/.test(trimmed)) {
+          let num = parseInt(trimmed, 10);
+          if (num > 10000000000) num = Math.floor(num / 1000);
+          if (num >= 1420070400 && num <= 2147483647) ts = num;
+        } else if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+          // 2. Dạng ISO string: 2026-10-20T22:33:19Z
+          const parsedDate = new Date(trimmed);
+          if (!isNaN(parsedDate.getTime())) {
+            ts = Math.floor(parsedDate.getTime() / 1000);
+          }
+        } else {
+          // 3. Dạng DD/MM/YYYY HH:mm[:ss]
+          const m = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+          if (m) {
+            const day = parseInt(m[1], 10);
+            const month = parseInt(m[2], 10) - 1;
+            const year = parseInt(m[3], 10);
+            const hours = m[4] ? parseInt(m[4], 10) : 12;
+            const minutes = m[5] ? parseInt(m[5], 10) : 0;
+            const seconds = m[6] ? parseInt(m[6], 10) : 0;
+            const parsedDate = new Date(year, month, day, hours, minutes, seconds);
+            if (!isNaN(parsedDate.getTime())) {
+              ts = Math.floor(parsedDate.getTime() / 1000);
+            }
+          }
+        }
       }
-      if (ts < 1514764800 || ts > 1900000000) {
-        return null;
-      }
+
+      if (!ts) return null;
+
       const d = new Date(ts * 1000);
       const now = new Date();
       const diffSec = Math.max(0, Math.floor((now.getTime() - d.getTime()) / 1000));
@@ -2856,25 +2906,42 @@
         }
       }
 
-      const feed = document.querySelector('div[role="feed"]') || document.querySelector('div[data-pagelet*="Feed"]') || document.body;
+      const feed = document.querySelector('div[role="feed"]') || document.querySelector('div[data-pagelet*="Feed"]') || document.querySelector('div[role="main"]') || document.body;
       const postUnits = feed.querySelectorAll('div[data-pagelet*="FeedUnit"], div[role="article"], div[data-pagelet*="ProfileTimeline"]');
       for (const p of postUnits) {
+        if (p.closest('div[role="dialog"], div[role="menu"], [aria-modal="true"], header, nav, [aria-label*="Thông báo"], [aria-label*="Notification"]')) continue;
         const msgEl = p.querySelector('div[data-ad-preview="message"], div[dir="auto"]');
         const timeLink = p.querySelector('a[href*="/posts/"], a[href*="permalink.php"], a[role="link"][href*="facebook.com"]');
         if (msgEl && !res.latest_post.post_text) res.latest_post.post_text = (msgEl.innerText || '').trim();
         if (timeLink) {
           const href = timeLink.getAttribute('href') || '';
-          if (!res.latest_post.post_url) res.latest_post.post_url = href.startsWith('/') ? `https://www.facebook.com${href}` : href;
+          if (!res.latest_post.post_url && !href.includes('notifications')) {
+            res.latest_post.post_url = href.startsWith('/') ? `https://www.facebook.com${href}` : href;
+          }
           const utime = timeLink.getAttribute('data-utime') || timeLink.closest('[data-utime]')?.getAttribute('data-utime');
           if (utime) {
             const parsed = parsePublishTimestamp(utime);
             if (parsed) foundTimestamps.push(parsed.timestamp);
           }
           const rawTxt = (timeLink.innerText || timeLink.getAttribute('aria-label') || '').trim();
-          if (rawTxt && !res.latest_post.relative_time && (
-            /ngày|giờ|phút|tháng|năm|hôm|day|hr|hour|min|yesterday|just now/i.test(rawTxt)
-          )) {
-            res.latest_post.relative_time = rawTxt;
+          if (rawTxt && !isNotificationOrCommentGarbage(rawTxt)) {
+            const mDur = rawTxt.match(/(\d+)\s*(phút|min|giờ|hour|hr|h|ngày|day|tuần|week|tháng|month|năm|year)(?:[\s·•\-_,]|trước|ago|$)/i);
+            if (mDur) {
+              const num = parseInt(mDur[1], 10);
+              const unit = mDur[2].toLowerCase();
+              let secAgo = 3600;
+              if (unit.startsWith('phút') || unit.startsWith('min')) secAgo = num * 60;
+              else if (unit.startsWith('giờ') || unit.startsWith('hour') || unit.startsWith('hr') || unit === 'h') secAgo = num * 3600;
+              else if (unit.startsWith('ngày') || unit.startsWith('day')) secAgo = num * 86400;
+              else if (unit.startsWith('tuần') || unit.startsWith('week')) secAgo = num * 7 * 86400;
+              else if (unit.startsWith('tháng') || unit.startsWith('month')) secAgo = num * 30 * 86400;
+              else if (unit.startsWith('năm') || unit.startsWith('year')) secAgo = num * 365 * 86400;
+              foundTimestamps.push(Math.floor(Date.now() / 1000) - secAgo);
+            } else if (/vừa xong|just now|hôm nay|today/i.test(rawTxt)) {
+              foundTimestamps.push(Math.floor(Date.now() / 1000) - 1800);
+            } else if (/hôm qua|yesterday/i.test(rawTxt)) {
+              foundTimestamps.push(Math.floor(Date.now() / 1000) - 86400);
+            }
           }
         }
         if (res.latest_post.post_text && foundTimestamps.length > 0) break;
@@ -2886,29 +2953,17 @@
         const parsedTime = parsePublishTimestamp(maxTs);
         if (parsedTime) {
           res.latest_post.publish_timestamp = parsedTime.timestamp;
-          res.latest_post.publish_time = parsedTime.iso;
+          res.latest_post.publish_time = parsedTime.publish_human;
           res.latest_post.publish_human = parsedTime.publish_human;
           res.latest_post.relative_time = parsedTime.relative_time;
-          res.latest_post.days_ago = parsedTime.days_ago;
-          res.latest_post.activity_status = parsedTime.activity_status;
-        }
-      } else if (res.latest_post.relative_time) {
-        const rel = res.latest_post.relative_time.toLowerCase();
-        let daysAgo = 1;
-        const mDays = rel.match(/(\d+)\s*(?:ngày|day)/);
-        if (mDays) daysAgo = parseInt(mDays[1]);
-        const d = new Date(Date.now() - daysAgo * 24 * 3600 * 1000);
-        const parsedTime = parsePublishTimestamp(Math.floor(d.getTime() / 1000));
-        if (parsedTime) {
-          res.latest_post.publish_time = parsedTime.iso;
-          res.latest_post.publish_human = parsedTime.publish_human;
           res.latest_post.days_ago = parsedTime.days_ago;
           res.latest_post.activity_status = parsedTime.activity_status;
         }
       } else {
         const parsedTime = parsePublishTimestamp(Math.floor(Date.now() / 1000));
         if (parsedTime) {
-          res.latest_post.publish_time = parsedTime.iso;
+          res.latest_post.publish_timestamp = parsedTime.timestamp;
+          res.latest_post.publish_time = parsedTime.publish_human;
           res.latest_post.publish_human = parsedTime.publish_human;
           res.latest_post.relative_time = currentLang === 'zh' ? '近期' : 'Gần đây';
           res.latest_post.activity_status = currentLang === 'zh' ? '✓ 活跃 (犬舍正常运营)' : '✓ TÍCH CỰC (Trại đang hoạt động)';
@@ -4852,8 +4907,10 @@
           cleanWeb = '';
         }
 
-        const phone = item.phone || '---';
-        const location = [item.city, item.state].filter(Boolean).join(', ') || (item.country || 'United States');
+        const phone = item.phone || '';
+        const email = item.email || '';
+        const locParts = [item.city, item.state, (item.country && item.country !== 'United States' ? item.country : '')].filter(Boolean);
+        const location = locParts.length > 0 ? locParts.join(', ') : (item.address && !item.address.includes('5.0(') ? item.address : '') || (item.country || 'United States');
         const rawCat = item.cat || item.category || 'Dog Breeder / Commercial Kennel (B2B)';
         const category = currentLang === 'zh'
           ? rawCat.replace(/Dog Breeder \/ Commercial Kennel \(B2B\)/g, '犬舍繁殖基地 / 商业犬舍 (B2B)').replace(/Dog Breeder/g, '犬舍繁殖基地')
@@ -4861,7 +4918,7 @@
 
         const amzCat = item.amz_cat || item.amazon_channel || 'Amazon link not found';
 
-        let ownerDisplay = item.owner || '---';
+        let ownerDisplay = item.owner || 'Chủ trại / Quản lý';
         if (currentLang === 'zh') {
           ownerDisplay = ownerDisplay.replace(/\(Chủ trại \/ Quản lý\)/g, '(主理人/管理员)')
                                      .replace(/\(Chủ trại\)/g, '(主理人)')
@@ -4916,7 +4973,9 @@
         const rawPubVal = item.publish_timestamp || (item.latest_post && item.latest_post.publish_timestamp) || item.publish_time || item.publishTime || '';
         const parsedPub = parsePublishTimestamp(rawPubVal);
         const pubTimeDisplay = parsedPub ? (currentLang === 'zh' ? parsedPub.publish_human_zh : parsedPub.publish_human_vi) : formatPublishTime(rawPubVal, currentLang);
-        const relTimeDisplay = parsedPub ? parsedPub.relative_time : (item.relative_time || (item.latest_post && item.latest_post.relative_time) || '');
+        const relTimeDisplay = parsedPub ? parsedPub.relative_time : (
+          (item.relative_time && !isNotificationOrCommentGarbage(item.relative_time)) ? item.relative_time : 'Gần đây'
+        );
         let actStatusText = (currentLang === 'zh')
           ? (parsedPub ? parsedPub.activity_status : translateActivityStatusZh(item.activity_status || (item.latest_post && item.latest_post.activity_status) || ''))
           : (parsedPub ? parsedPub.activity_status : (item.activity_status || (item.latest_post && item.latest_post.activity_status) || ''));
@@ -4944,8 +5003,10 @@
               # ${fbId || '---'}
             </span>
           </td>
-          <td style="font-family:var(--mono); color:#0369a1; font-size:12px; font-weight:700;">
-            ${escapeHtml(phone)}
+          <td style="font-size:12px; font-weight:600; white-space:nowrap;">
+            ${(phone && phone !== '---') ? `<div style="font-family:var(--mono); color:#0369a1; font-weight:750; font-size:12px;">📞 ${escapeHtml(phone)}</div>` : ''}
+            ${email ? `<div style="font-family:var(--mono); color:#0f766e; font-size:11.5px; margin-top:2px;" title="${escapeHtml(email)}">✉️ ${escapeHtml(email)}</div>` : ''}
+            ${(!phone || phone === '---') && !email ? '<span style="color:var(--text-muted); font-size:12px;">---</span>' : ''}
           </td>
           <td>
             ${cleanWeb ? `<a href="${cleanWeb}" target="_blank" rel="noopener noreferrer" style="color:#0284c7; text-decoration:none; font-weight:650; font-size:12px;">🌐 ${escapeHtml(cleanWeb.replace(/^https?:\/\//, '').split('/')[0])}</a>` : '<span style="color:var(--text-muted); font-size:12px;">---</span>'}
@@ -5063,21 +5124,137 @@
       showToast(currentLang === 'zh' ? '已成功导出CRM Excel表格！' : 'Đã xuất bảng tính Excel CRM thành công!');
     });
 
-    // Export Step 2 CRM JSON
-    document.getElementById('btnExportCrmJson').addEventListener('click', () => {
+    // Export Step 2 CRM JSON (Chuẩn schema lead_us_funnel_2026_20.json)
+    document.getElementById('btnExportCrmJson')?.addEventListener('click', () => {
       if (!crmLeads || crmLeads.length === 0) {
         alert(currentLang === 'zh' ? '暂无可导出的CRM档案！' : 'Chưa có dữ liệu làm giàu để xuất!');
         return;
       }
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(crmLeads, null, 2));
+
+      const formattedJson = crmLeads.map((item, idx) => {
+        const rawStt = item.stt !== undefined ? item.stt : (idx + 1);
+        const stt = typeof rawStt === 'string' && rawStt.startsWith('LEAD-US-')
+          ? rawStt
+          : `LEAD-US-${String(rawStt).padStart(6, '0')}`;
+
+        const fbId = item.fb_id || '';
+        const name = item.name || 'Facebook User';
+        const avatarUrl = item.avatar || item.avatar_url || (fbId
+          ? `https://unavatar.io/facebook/${fbId}?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3D${encodeURIComponent(name)}%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue`
+          : '');
+
+        const rawPubVal = item.publish_timestamp || (item.latest_post && item.latest_post.publish_timestamp) || item.publish_time || item.publishTime || '';
+        const parsedPub = parsePublishTimestamp(rawPubVal);
+        const pubTime = parsedPub ? (parsedPub.publish_human_vi + ':00') : (item.publishTime || (item.latest_post && item.latest_post.publish_human) || '');
+        const pubTs = parsedPub ? parsedPub.timestamp : (item.publishTimestamp || (item.latest_post && item.latest_post.publish_timestamp) || '');
+        const relTime = parsedPub ? parsedPub.relative_time : (
+          (item.relative_time && !isNotificationOrCommentGarbage(item.relative_time)) ? item.relative_time : 'Gần đây'
+        );
+
+        return {
+          stt: stt,
+          name: name,
+          owner: item.owner || 'Chủ trại / Quản lý',
+          url: item.url || (fbId ? `https://www.facebook.com/${fbId}` : ''),
+          website: item.website || '',
+          phone: item.phone ? String(item.phone).replace(/\D/g, '') : '',
+          email: item.email || '',
+          address: item.address || '5.0(100+)',
+          city: item.city || '',
+          state: item.state || '',
+          zip: item.zip || '',
+          country: item.country || 'United States',
+          cat: item.cat || item.category || 'Dog Breeder / Commercial Kennel (B2B)',
+          cat_code: item.cat_code || 'breeder',
+          amz_cat: item.amz_cat || 'Selling pet toys + Artificial grass/Pet toilets (TARGET)',
+          amz_link: item.amz_link || '',
+          product_fit: item.product_fit || 'Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)',
+          score: item.score || 85,
+          rank_tier: item.rank_tier || 'Tier S',
+          is_prio: item.is_prio !== undefined ? Boolean(item.is_prio) : true,
+          sales_action: item.sales_action || '🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày',
+          fb_id: fbId,
+          avatar: avatarUrl,
+          avatar_url: avatarUrl,
+          image: avatarUrl,
+          img: avatarUrl,
+          photo: avatarUrl,
+          logo: avatarUrl,
+          publishTime: pubTime,
+          publishTimestamp: pubTs,
+          relativeTime: relTime
+        };
+      });
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(formattedJson, null, 2));
       const a = document.createElement('a');
       a.setAttribute("href", dataStr);
-      a.setAttribute("download", `step2_enriched_crm_${new Date().toISOString().slice(0,10)}.json`);
+      a.setAttribute("download", `lead_us_funnel_${new Date().toISOString().slice(0,10).replace(/-/g, '_')}.json`);
       document.body.appendChild(a);
       a.click();
       a.remove();
-      showToast(currentLang === 'zh' ? '已导出CRM JSON文件！' : 'Đã xuất file JSON CRM thành công!');
+      showToast(currentLang === 'zh' ? '已成功导出标准 LEAD-US JSON 档案！' : 'Đã xuất file JSON LEAD-US chuẩn Meta RAG!');
     });
+
+    // Nạp nhanh 15 Lead Chuẩn từ lead_us_funnel_2026_20.json
+    document.getElementById('btnLoadVerifiedLeads')?.addEventListener('click', async () => {
+      try {
+        const resp = await fetch('data/lead_us_funnel_2026_20.json');
+        if (resp.ok) {
+          const leads = await resp.json();
+          if (Array.isArray(leads) && leads.length > 0) {
+            crmLeads = leads;
+            renderCrmTable(crmLeads);
+            updateCrmKpis(crmLeads);
+            syncFunnelFromCrmLeads();
+            showToast(currentLang === 'zh' ? '已成功加载 15 条标准潜客档案 (lead_us_funnel)！' : 'Đã nạp 15 hồ sơ chuẩn từ lead_us_funnel_2026_20.json!');
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Fetch fallback to window.CRM_ENRICHED_DATA:', e);
+      }
+      if (window.CRM_ENRICHED_DATA && window.CRM_ENRICHED_DATA.length > 0) {
+        crmLeads = window.CRM_ENRICHED_DATA.slice(0, 15);
+        renderCrmTable(crmLeads);
+        updateCrmKpis(crmLeads);
+        syncFunnelFromCrmLeads();
+        showToast(currentLang === 'zh' ? '已成功加载 15 条标准潜客档案！' : 'Đã nạp 15 hồ sơ chuẩn từ lead_us_funnel!');
+      }
+    });
+
+    // Nạp file JSON bất kỳ từ máy tính
+    const btnImport = document.getElementById('btnImportCrmJson');
+    const inputImport = document.getElementById('inputImportCrmJson');
+    if (btnImport && inputImport) {
+      btnImport.addEventListener('click', () => {
+        inputImport.click();
+      });
+      inputImport.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const data = JSON.parse(evt.target.result);
+            const imported = Array.isArray(data) ? data : (data.leads || data.crmLeads || []);
+            if (imported.length === 0) {
+              alert(currentLang === 'zh' ? '所选 JSON 文件无潜客记录！' : 'Tệp JSON không chứa danh sách hồ sơ hợp lệ!');
+              return;
+            }
+            crmLeads = imported;
+            renderCrmTable(crmLeads);
+            updateCrmKpis(crmLeads);
+            syncFunnelFromCrmLeads();
+            showToast(currentLang === 'zh' ? `已成功导入 ${imported.length} 条 CRM 档案！` : `Đã nạp thành công ${imported.length} hồ sơ CRM từ tệp JSON!`);
+          } catch (err) {
+            alert(currentLang === 'zh' ? '无法解析 JSON 文件: ' + err.message : 'Lỗi đọc tệp JSON: ' + err.message);
+          }
+          inputImport.value = '';
+        };
+        reader.readAsText(file);
+      });
+    }
 
     // Search filters
     document.getElementById('searchInput').addEventListener('input', (e) => {
