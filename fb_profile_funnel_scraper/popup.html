@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>FB Profile Funnel & Lead Scraper</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      width: 390px;
+      margin: 0;
+      padding: 14px;
+      color: #1c1e21;
+      background: #f7f8fa;
+      box-sizing: border-box;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e4e6eb;
+    }
+    .title-box {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    h2 {
+      font-size: 14px;
+      margin: 0;
+      color: #1877f2;
+      font-weight: 750;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .badge {
+      background: #e7f3ff;
+      color: #1877f2;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      width: fit-content;
+    }
+
+    /* Bộ chuyển đổi ngôn ngữ Song ngữ */
+    .lang-switch {
+      display: flex;
+      background: #e2e8f0;
+      padding: 2px;
+      border-radius: 20px;
+      gap: 2px;
+    }
+    .lang-pill {
+      border: none;
+      background: transparent;
+      padding: 3px 8px;
+      border-radius: 14px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      line-height: 1;
+    }
+    .lang-pill:hover {
+      color: #0f172a;
+    }
+    .lang-pill.active {
+      background: #ffffff;
+      color: #1877f2;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin-bottom: 10px;
+    }
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4b4f56;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .link-count {
+      color: #1877f2;
+      font-weight: bold;
+    }
+    .btn-quick-paste {
+      background: #edf3ff;
+      color: #1877f2;
+      border: 1px solid #c7d9fc;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 650;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .btn-quick-paste:hover {
+      background: #1877f2;
+      color: #fff;
+      border-color: #1877f2;
+    }
+
+    textarea {
+      width: 100%;
+      height: 125px;
+      padding: 8px;
+      box-sizing: border-box;
+      font-size: 11px;
+      line-height: 1.4;
+      font-family: Consolas, monospace;
+      border: 1px solid #ccd0d5;
+      border-radius: 6px;
+      resize: vertical;
+      background: #fafbfc;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #1877f2;
+      background: #fff;
+    }
+    .range-box {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+      background: #f0f2f5;
+      padding: 7px 10px;
+      border-radius: 6px;
+    }
+    .range-item {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .range-item input {
+      width: 65px;
+      padding: 4px 6px;
+      font-size: 12px;
+      border: 1px solid #ccd0d5;
+      border-radius: 4px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .range-hint {
+      font-size: 11px;
+      color: #65676b;
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-top: 10px;
+    }
+    button.btn-act {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 650;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+      transition: background 0.15s ease, transform 0.05s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    button.btn-act:active {
+      transform: scale(0.99);
+    }
+    button.btn-act:disabled {
+      background: #e4e6eb !important;
+      color: #bcc0c4 !important;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-primary { background: #1877f2; }
+    .btn-primary:hover { background: #166fe5; }
+    .btn-resume { background: #f7931a; }
+    .btn-resume:hover { background: #df8112; }
+    .btn-pause { background: #e41e3f; }
+    .btn-pause:hover { background: #c91835; }
+    .btn-export-priority { background: #059669; }
+    .btn-export-priority:hover { background: #047857; }
+    .btn-export-json { background: #7c3aed; }
+    .btn-export-json:hover { background: #6d28d9; }
+    .btn-export-csv { background: #4b5563; }
+    .btn-export-csv:hover { background: #374151; }
+    .btn-clear { background: #65676b; }
+    .btn-clear:hover { background: #4e5053; }
+
+    .status-card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 10px;
+      border-left: 4px solid #1877f2;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      font-size: 12px;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: #e4e6eb;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #1877f2;
+      transition: width 0.3s ease;
+    }
+    .status-text {
+      font-size: 11px;
+      color: #65676b;
+      word-break: break-all;
+      margin-top: 4px;
+      min-height: 26px;
+      line-height: 1.35;
+    }
+    .footer {
+      font-size: 10px;
+      color: #8a8d91;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title-box">
+      <h2 id="appTitle">🕒 FB Profile Funnel & Lead Scraper</h2>
+      <span class="badge" id="modeBadge">Full Intro + Chủ Trại + Ngày Đăng</span>
+    </div>
+    <!-- Bộ chuyển đổi ngôn ngữ Song ngữ -->
+    <div class="lang-switch">
+      <button type="button" id="langVi" class="lang-pill active">🇻🇳 VI</button>
+      <button type="button" id="langZh" class="lang-pill">🇨🇳 中文</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label-row">
+      <label>
+        <span id="txtUrlListLabel">Danh sách link Facebook:</span>
+        <span class="link-count" id="linkCountText">0 link</span>
+      </label>
+      <!-- Nút Dán Nhanh Từ Clipboard -->
+      <button type="button" id="btnQuickPaste" class="btn-quick-paste" title="Dán nhanh danh sách link vừa sao chép từ tiện ích FB Following Scraper">
+        <span>📋</span> <span id="txtBtnQuickPaste">Dán từ Clipboard</span>
+      </button>
+    </div>
+    <textarea id="urlList" placeholder="Dán danh sách link vào đây (mỗi dòng 1 link, không giới hạn số lượng)&#10;https://www.facebook.com/page1&#10;https://www.facebook.com/profile2..."></textarea>
+    
+    <div class="range-box">
+      <div class="range-item">
+        <span id="txtFromLine">Từ dòng:</span>
+        <input type="number" id="fromLine" min="1" value="1">
+      </div>
+      <div class="range-item">
+        <span id="txtToLine">Đến dòng:</span>
+        <input type="number" id="toLine" min="1" placeholder="Hết">
+      </div>
+    </div>
+    <div class="range-hint" id="txtRangeHint">
+      💡 Chạy đoạn tùy chọn: ví dụ từ dòng <b>200</b> đến <b>300</b>. Chạy 1 link cụ thể: từ <b>200</b> đến <b>200</b>.
+    </div>
+  </div>
+
+  <div class="status-card">
+    <div style="display:flex; justify-content:space-between; font-weight:600;">
+      <span id="currentStatusTitle">Trạng thái: Sẵn sàng</span>
+      <span style="color:#1877f2;" id="progressPercent">0%</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+    <div style="font-weight:600; color:#1877f2; margin-top:2px;">
+      <span id="txtScrapedPrefix">Đã cào:</span> <span id="currentCount">0</span> <span id="txtScrapedSuffix">kết quả</span>
+    </div>
+    <div class="status-text" id="statusText">Dán link, chọn khoảng chạy rồi ấn Bắt đầu.</div>
+  </div>
+
+  <div class="btn-group">
+    <!-- Nút bắt đầu mới -->
+    <button id="btnAutoStart" class="btn-act btn-primary">
+      <span>▶</span> <span id="txtBtnAutoStart">Bắt đầu cào</span>
+    </button>
+
+    <!-- Nút tiếp tục khi đang tạm dừng -->
+    <button id="btnResume" class="btn-act btn-resume" style="display:none;">
+      <span>⏯</span> <span id="txtBtnResume">Tiếp tục cào (từ dòng ...)</span>
+    </button>
+
+    <!-- Nút tạm dừng và lưu vị trí -->
+    <button id="btnPause" class="btn-act btn-pause" style="display:none;">
+      <span>⏹</span> <span id="txtBtnPause">Tạm dừng & Lưu vị trí</span>
+    </button>
+
+    <!-- Nút xuất file Priority Data 8 giao Sếp -->
+    <button id="btnExportPriority8" class="btn-act btn-export-priority">
+      <span>📊</span> <span id="txtBtnPriority8">Xuất Excel Priority Data 8 (37 Cột Giao Sếp)</span>
+    </button>
+
+    <!-- Nút xuất JSON LEAD-US (Meta & Leads RAG) -->
+    <button id="btnExportJson" class="btn-act btn-export-json">
+      <span>📄</span> <span id="txtBtnExportJson">Xuất JSON LEAD-US (Chuẩn Meta RAG)</span>
+    </button>
+
+    <!-- Nút xuất file CSV và xóa bộ nhớ -->
+    <button id="btnExport" class="btn-act btn-export-csv">
+      <span>📥</span> <span id="txtBtnExportCsv">Xuất file CSV gốc</span>
+    </button>
+    <button id="btnClear" class="btn-act btn-clear">
+      <span>🗑</span> <span id="txtBtnClear">Xóa dữ liệu & Làm mới</span>
+    </button>
+  </div>
+
+  <div class="footer" id="txtFooter">Tự động lưu vị trí • Tiếp tục cào bất cứ lúc nào • 100% chuẩn xác</div>
+
+  <script src="exceljs.min.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

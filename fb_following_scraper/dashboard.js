@@ -3543,28 +3543,19 @@
       document.getElementById('lblScanStatus').textContent = statusMsg;
       document.getElementById('lblTotalQueueStep2').textContent = urls.length;
 
-      // Thực thi trực tiếp trên Dashboard nếu có quyền chrome.tabs, đảm bảo giao diện & terminal render tức thì 0ms
-      if (window.chrome && chrome.tabs && chrome.tabs.create) {
-        runDirectProfileScrapingLoop(urls, startIdx, endIdx);
-      } else if (window.chrome && chrome.runtime && chrome.runtime.sendMessage) {
-        chrome.runtime.sendMessage({
-          action: 'START_STEP2_DIRECT_SCAN',
-          links: urls,
-          options: { startIndex: startIdx, endIndex: endIdx }
-        }, (res) => {
-          if (chrome.runtime.lastError || !res) {
-            runDirectProfileScrapingLoop(urls, startIdx, endIdx);
-          }
-        });
-      } else if (isExtensionBridgeReady) {
-        window.postMessage({
-          type: 'START_STEP2_SCAN_VIA_EXTENSION',
-          links: urls,
-          options: { startIndex: startIdx, endIndex: endIdx }
-        }, '*');
-      } else {
-        runDirectProfileScrapingLoop(urls, startIdx, endIdx);
+      // Gửi tín hiệu sang Background Extension (nếu có)
+      if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.sendMessage === 'function') {
+        try {
+          chrome.runtime.sendMessage({
+            action: 'START_STEP2_DIRECT_SCAN',
+            links: urls,
+            options: { startIndex: startIdx, endIndex: endIdx }
+          }).catch(() => {});
+        } catch (_) {}
       }
+
+      // Luôn kích hoạt trình cào trực tiếp để giao diện, terminal và tiến trình chạy 100% không bị treo
+      runDirectProfileScrapingLoop(urls, startIdx, endIdx);
     }
 
     function pauseDirectScraping() {
@@ -5303,11 +5294,11 @@
       }
 
       // Funnel action buttons
-      if (e.target.closest('#btnRunFunnelStage1')) { runFunnelStage1(); return; }
-      if (e.target.closest('#btnRunFunnelStage2')) { runFunnelStage2(); return; }
-      if (e.target.closest('#btnRunFunnelStage3')) { runFunnelStage3(); return; }
-      if (e.target.closest('#btnRunFunnelRagMerge')) { runFunnelRagMerge(); return; }
-      if (e.target.closest('#btnRunFunnelAutoAll')) { runFunnelAutoAll(); return; }
+      if (e.target.closest('#btnRunFunnelStage1')) { executeFunnelStage1(); return; }
+      if (e.target.closest('#btnRunFunnelStage2')) { executeFunnelStage2(); return; }
+      if (e.target.closest('#btnRunFunnelStage3')) { executeFunnelStage3(); return; }
+      if (e.target.closest('#btnRunFunnelRagMerge')) { executeFunnelRagMerge(); return; }
+      if (e.target.closest('#btnRunFunnelAutoAll')) { executeFunnelAutoAll(); return; }
 
       const copyEl = e.target.closest('[data-copy-id]');
       if (copyEl) {
@@ -5321,3 +5312,110 @@
         return;
       }
     });
+
+    // =========================================================================
+    // LẮNG NGHE SỰ KIỆN TRUYỀN TIN 2 CHIỀU TỪ BACKGROUND EXTENSION (STEP 2 DIRECT)
+    // =========================================================================
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+      chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+        if (!msg || !msg.action) return;
+
+        if (msg.action === 'STEP2_LOG') {
+          const l = msg.log || {};
+          appendTerminalLogStep2({
+            stage: l.stage || 'TIẾN ĐỘ',
+            text: l.text || '',
+            level: l.level || 'info'
+          });
+        }
+        else if (msg.action === 'STEP2_PROGRESS') {
+          const cur = msg.current || 0;
+          const tot = msg.total || 0;
+          const pct = msg.percent !== undefined ? msg.percent : Math.round((cur / Math.max(1, tot)) * 100);
+          const fill = document.getElementById('bulkProgressFill');
+          if (fill) fill.style.width = `${pct}%`;
+          const lblPct = document.getElementById('lblScanPercent');
+          if (lblPct) lblPct.textContent = `${pct}%`;
+          const lblCnt = document.getElementById('lblScrapedCountStep2');
+          if (lblCnt) lblCnt.textContent = cur;
+          const lblTot = document.getElementById('lblTotalQueueStep2');
+          if (lblTot) lblTot.textContent = tot;
+          const lblStat = document.getElementById('lblScanStatus');
+          if (lblStat && msg.status) lblStat.textContent = msg.status;
+        }
+        else if (msg.action === 'STEP2_LEAD_DONE') {
+          const item = msg.lead || {};
+          if (item && (item.fb_id || item.url || item.name)) {
+            const prevRow = document.getElementById('bulkLeadPreviewRow');
+            if (prevRow) prevRow.style.display = 'flex';
+            const bName = document.getElementById('bulkLeadName');
+            if (bName) bName.textContent = item.name || 'Dog Breeder';
+            const bOwner = document.getElementById('bulkLeadOwner');
+            if (bOwner) bOwner.textContent = `Chủ trại: ${item.owner || item.owner_name || 'Dog Breeder'}`;
+            const bFbid = document.getElementById('bulkLeadFbid');
+            if (bFbid) bFbid.textContent = `ID: ${item.fb_id || item.profile_id || '---'}`;
+            const bAv = document.getElementById('bulkLeadAvatar');
+            if (bAv && item.avatar_url) bAv.src = item.avatar_url;
+
+            const exIdx = crmLeads.findIndex(l => (item.fb_id && l.fb_id === item.fb_id) || (item.url && l.url === item.url));
+            if (exIdx !== -1) {
+              crmLeads[exIdx] = { ...crmLeads[exIdx], ...item, stt: crmLeads[exIdx].stt };
+            } else {
+              crmLeads.unshift(item);
+            }
+
+            renderCrmTable(crmLeads);
+            updateCrmKpis(crmLeads);
+            syncFunnelFromCrmLeads();
+          }
+        }
+        else if (msg.action === 'STEP2_ALL_DONE') {
+          isDirectScrapingRunning = false;
+          isDirectScrapingPaused = false;
+          const btnStart = document.getElementById('btnStartDirectScrape');
+          const btnPause = document.getElementById('btnPauseDirectScrape');
+          const btnResume = document.getElementById('btnResumeDirectScrape');
+          if (btnStart) btnStart.style.display = 'inline-flex';
+          if (btnPause) btnPause.style.display = 'none';
+          if (btnResume) btnResume.style.display = 'none';
+
+          const txtBulk = document.getElementById('txtBulkLinks');
+          const fromInp = document.getElementById('fromLineStep2');
+          const toInp = document.getElementById('toLineStep2');
+          if (txtBulk) txtBulk.disabled = false;
+          if (fromInp) fromInp.disabled = false;
+          if (toInp) toInp.disabled = false;
+
+          const fill = document.getElementById('bulkProgressFill');
+          if (fill) fill.style.width = '100%';
+          const lblPct = document.getElementById('lblScanPercent');
+          if (lblPct) lblPct.textContent = '100%';
+
+          const doneMsg = currentLang === 'zh' ? '🎉 采集完成！' : `🎉 HOÀN TẤT BƯỚC 2: Đã bóc tách thành công toàn bộ hồ sơ!`;
+          const lblStat = document.getElementById('lblScanStatus');
+          if (lblStat) lblStat.textContent = doneMsg;
+
+          appendTerminalLogStep2({
+            stage: 'HỆ THỐNG',
+            text: `🎉 HOÀN TẤT BƯỚC 2: ĐÃ BÓC TÁCH HOÀN TOÀN CÁC HỒ SƠ!`,
+            level: 'success'
+          });
+
+          playCompletionChime();
+          showToast(doneMsg);
+        }
+        else if (msg.action === 'STEP2_PAUSED') {
+          isDirectScrapingRunning = false;
+          isDirectScrapingPaused = true;
+          const btnPause = document.getElementById('btnPauseDirectScrape');
+          const btnResume = document.getElementById('btnResumeDirectScrape');
+          if (btnPause) btnPause.style.display = 'none';
+          if (btnResume) {
+            btnResume.style.display = 'inline-flex';
+            const cur = msg.currentIndex || (directScrapeCurrentIdx + 1);
+            btnResume.querySelector('span:last-child').textContent = `TIẾP TỤC CÀO (Dòng ${cur})`;
+          }
+        }
+      });
+    }
+
