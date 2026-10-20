@@ -3478,7 +3478,20 @@
     }
 
     function startDirectScraping(isResume = false) {
-      const urls = getValidStep2Urls();
+      let urls = getValidStep2Urls();
+      if (urls.length === 0) {
+        // Tự động nạp từ Bước 1 nếu ô đang trống
+        const pool = (verifiedLeads && verifiedLeads.length > 0) ? verifiedLeads : ((rawFollowers && rawFollowers.length > 0) ? rawFollowers : []);
+        if (pool.length > 0) {
+          const links = pool.map(item => item.url || (item.fb_id ? `https://www.facebook.com/profile.php?id=${item.fb_id}` : '')).filter(Boolean);
+          if (links.length > 0) {
+            const txt = document.getElementById('txtBulkLinks');
+            if (txt) txt.value = links.join('\n');
+            updateStep2LinkCount();
+            urls = links;
+          }
+        }
+      }
       if (urls.length === 0) {
         alert(currentLang === 'zh' ? '请输入至少 1 个 Facebook 链接或点击“📥 加载第1步有效链接”！' : 'Vui lòng nhập ít nhất 1 link Facebook hoặc bấm "📥 Nạp Từ Bước 1"!');
         return;
@@ -3490,21 +3503,15 @@
       let toVal = parseInt(document.getElementById('toLineStep2')?.value || '', 10);
       if (isNaN(toVal) || toVal > urls.length || toVal < 1) toVal = urls.length;
 
-      if (fromVal > urls.length) {
-        alert(currentLang === 'zh' ? `起始行 (${fromVal}) 超过了链接总数 (${urls.length})！` : `Dòng bắt đầu (${fromVal}) vượt quá tổng số link (${urls.length})!`);
-        return;
-      }
-      if (fromVal > toVal) {
-        alert(currentLang === 'zh' ? `起始行 (${fromVal}) 不能大于结束行 (${toVal})！` : `Dòng bắt đầu (${fromVal}) không thể lớn hơn dòng kết thúc (${toVal})!`);
-        return;
-      }
+      if (fromVal > urls.length) fromVal = 1;
+      if (fromVal > toVal) toVal = urls.length;
 
-      const startIdx = isResume ? directScrapeCurrentIdx : (fromVal - 1);
+      let startIdx = isResume ? directScrapeCurrentIdx : (fromVal - 1);
       const endIdx = toVal - 1;
 
-      if (startIdx > endIdx) {
-        alert(currentLang === 'zh' ? '已采集到设定末尾，如需重新采集请重置起始行！' : 'Đã cào đến cuối khoảng chọn! Vui lòng chọn lại dòng bắt đầu.');
-        return;
+      if (startIdx > endIdx || startIdx < 0) {
+        startIdx = 0;
+        directScrapeCurrentIdx = 0;
       }
 
       directScrapeUrls = urls;
@@ -5076,27 +5083,27 @@
             </div>
           </td>
           <td>
-            <strong style="color:#fff; font-size:13px;">${escapeHtml(ownerDisplay)}</strong>
+            <strong style="color:var(--text); font-size:13.5px; font-weight:800;">${escapeHtml(ownerDisplay)}</strong>
           </td>
           <td>
-            <div style="font-weight:600; color:#cbd5e1;">${escapeHtml(item.name || '---')}</div>
+            <div style="font-weight:700; color:var(--text); font-size:12.5px;">${escapeHtml(item.name || '---')}</div>
           </td>
           <td>
-            <span class="badge-fbid" onclick="copyText('${fbId}')" title="${currentLang === 'zh' ? '点击复制纯数字ID' : 'Sao chép ID số'}" style="cursor:pointer;">
+            <span class="badge-fbid" onclick="copyText('${fbId}')" title="${currentLang === 'zh' ? '点击复制纯数字ID' : 'Sao chép ID số'}" style="cursor:pointer; font-weight:750;">
               # ${fbId || '---'}
             </span>
           </td>
-          <td style="font-family:var(--mono); color:#a5b4fc; font-size:11.5px;">
+          <td style="font-family:var(--mono); color:#0284c7; font-size:12px; font-weight:750;">
             ${escapeHtml(phone)}
           </td>
           <td>
             ${cleanWeb ? `<a href="${cleanWeb}" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:none; font-weight:600; font-size:11.5px;">🌐 ${escapeHtml(cleanWeb.replace(/^https?:\/\//, '').split('/')[0])}</a>` : '<span style="color:var(--text-muted);">---</span>'}
           </td>
-          <td style="color:var(--text-muted); font-size:11.5px;">
+          <td style="color:#334155; font-size:12px; font-weight:600;">
             ${escapeHtml(location)}
           </td>
           <td>
-            <div style="font-weight:700; color:#38bdf8; font-size:11.5px;">${escapeHtml(pubTimeDisplay)}</div>
+            <div style="font-weight:750; color:#0284c7; font-size:12px;">${escapeHtml(pubTimeDisplay)}</div>
             <div style="font-size:11px; margin-top:2px;">
               ${relTimeDisplay ? `<span style="color:#94a3b8; font-size:10px; margin-right:4px;">⏱️ ${escapeHtml(relTimeDisplay)}</span>` : ''}
               ${actStatusText ? `<span style="font-size:10px; padding:1px 6px; border-radius:4px; font-weight:700; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); color:#38bdf8;">${escapeHtml(actStatusText)}</span>` : ''}
@@ -5267,6 +5274,40 @@
       if (e.target.closest('#btnAppLangVi')) { setAppLang('vi'); return; }
       if (e.target.closest('#btnAppLangZh')) { setAppLang('zh'); return; }
       if (e.target.closest('#btnRetryServerConn')) { retryServerConnection(); return; }
+
+      // Step 1 buttons
+      if (e.target.closest('#btnRunPipeline')) { startStep1Pipeline(); return; }
+
+      // Step 2 Direct scraper buttons
+      if (e.target.closest('#btnStartDirectScrape')) { startDirectScraping(false); return; }
+      if (e.target.closest('#btnResumeDirectScrape')) { startDirectScraping(true); return; }
+      if (e.target.closest('#btnPauseDirectScrape')) { pauseDirectScraping(); return; }
+      if (e.target.closest('#btnLoadFromStep1')) {
+        const pool = (verifiedLeads && verifiedLeads.length > 0) ? verifiedLeads : ((rawFollowers && rawFollowers.length > 0) ? rawFollowers : []);
+        if (pool.length === 0) {
+          showToast(currentLang === 'zh' ? '第1步暂无有效链接！' : 'Chưa có link từ Bước 1!');
+          return;
+        }
+        const links = pool.map(item => item.url || (item.fb_id ? `https://www.facebook.com/profile.php?id=${item.fb_id}` : '')).filter(Boolean);
+        const txt = document.getElementById('txtBulkLinks');
+        if (txt) txt.value = links.join('\n');
+        updateStep2LinkCount();
+        showToast(currentLang === 'zh' ? `✅ 已从第1步加载 ${links.length} 个链接！` : `✅ Đã nạp ${links.length} link từ Bước 1!`);
+        return;
+      }
+      if (e.target.closest('#btnClearLinks')) {
+        const txt = document.getElementById('txtBulkLinks');
+        if (txt) txt.value = '';
+        updateStep2LinkCount();
+        return;
+      }
+
+      // Funnel action buttons
+      if (e.target.closest('#btnRunFunnelStage1')) { runFunnelStage1(); return; }
+      if (e.target.closest('#btnRunFunnelStage2')) { runFunnelStage2(); return; }
+      if (e.target.closest('#btnRunFunnelStage3')) { runFunnelStage3(); return; }
+      if (e.target.closest('#btnRunFunnelRagMerge')) { runFunnelRagMerge(); return; }
+      if (e.target.closest('#btnRunFunnelAutoAll')) { runFunnelAutoAll(); return; }
 
       const copyEl = e.target.closest('[data-copy-id]');
       if (copyEl) {
