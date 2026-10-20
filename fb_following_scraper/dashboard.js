@@ -2,9 +2,29 @@
     // =========================================================================
     // 0. SERVER STATUS MONITOR & NOTIFICATION BANNER
     // =========================================================================
-    const API_BASE = (window.location.protocol.startsWith('http') && window.location.port === '8000')
-      ? ''
-      : 'http://127.0.0.1:8000';
+    function getStoredServerUrl() {
+      const custom = localStorage.getItem('pet_lead_server_url') || '';
+      if (custom && custom.trim()) {
+        return custom.trim().replace(/\/+$/, '');
+      }
+      if (window.location.protocol.startsWith('http')) {
+        return `${window.location.protocol}//${window.location.host}`;
+      }
+      return 'http://127.0.0.1:8000';
+    }
+
+    let API_BASE = getStoredServerUrl();
+
+    // Check Chrome Extension storage if available
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(['pet_lead_server_url'], (res) => {
+        if (res && res.pet_lead_server_url) {
+          API_BASE = res.pet_lead_server_url.trim().replace(/\/+$/, '');
+          localStorage.setItem('pet_lead_server_url', API_BASE);
+          checkServerConnection();
+        }
+      });
+    }
 
     let isServerConnected = false;
 
@@ -13,23 +33,50 @@
       if (!banner) {
         banner = document.createElement('div');
         banner.id = 'serverOfflineBanner';
-        banner.style.cssText = 'background: linear-gradient(90deg, #1e293b, #0f172a); border-bottom: 2px solid #f59e0b; padding: 12px 24px; color: #f8fafc; display: none; align-items: center; justify-content: space-between; gap: 16px; font-size: 13px; z-index: 9999; position: sticky; top: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.4);';
+        banner.style.cssText = 'background: linear-gradient(90deg, #1e293b, #0f172a); border-bottom: 2px solid #f59e0b; padding: 12px 24px; color: #f8fafc; display: none; flex-direction: column; gap: 10px; font-size: 13px; z-index: 9999; position: sticky; top: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.4);';
         banner.innerHTML = `
-          <div style="display:flex; align-items:center; gap:12px;">
-            <span style="font-size:22px;">⚠️</span>
-            <div>
-              <span id="bannerTitle" style="font-weight:700; color:#fbbf24;">Máy chủ Python (Port 8000) chưa được kết nối!</span>
-              <span id="bannerDesc" style="color:#cbd5e1; margin-left:8px;">Để sử dụng Lọc AI Thị Giác YOLOv8, Lọc khuôn mặt và Làm giàu hồ sơ CRM, vui lòng mở file <strong>CHAY_GIAO_DIEN_WEB.bat</strong> trong thư mục dự án. (Dữ liệu quét từ Facebook vẫn hiển thị và xem được đầy đủ bên dưới).</span>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="font-size:22px;">⚠️</span>
+              <div>
+                <span id="bannerTitle" style="font-weight:700; color:#fbbf24;">Máy chủ Python AI chưa được kết nối!</span>
+                <span id="bannerDesc" style="color:#cbd5e1; margin-left:8px;">Vui lòng mở file <strong>CHAY_GIAO_DIEN_WEB.bat</strong> trên máy chủ. Nếu chạy trên Server/VPS khác, hãy nhập URL/IP bên dưới.</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button id="btnRetryServerConn" style="background:#f59e0b; color:#0f172a; font-weight:700; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:12px; transition:all 0.2s;">🔄 Thử kết nối lại (Retry)</button>
             </div>
           </div>
-          <div style="display:flex; gap:8px; align-items:center;">
-            <button id="btnRetryServerConn" style="background:#f59e0b; color:#0f172a; font-weight:700; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:12px; transition:all 0.2s;">🔄 Thử kết nối lại (Retry)</button>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:rgba(0,0,0,0.25); padding:8px 12px; border-radius:8px; border:1px solid rgba(245,158,11,0.3);">
+            <span style="font-weight:700; color:#fbbf24; font-size:12px;">⚙️ Địa chỉ Máy chủ (Server URL / IP):</span>
+            <input id="inpCustomServerUrl" type="text" placeholder="http://127.0.0.1:8000 hoặc http://IP-Server:8000" style="background:#0f172a; border:1px solid #475569; color:#fff; padding:5px 10px; border-radius:6px; font-size:12px; min-width:280px; flex:1;" value="${API_BASE}" />
+            <button id="btnSaveCustomServerUrl" style="background:#10b981; color:#fff; font-weight:700; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:12px; transition:all 0.2s;">💾 Lưu & Kết Nối Ngay</button>
           </div>
         `;
         document.body.insertBefore(banner, document.body.firstChild);
 
         const btnRetry = document.getElementById('btnRetryServerConn');
         if (btnRetry) btnRetry.addEventListener('click', retryServerConnection);
+
+        const btnSaveUrl = document.getElementById('btnSaveCustomServerUrl');
+        if (btnSaveUrl) {
+          btnSaveUrl.addEventListener('click', () => {
+            const inp = document.getElementById('inpCustomServerUrl');
+            if (inp && inp.value.trim()) {
+              let newUrl = inp.value.trim().replace(/\/+$/, '');
+              if (!newUrl.startsWith('http://') && !newUrl.startsWith('https://')) {
+                newUrl = 'http://' + newUrl;
+              }
+              API_BASE = newUrl;
+              localStorage.setItem('pet_lead_server_url', newUrl);
+              if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                chrome.storage.local.set({ pet_lead_server_url: newUrl });
+              }
+              showToast(currentLang === 'zh' ? `已更新服务器地址: ${newUrl}` : `Đã lưu địa chỉ máy chủ: ${newUrl}`);
+              retryServerConnection();
+            }
+          });
+        }
       }
       return banner;
     }
@@ -37,20 +84,20 @@
     async function checkServerConnection() {
       const banner = renderServerBanner();
       try {
-        const resp = await fetch(`${API_BASE}/api/system-status`, { signal: AbortSignal.timeout(1800) });
+        const resp = await fetch(`${API_BASE}/api/system-status`, { signal: AbortSignal.timeout(2200) });
         if (resp.ok) {
           isServerConnected = true;
           banner.style.display = 'none';
           const statusEl = document.getElementById('lblSystemOnline');
-          if (statusEl && statusEl.textContent.includes('CHƯA KẾT NỐI')) {
-            statusEl.textContent = '● HỆ THỐNG TRỰC TUYẾN';
+          if (statusEl) {
+            statusEl.textContent = currentLang === 'zh' ? `● 系统在线 (${API_BASE})` : `● HỆ THỐNG TRỰC TUYẾN (${API_BASE})`;
             statusEl.style.color = 'var(--emerald)';
           }
           return true;
         }
       } catch (e) {
         try {
-          const resp2 = await fetch(`${API_BASE}/api/step1-filter-status`, { signal: AbortSignal.timeout(1200) });
+          const resp2 = await fetch(`${API_BASE}/api/step1-filter-status`, { signal: AbortSignal.timeout(1500) });
           if (resp2.ok) {
             isServerConnected = true;
             banner.style.display = 'none';
@@ -60,6 +107,11 @@
       }
       isServerConnected = false;
       banner.style.display = 'flex';
+      const statusEl = document.getElementById('lblSystemOnline');
+      if (statusEl) {
+        statusEl.textContent = currentLang === 'zh' ? `● 未连接服务器 (${API_BASE})` : `● CHƯA KẾT NỐI (${API_BASE})`;
+        statusEl.style.color = 'var(--rose)';
+      }
       return false;
     }
 
@@ -71,11 +123,11 @@
       if (btn) btn.textContent = '⏳ Đang kiểm tra...';
       const ok = await checkServerConnection();
       if (ok) {
-        showToast(currentLang === 'zh' ? '✓ 已成功连接Python后端服务器 (Port 8000)！' : '✓ Đã kết nối máy chủ Python (Port 8000) thành công!');
-        appendTerminalLog('✓ [KẾT NỐI THÀNH CÔNG] Đã kết nối với máy chủ Python Port 8000.');
+        showToast(currentLang === 'zh' ? `✓ 已成功连接Python后端服务器 (${API_BASE})！` : `✓ Đã kết nối máy chủ Python (${API_BASE}) thành công!`);
+        appendTerminalLog(`✓ [KẾT NỐI THÀNH CÔNG] Đã kết nối với máy chủ Python: ${API_BASE}`);
         loadDefaultData();
       } else {
-        showToast(currentLang === 'zh' ? '❌ 无法连接到 127.0.0.1:8000，请先运行 CHAY_GIAO_DIEN_WEB.bat' : '❌ Chưa tìm thấy máy chủ 127.0.0.1:8000. Vui lòng chạy file CHAY_GIAO_DIEN_WEB.bat');
+        showToast(currentLang === 'zh' ? `❌ 无法连接到 ${API_BASE}，请检查IP地址或防火墙 Port 8000.` : `❌ Chưa tìm thấy máy chủ ${API_BASE}. Vui lòng kiểm tra lại IP hoặc mở file CHAY_GIAO_DIEN_WEB.bat`);
         if (btn) btn.textContent = '🔄 Thử kết nối lại (Retry)';
       }
     }
@@ -339,7 +391,7 @@
       localStorage.setItem('pet_lead_lang', lang);
 
       // Đồng bộ ngôn ngữ sang server python để terminal in tiếng Trung chuẩn xác
-      fetch('http://127.0.0.1:8000/api/set-lang', {
+      fetch(`${API_BASE}/api/set-lang`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lang })
@@ -695,7 +747,7 @@
           const approvedTag = currentLang === 'zh' ? '✓ [已批准犬类档案]' : '✓ [PHÊ DUYỆT CHÓ]';
           row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${idxStr} <span style="color:#10b981; font-weight:700;">${approvedTag}</span> ${nameStr} ${idStr} ➔ <span style="color:#34d399;">${reasonStr}</span>`;
           
-          fetch('http://127.0.0.1:8000/api/step1/log', {
+          fetch(`${API_BASE}/api/step1/log`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -713,7 +765,7 @@
           const rejectedTag = currentLang === 'zh' ? '❌ [已剔除非目标]' : '❌ [LOẠI BỎ]';
           row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${idxStr} <span style="color:#f43f5e; font-weight:700;">${rejectedTag}</span> ${nameStr} ${idStr} ➔ <span style="color:#fbbf24;">${reasonStr}</span>`;
 
-          fetch('http://127.0.0.1:8000/api/step1/log', {
+          fetch(`${API_BASE}/api/step1/log`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -778,7 +830,7 @@
         row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:${color}; font-weight:700;">[${escapeHtml(stage)}]</span> <span>${escapeHtml(text)}</span>`;
 
         // Đồng bộ trực tiếp ra terminal cmd/powershell của máy chủ python
-        fetch('http://127.0.0.1:8000/api/step2/log', {
+        fetch(`${API_BASE}/api/step2/log`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

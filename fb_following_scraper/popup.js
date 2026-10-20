@@ -487,7 +487,6 @@ async function clearData() {
     const tab = await getActiveTab();
     if (tab && tab.id) {
       chrome.tabs.sendMessage(tab.id, { action: 'PURGE_JUNK_DATA' });
-      chrome.tabs.sendMessage(tab.id, { action: 'RESET_HARVESTING' });
     }
   } catch (e) {}
 
@@ -510,9 +509,14 @@ async function syncDataToWebDashboard(data, desiredFilename) {
   if (!data || data.length === 0) return null;
   let finalFilename = desiredFilename || `step1_followers_raw_${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.json`;
   
-  // 1. Post to local python server if active
+  // 1. Post to python server if active (supports custom IP/Server)
   try {
-    await fetch('http://127.0.0.1:8000/api/upload-raw', {
+    let sUrl = 'http://127.0.0.1:8000';
+    if (chrome && chrome.storage && chrome.storage.local) {
+      const st = await chrome.storage.local.get(['pet_lead_server_url']);
+      if (st && st.pet_lead_server_url) sUrl = st.pet_lead_server_url.trim().replace(/\/+$/, '');
+    }
+    await fetch(`${sUrl}/api/upload-raw`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

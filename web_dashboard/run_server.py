@@ -631,33 +631,48 @@ class DashboardApiHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
 
+def get_lan_ip():
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(('8.8.8.8', 80))
+            return s.getsockname()[0]
+    except Exception:
+        return '127.0.0.1'
+
 def find_available_port(start_port=8000):
     port = start_port
     while port < start_port + 100:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            if s.connect_ex(('127.0.0.1', port)) != 0:
+            if s.connect_ex(('127.0.0.1', port)) != 0 and s.connect_ex(('0.0.0.0', port)) != 0:
                 return port
         port += 1
     return start_port
 
 def main():
+    lan_ip = get_lan_ip()
     port = find_available_port(PORT)
-    url = f"http://127.0.0.1:{port}/index.html"
+    url_local = f"http://127.0.0.1:{port}/index.html"
+    url_lan = f"http://{lan_ip}:{port}/index.html"
 
     print("=" * 75)
     print("      🐾 PET LEAD AI - GIAO DIỆN WEB TRỰC QUAN (WEB DASHBOARD) 🐾")
     print("=" * 75)
     print(f"[*] Thư mục phục vụ: {DIRECTORY}")
-    print(f"[*] Đang khởi chạy Web Server tại: {url}")
+    print(f"[*] Máy chủ Local (Máy này):       {url_local}")
+    print(f"[*] Máy chủ Mạng LAN / Máy khác / VPS: {url_lan}")
+    print(f"[*] Lưu ý: Nếu dùng Chrome Extension ở máy khác, nhập IP: http://{lan_ip}:{port}")
     print(f"[*] API Quét làm giàu tự động (Bulk Enricher API) sẵn sàng tại /api/*")
     print(f"[*] API Lọc AI Thị Giác Bước 1 (Ngưỡng Strict 0.70) sẵn sàng tại /api/run-step1-filter")
     print("=" * 75)
     print(">>> Nhấn [Ctrl + C] để dừng Web Server khi không dùng nữa.\n")
 
-    webbrowser.open(url)
+    try:
+        webbrowser.open(url_local)
+    except Exception:
+        pass
 
     socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("127.0.0.1", port), DashboardApiHandler) as httpd:
+    with socketserver.TCPServer(("0.0.0.0", port), DashboardApiHandler) as httpd:
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
