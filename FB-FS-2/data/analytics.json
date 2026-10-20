@@ -1,0 +1,501 @@
+{
+  "generatedAt": "2026-10-17T11:45:50.295Z",
+  "totalLeads": 3324,
+  "score": {
+    "min": 62,
+    "max": 97,
+    "avg": 75.9,
+    "buckets": [
+      {
+        "label": "85 - 100",
+        "value": 102
+      },
+      {
+        "label": "70 - 84",
+        "value": 3025
+      },
+      {
+        "label": "50 - 69",
+        "value": 197
+      },
+      {
+        "label": "30 - 49",
+        "value": 0
+      },
+      {
+        "label": "< 30",
+        "value": 0
+      }
+    ]
+  },
+  "tiers": [
+    {
+      "label": "Tier S",
+      "value": 102,
+      "percent": 3.1
+    },
+    {
+      "label": "Tier A",
+      "value": 3025,
+      "percent": 91
+    },
+    {
+      "label": "Tier B",
+      "value": 197,
+      "percent": 5.9
+    }
+  ],
+  "tierIndex": {
+    "Tier S": 102,
+    "Tier A": 3025,
+    "Tier B": 197
+  },
+  "amazon": [
+    {
+      "key": "no_amz",
+      "value": 3301,
+      "percent": 99.3,
+      "zh": "暂无亚马逊店铺",
+      "vi": "Chưa có Amazon"
+    },
+    {
+      "key": "both_target",
+      "value": 12,
+      "percent": 0.4,
+      "zh": "玩具 + 草坪便盆（双目标）",
+      "vi": "Cả đồ chơi + Cỏ/Potty (TARGET kép)"
+    },
+    {
+      "key": "grass_target",
+      "value": 9,
+      "percent": 0.3,
+      "zh": "草坪 / 便盆 TARGET",
+      "vi": "Cỏ / Khay Potty (TARGET)"
+    },
+    {
+      "key": "toys_target",
+      "value": 1,
+      "percent": 0,
+      "zh": "玩具 TARGET",
+      "vi": "Đồ chơi (TARGET)"
+    },
+    {
+      "key": "amz_other",
+      "value": 1,
+      "percent": 0,
+      "zh": "亚马逊其他品类",
+      "vi": "Amazon khác"
+    }
+  ],
+  "amazonIndex": {
+    "no_amz": 3301,
+    "both_target": 12,
+    "grass_target": 9,
+    "toys_target": 1,
+    "amz_other": 1
+  },
+  "amazonTotal": 23,
+  "categories": [],
+  "contactCoverage": [
+    {
+      "key": "phone",
+      "zh": "电话 Phone",
+      "vi": "Điện thoại Phone",
+      "value": 1470,
+      "percent": 44.2
+    },
+    {
+      "key": "email",
+      "zh": "邮箱 Email",
+      "vi": "Email",
+      "value": 1247,
+      "percent": 37.5
+    },
+    {
+      "key": "website",
+      "zh": "官网 Website",
+      "vi": "Website chính thức",
+      "value": 1849,
+      "percent": 55.6
+    },
+    {
+      "key": "url",
+      "zh": "Facebook 主页",
+      "vi": "Trang Facebook",
+      "value": 3118,
+      "percent": 93.8
+    },
+    {
+      "key": "zip",
+      "zh": "邮编 Zip",
+      "vi": "Mã Zip",
+      "value": 134,
+      "percent": 4
+    }
+  ],
+  "geo": {
+    "states": [
+      {
+        "label": "US",
+        "value": 480
+      },
+      {
+        "label": "CA",
+        "value": 34
+      },
+      {
+        "label": "NEW YORK",
+        "value": 26
+      },
+      {
+        "label": "OR",
+        "value": 19
+      },
+      {
+        "label": "NY",
+        "value": 14
+      },
+      {
+        "label": "NE",
+        "value": 11
+      },
+      {
+        "label": "ND",
+        "value": 11
+      },
+      {
+        "label": "FLORIDA",
+        "value": 10
+      },
+      {
+        "label": "WA",
+        "value": 9
+      },
+      {
+        "label": "VA",
+        "value": 6
+      },
+      {
+        "label": "MASSACHUSETTS",
+        "value": 5
+      },
+      {
+        "label": "NEW JERSEY",
+        "value": 2
+      }
+    ],
+    "cities": [
+      {
+        "label": "New York",
+        "value": 15
+      },
+      {
+        "label": "Miami",
+        "value": 9
+      },
+      {
+        "label": "San Diego",
+        "value": 8
+      },
+      {
+        "label": "Rochester",
+        "value": 8
+      },
+      {
+        "label": "Omaha",
+        "value": 7
+      },
+      {
+        "label": "Seattle",
+        "value": 3
+      },
+      {
+        "label": "Bismarck",
+        "value": 3
+      },
+      {
+        "label": "Eugene",
+        "value": 2
+      },
+      {
+        "label": "Glendale",
+        "value": 2
+      },
+      {
+        "label": "Portland",
+        "value": 2
+      }
+    ],
+    "distinctStates": 27,
+    "stateCoverage": 19.4
+  },
+  "dataQuality": {
+    "note": "字段完整度：用于评估可直接触达（电话/邮件）的客户比例。",
+    "reachableByPhoneOrEmail": 1774,
+    "reachablePercent": 53.4,
+    "missingState": 2679
+  },
+  "priorityLeads": 0,
+  "topLeads": [
+    {
+      "stt": "LEAD-US-000146",
+      "name": "California Dulce Doodles",
+      "owner": "Margie",
+      "city": "Glendale",
+      "state": "CA",
+      "zip": null,
+      "score": 97,
+      "rank_tier": "Tier S",
+      "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+      "phone": "+18182376975",
+      "email": "margie@californiadulcedoodles.com"
+    },
+    {
+      "stt": "LEAD-US-000088",
+      "name": "Daisey's Doodles Seattle",
+      "owner": "Trina Palosaari",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98001",
+      "score": 97,
+      "rank_tier": "Tier S",
+      "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+      "phone": "206-890-9458",
+      "email": "trinapalosaari@gmail.com"
+    },
+    {
+      "stt": "LEAD-US-000126",
+      "name": "Deer Creek Doodles",
+      "owner": "Amy",
+      "city": "Fort Calhoun",
+      "state": "NE",
+      "zip": "68023",
+      "score": 97,
+      "rank_tier": "Tier S",
+      "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+      "phone": "402-681-7596",
+      "email": "amy@deercreekdoodles.com"
+    },
+    {
+      "stt": "LEAD-US-000008",
+      "name": "High Desert Family Doodles",
+      "owner": "Mama Bryner",
+      "city": "Madras",
+      "state": "OR",
+      "zip": "97741",
+      "score": 97,
+      "rank_tier": "Tier S",
+      "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+      "phone": "(541) 838-0840",
+      "email": "highdesertgoldendoodles@gmail.com"
+    },
+    {
+      "stt": "LEAD-US-000071",
+      "name": "LK Bernedoodles",
+      "owner": "Chủ trại / Quản lý chuồng trại (Breeder Owner / Kennel Manager)",
+      "city": "Eugene",
+      "state": "OR",
+      "zip": null,
+      "score": 97,
+      "rank_tier": "Tier S",
+      "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+      "phone": "+1541.510.5989",
+      "email": "lk.kennel@yahoo.com"
+    },
+    {
+      "stt": "LEAD-US-000011",
+      "name": "NW Frenchies",
+      "owner": "Tanya Kharus",
+      "city": "Chimacum",
+      "state": "WA",
+      "zip": null,
+      "score": 97,
+      "rank_tier": "Tier S",
+      "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+      "phone": "503 349 3944",
+      "email": "349-3944tanya@nwfrenchies.com"
+    },
+    {
+      "stt": "LEAD-US-000148",
+      "name": "Sierra Springs Australian Doodles",
+      "owner": "Chủ trại / Quản lý chuồng trại (Breeder Owner / Kennel Manager)",
+      "city": null,
+      "state": "US",
+      "zip": null,
+      "score": 97,
+      "rank_tier": "Tier S",
+      "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+      "phone": "+15309037575",
+      "email": "info@ssdoodles.com"
+    },
+    {
+      "stt": "LEAD-US-000147",
+      "name": "Animal Haven",
+      "owner": "Chủ trại / Quản lý chuồng trại (Breeder Owner / Kennel Manager)",
+      "city": "New York",
+      "state": "New York",
+      "zip": "10013",
+      "score": 92,
+      "rank_tier": "Tier S",
+      "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+      "phone": "2122748511",
+      "email": "info@animalhaven.org"
+    },
+    {
+      "stt": "LEAD-US-000026",
+      "name": "Dream Golden Retrievers",
+      "owner": "Chủ trại / Quản lý chuồng trại (Breeder Owner / Kennel Manager)",
+      "city": "Hollister",
+      "state": "CA",
+      "zip": null,
+      "score": 92,
+      "rank_tier": "Tier S",
+      "amz_cat": "Selling artificial grass/pet toilets (TARGET)",
+      "phone": "+1 831 809 8745",
+      "email": "dreamgoldenretrievers@gmail.com"
+    },
+    {
+      "stt": "LEAD-US-000038",
+      "name": "Golden Puppies",
+      "owner": "Chủ trại / Quản lý chuồng trại (Breeder Owner / Kennel Manager)",
+      "city": "Amite City",
+      "state": "LA",
+      "zip": "70422",
+      "score": 92,
+      "rank_tier": "Tier S",
+      "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+      "phone": "+1-985-247-1987",
+      "email": "info@goldenpuppies.com"
+    },
+    {
+      "stt": "LEAD-US-000135",
+      "name": "Suncrest Australian Labradoodles",
+      "owner": "Lori Drew",
+      "city": "Portland",
+      "state": "OR",
+      "zip": "97223",
+      "score": 92,
+      "rank_tier": "Tier S",
+      "amz_cat": "Selling artificial grass/pet toilets (TARGET)",
+      "phone": null,
+      "email": "suncrestlabradoodles@gmail.com"
+    },
+    {
+      "stt": "LEAD-US-000218",
+      "name": "Blue Buddha Frenchies LLC",
+      "owner": "Angela & Blue Buddha Family",
+      "city": null,
+      "state": "US",
+      "zip": null,
+      "score": 90,
+      "rank_tier": "Tier S",
+      "amz_cat": "Amazon link not found",
+      "phone": null,
+      "email": null
+    },
+    {
+      "stt": "LEAD-US-000163",
+      "name": "Golden Dog Farm Vermont",
+      "owner": "Chủ trại / Quản lý chuồng trại (Breeder Owner / Kennel Manager)",
+      "city": null,
+      "state": "US",
+      "zip": null,
+      "score": 90,
+      "rank_tier": "Tier S",
+      "amz_cat": "Amazon link not found",
+      "phone": null,
+      "email": "goldendogfarmer@gmail.com"
+    },
+    {
+      "stt": "LEAD-US-000304",
+      "name": "Honey Mountain Kennels",
+      "owner": "Chủ trại / Quản lý chuồng trại (Breeder Owner / Kennel Manager)",
+      "city": null,
+      "state": "US",
+      "zip": null,
+      "score": 90,
+      "rank_tier": "Tier S",
+      "amz_cat": "Amazon link not found",
+      "phone": null,
+      "email": null
+    },
+    {
+      "stt": "LEAD-US-000311",
+      "name": "Joshua's House for Golden Retriever Rescue & Sanctuary Inc",
+      "owner": "Joshua",
+      "city": null,
+      "state": "US",
+      "zip": null,
+      "score": 90,
+      "rank_tier": "Tier S",
+      "amz_cat": "Amazon link not found",
+      "phone": null,
+      "email": null
+    },
+    {
+      "stt": "LEAD-US-000159",
+      "name": "Husker Doodles",
+      "owner": "Chủ trại / Quản lý chuồng trại (Breeder Owner / Kennel Manager)",
+      "city": "Chapman",
+      "state": "NE",
+      "zip": "68827",
+      "score": 89,
+      "rank_tier": "Tier S",
+      "amz_cat": "Selling pet toys",
+      "phone": "+1 308-379-4142",
+      "email": "bernedoodlekennels@gmail.com"
+    },
+    {
+      "stt": "LEAD-US-007507",
+      "name": "706Frenchies",
+      "owner": "Chủ trại / Quản lý chuồng trại (Breeder Owner / Kennel Manager)",
+      "city": null,
+      "state": null,
+      "zip": null,
+      "score": 87,
+      "rank_tier": "Tier S",
+      "amz_cat": "Amazon link not found",
+      "phone": "+1 951-348-0058 706 | 951-348-0058 706",
+      "email": "706frenchies@gmail.com"
+    },
+    {
+      "stt": "LEAD-US-000442",
+      "name": "Addybull Bulldogs  (Addybull Kennel)",
+      "owner": "Chủ trại / Quản lý chuồng trại (Breeder Owner / Kennel Manager)",
+      "city": null,
+      "state": "US",
+      "zip": null,
+      "score": 87,
+      "rank_tier": "Tier S",
+      "amz_cat": "Amazon link not found",
+      "phone": null,
+      "email": null
+    },
+    {
+      "stt": "LEAD-US-000078",
+      "name": "Autumn Harvest Dood Ranch",
+      "owner": "Karen",
+      "city": "Azalea",
+      "state": "OR",
+      "zip": "97410",
+      "score": 87,
+      "rank_tier": "Tier S",
+      "amz_cat": "Selling pet toys + Artificial grass/Pet toilets (TARGET)",
+      "phone": "541-900-0405",
+      "email": "karen@autumnharvestdoodranch.com"
+    },
+    {
+      "stt": "LEAD-US-002531",
+      "name": "Back Roads Mini Bernedoodles",
+      "owner": "Chủ trại / Quản lý chuồng trại (Breeder Owner / Kennel Manager)",
+      "city": null,
+      "state": null,
+      "zip": null,
+      "score": 87,
+      "rank_tier": "Tier S",
+      "amz_cat": "Amazon link not found",
+      "phone": "+1 574-202-1590 | 574-202-1590",
+      "email": "backroadsminibernedoodles@gmail.com"
+    }
+  ]
+}

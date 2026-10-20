@@ -61,6 +61,78 @@ STEP1_STATE = {
     "finished_at": 0
 }
 
+# Global state for language preference
+CURRENT_APP_LANG = "vi"
+
+def translate_log_to_zh(stage: str, text: str) -> tuple[str, str]:
+    """Chuyển đổi stage và text sang tiếng Trung nếu người dùng chọn ngôn ngữ tiếng Trung"""
+    stage_map = {
+        'KHỞI ĐỘNG': '启动任务',
+        'TIẾN HÀNH': '开始处理',
+        'TIẾN TRÌNH': '处理进度',
+        '1. KẾT NỐI FB': '1. 连接FB',
+        '2. TÊN TRẠI & CHỦ': '2. 犬舍与主理人',
+        '3. THÔNG TIN LIÊN HỆ': '3. 联系方式',
+        '4. BÀI ĐĂNG GẦN NHẤT': '4. 最新发帖',
+        '5. KÊNH AMAZON': '5. 亚马逊渠道',
+        '6. HOÀN TẤT HỒ SƠ': '6. 归档入库',
+        'TẦNG 1: FB INTRO': '第1层: FB简介',
+        'TẦNG 1: FB PROFILE': '第1层: FB主页提取',
+        'TẦNG 1: QUÉT FB': '第1层: FB主页提取',
+        'TẦNG 2: WEBSITE': '第2层: 官网挖掘',
+        'TẦNG 2: DUYỆT WEBSITE': '第2层: 官网挖掘',
+        'TẦNG 3: BÓC TÁCH AMAZON': '第3层: 亚马逊细分',
+        'TẦNG 4: CHẤM ĐIỂM': '第4层: 评分归档',
+        'TẦNG 4: RAG MASTER CRM': '第4层: RAG归档去重',
+        'GOOGLE AI FALLBACK': 'GOOGLE AI 智能补充',
+        'PHÊ DUYỆT CHÓ': '已批准犬类',
+        'LOẠI BỎ': '已剔除非目标',
+        'LỖI': '错误',
+        'THÀNH CÔNG': '成功',
+        'LOG': '运行日志'
+    }
+    new_stage = stage_map.get(stage, stage)
+
+    new_text = str(text or '')
+    replacements = [
+        ('BẮT ĐẦU CÀO BÓC TÁCH TRỰC TIẾP TỪ DÒNG', '开始实时深度抓取：从第'),
+        ('ĐẾN', '行到第'),
+        ('HỒ SƠ', '档案'),
+        ('Chuẩn bị mở URL:', '准备打开 URL:'),
+        ('Đang tải trang Facebook:', '正在加载 Facebook 页面:'),
+        ('Tên trại:', '犬舍名称:'),
+        ('Đại diện:', '主理人代表:'),
+        ('Chưa rõ', '未确定'),
+        ('Chưa bắt được', '未获取'),
+        ('SĐT:', '电话:'),
+        ('Không có', '无'),
+        ('Ngày đăng:', '发帖时间:'),
+        ('Amazon:', '亚马逊:'),
+        ('Có gian hàng', '有店铺'),
+        ('Gói SP:', '推荐方案:'),
+        ('Chủ:', '主理人:'),
+        ('ĐÃ TỰ CẬP NHẬT VÀO CRM!', '已实时存入CRM！'),
+        ('Điểm:', '评分:'),
+        ('Hoàn tất hồ sơ', '档案归档完成'),
+        ('Đang quét FB', '正在抓取 FB'),
+        ('Bắt đầu duyệt', '开始挖掘'),
+        ('website chính thức của trại', '个官方网站'),
+        ('Tìm tên chủ trại Owner', '查找主理人姓名Owner'),
+        ('Đã hoàn thành bóc tách toàn bộ', '已完成全部'),
+        ('Đã bóc tách thành công toàn bộ', '已完成全部'),
+        ('Đã quét', '已抓取'),
+        ('Có Website:', '有独立官网:'),
+        ('Không Website:', '无官网:'),
+        ('Đang xử lý', '正在处理'),
+        ('hồ sơ đạt chuẩn', '份档案达标'),
+        ('hồ sơ...', '份档案...'),
+        ('hồ sơ', '份档案')
+    ]
+    for vi_str, zh_str in replacements:
+        new_text = new_text.replace(vi_str, zh_str)
+
+    return new_stage, new_text
+
 # Global state for Step 2 bulk scanning progress
 SCAN_STATE = {
     "is_running": False,
@@ -378,6 +450,43 @@ class DashboardApiHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_response({'status': 'ok', 'data': parsed_data})
             return
 
+        # API: Cập nhật ngôn ngữ hiển thị hệ thống (vi / zh)
+        if path == '/api/set-lang':
+            global CURRENT_APP_LANG
+            req_lang = req_data.get('lang', 'vi')
+            CURRENT_APP_LANG = req_lang
+            t_now = time.strftime('%H:%M:%S')
+            lang_name = "中文 (Chinese)" if req_lang == 'zh' else "Tiếng Việt"
+            print(f"[{t_now}] \033[96m[NGÔN NGỮ / 语言]\033[0m Đã chuyển ngôn ngữ terminal sang: {lang_name}", flush=True)
+            self.send_json_response({'status': 'ok', 'lang': CURRENT_APP_LANG})
+            return
+
+        # API: Nhận thông báo log Bước 1 và in ra Terminal
+        if path == '/api/step1/log':
+            log_item = req_data.get('log', {})
+            stage = log_item.get('stage', 'BƯỚC 1')
+            text = log_item.get('text', '')
+            level = log_item.get('level', 'info')
+            t_stamp = log_item.get('timestamp', time.strftime('%H:%M:%S'))
+            req_lang = req_data.get('lang', log_item.get('lang', CURRENT_APP_LANG))
+
+            if req_lang == 'zh' or CURRENT_APP_LANG == 'zh':
+                stage, text = translate_log_to_zh(stage, text)
+
+            colors = {
+                'info': '\033[94m',
+                'success': '\033[92m',
+                'approved': '\033[92m',
+                'warn': '\033[93m',
+                'err': '\033[91m',
+                'rejected': '\033[91m'
+            }
+            c = colors.get(level, '\033[0m')
+            reset = '\033[0m'
+            print(f"[{t_stamp}] {c}[{stage}]{reset} {text}", flush=True)
+            self.send_json_response({'status': 'ok'})
+            return
+
         # API: Nhận thông báo log trực tiếp từ Chrome Extension và in ra Terminal
         if path == '/api/step2/log':
             log_item = req_data.get('log', {})
@@ -385,6 +494,10 @@ class DashboardApiHandler(http.server.SimpleHTTPRequestHandler):
             text = log_item.get('text', '')
             level = log_item.get('level', 'info')
             t_stamp = log_item.get('timestamp', time.strftime('%H:%M:%S'))
+            req_lang = req_data.get('lang', log_item.get('lang', CURRENT_APP_LANG))
+
+            if req_lang == 'zh' or CURRENT_APP_LANG == 'zh':
+                stage, text = translate_log_to_zh(stage, text)
 
             colors = {
                 'info': '\033[94m',

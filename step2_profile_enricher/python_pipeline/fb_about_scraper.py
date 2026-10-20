@@ -237,14 +237,18 @@ def scrape_fb_about(fb_url, session=None, timeout=10):
                     if pb_id:
                         result['fb_id'] = pb_id[0]
 
-            # 10. Bóc tách Publish Time & Bài viết gần nhất
+            # 10. Bóc tách Publish Time & Bài viết gần nhất (publish_time:"số")
             ts_list = []
-            for m_ts in re.finditer(r'"(?:creation_time|publish_time|story_time)"\s*:\s*(\d{10})', page_html):
+            for m_ts in re.finditer(r'\"?(?:creation_time|publish_time|story_time)\"?\s*:\s*\"?(\d{9,13})\"?', page_html):
                 v = int(m_ts.group(1))
+                if v > 10000000000:
+                    v = v // 1000
                 if 1577836800 <= v <= 1800000000:
                     ts_list.append(v)
-            for m_u in re.finditer(r'data-utime="(\d{10})"', page_html):
+            for m_u in re.finditer(r'data-utime=\"?(\d{9,13})\"?', page_html):
                 v = int(m_u.group(1))
+                if v > 10000000000:
+                    v = v // 1000
                 if 1577836800 <= v <= 1800000000:
                     ts_list.append(v)
 

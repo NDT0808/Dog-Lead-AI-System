@@ -1,0 +1,427 @@
+{
+  "_note": "UI 双语词典。HTML 通过 data/i18n.json（或 data/loader.js）加载，新增文案只需在此追加 key。",
+  "vi": {
+    "pageTitle": "Pet & Grass Lead Intelligence CRM - Thị Trường Hoa Kỳ (USA)",
+    "brandBadge": "⚡ Hệ Thống RAG & CRM Khách Hàng Mục Tiêu Hoa Kỳ (USA)",
+    "title": "Báo Cáo Phân Tích Leads & Sàn Amazon Thị Trường Mỹ 2026",
+    "desc": "Chiến lược Giai đoạn 1: <b>tập trung 100% thị trường nội địa Hoa Kỳ</b>. Dữ liệu được tách thành các tệp JSON độc lập trong thư mục <code>data/</code> để tra cứu và tích hợp. Báo cáo này trình bày <b>3.324 hồ sơ khách hàng tiềm năng giá trị cao</b>, chấm điểm theo chuẩn <b>marketing_parameter.html</b>, kết hợp kiểm chứng gian hàng Amazon và <b>radar thời tiết thời gian thực OpenWeatherMap</b> cho 3 dòng sản phẩm cốt lõi: <b>cỏ nhân tạo</b>, <b>khay vệ sinh thú cưng</b> và <b>đồ chơi trí tuệ cho cún</b>.",
+    "btnExport": "📥 Xuất Excel (.XLSX)",
+    "btnImport": "📤 Nhập leads.json",
+    "btnReset": "↺ Xóa bộ lọc",
+    "btnRefreshRadar": "🔄 Quét lại radar",
+    "sourceBuiltin": "Dữ liệu gốc",
+    "sourceImported": "File đã nhập",
+    "batchLabel": "Lô dữ liệu",
+    "importedAt": "Nhập lúc",
+    "builtinAt": "Ảnh chụp gốc · Tạo lúc",
+    "recordsCount": "{count} hồ sơ",
+    "thFbId": "FB ID",
+    "importSuccess": "✅ Đã nhập {name} — {count} hồ sơ, thống kê đã tính lại.",
+    "importFail": "❌ Nhập thất bại: {msg}",
+    "importInvalid": "Sai định dạng. Cần một mảng đối tượng leads, ví dụ: [{ \"name\": \"...\", \"score\": 90 }]",
+    "importEmpty": "Tệp không chứa bản ghi nào.",
+    "dropHint": "Kéo thả tệp .json vào thanh này để nhập nhanh.",
+    "radarTitle": "🛰️ Radar Khí Tượng Hoa Kỳ & Đòn Bẩy Tiếp Thị Theo Ngữ Cảnh",
+    "radarDesc": "Đo nhiệt độ và lượng mưa theo từng bang / zip code. Thời tiết xấu kích hoạt ngay nhu cầu thảm cỏ nhân tạo, khay potty thoát nước và đồ chơi xoa dịu stress.",
+    "radarStatusLive": "🟢 Đang kết nối OpenWeatherMap",
+    "radarStatusFallback": "🟡 Dữ liệu ước tính theo vùng",
+    "radarFallbackLabel": "Ước tính",
+    "alertTitle": "Mô Hình Chấm Điểm & Tín Nhiệm Kênh Amazon",
+    "alertContent": "Hệ thống áp dụng <b>mô hình chấm điểm chuẩn từ marketing_parameter.html</b> tính trực tiếp trên hồ sơ khách hàng, loại bỏ hoàn toàn tình trạng bão hòa điểm.<br>• <b>Tier S (85-100):</b> Trại chó quy mô lớn, đầy đủ liên hệ, có gian hàng Amazon bán đúng sản phẩm mục tiêu &rarr; <i>Sales gọi điện chốt ngay trong ngày</i>.<br>• <b>Tier A (70-84):</b> Trại chó thương mại uy tín &rarr; <i>Gọi điện ưu tiên + email cá nhân hóa</i>.<br>• <b>Tier B (50-69):</b> Tiềm năng trung bình &rarr; <i>Chuỗi email nuôi dưỡng tự động</i>.<br>• <b>Tier C/D (<50):</b> Quy mô nhỏ hoặc cứu trợ &rarr; <i>Nội dung mạng xã hội dài hạn</i>.<br>• <b>Phạm vi địa lý:</b> <i>100% đối tác nội địa Hoa Kỳ (mã vùng +1, 50 bang & zip code 5 số).</i>",
+    "alertFormula": "Điểm tổng hợp = Hồ sơ nền tảng (Website + Trang bán cún + Form đăng ký + 10+ đánh giá + Đa giống) + Bảo chứng Amazon (+15 điểm target kép) + Hành vi website",
+    "kpiTotal": "Tổng Leads giá trị cao",
+    "kpiSubTotal": "100% hồ sơ B2B nội địa Hoa Kỳ",
+    "kpiTierS": "Khách hàng Tier S",
+    "kpiSubTierS": "Điểm trung bình {avg} • Khoảng {min}–{max}",
+    "kpiBreeder": "Trại chó thương mại (Breeder)",
+    "kpiSubBreeder": "Chiếm {percent}% • Người mua Take-Home Kit chính",
+    "kpiAmz": "Gian hàng Amazon đã kiểm chứng",
+    "kpiSubAmz": "{both} gian hàng bán cả cỏ/potty + đồ chơi",
+    "kpiReach": "Có thể liên hệ trực tiếp",
+    "kpiSubReach": "Có điện thoại hoặc email • {percent}% độ phủ",
+    "chartTier": "Phân bổ cấp bậc khách hàng (Tier)",
+    "chartAmazon": "Kênh Amazon & tín nhiệm thương mại",
+    "chartScore": "Phân bổ điểm chấm (Score)",
+    "chartCategory": "Cơ cấu loại hình doanh nghiệp (ICP Fit)",
+    "chartCoverage": "Độ phủ thông tin liên hệ",
+    "searchPlaceholder": "🔍 Tìm tên trại, chủ sở hữu, phone, email, city, state, zip...",
+    "filterAmazon": "Kênh Amazon",
+    "filterTier": "Cấp bậc",
+    "filterCategory": "Loại hình",
+    "filterWeather": "Ngữ cảnh thời tiết",
+    "pageSizeLabel": "Số dòng / trang",
+    "resultCount": "Hiển thị <b>{shown}</b> / <b>{total}</b> đối tác • Trang {page}/{pages}",
+    "noMatch": "Không tìm thấy khách hàng phù hợp bộ lọc.",
+    "amzOptions": [
+      {
+        "val": "",
+        "text": "🛒 Tất cả"
+      },
+      {
+        "val": "both_target",
+        "text": "★ Đồ chơi + Cỏ/Potty (TARGET kép)"
+      },
+      {
+        "val": "grass_target",
+        "text": "Cỏ / Khay Potty (TARGET)"
+      },
+      {
+        "val": "toys_target",
+        "text": "Đồ chơi (TARGET)"
+      },
+      {
+        "val": "has_amz",
+        "text": "Có gian hàng Amazon (bất kỳ)"
+      },
+      {
+        "val": "no_amz",
+        "text": "Chưa có Amazon"
+      }
+    ],
+    "tierOptions": [
+      {
+        "val": "",
+        "text": "🏆 Tất cả"
+      },
+      {
+        "val": "Tier S",
+        "text": "Tier S (85 - 100 điểm)"
+      },
+      {
+        "val": "Tier A",
+        "text": "Tier A (70 - 84 điểm)"
+      },
+      {
+        "val": "Tier B",
+        "text": "Tier B (50 - 69 điểm)"
+      },
+      {
+        "val": "Tier C",
+        "text": "Tier C (30 - 49 điểm)"
+      }
+    ],
+    "catOptions": [
+      {
+        "val": "",
+        "text": "🏢 Tất cả"
+      },
+      {
+        "val": "breeder",
+        "text": "Trại chó thương mại (Breeder)"
+      },
+      {
+        "val": "service",
+        "text": "Huấn luyện & Boarding"
+      },
+      {
+        "val": "rescue",
+        "text": "Trạm cứu trợ / Shelter"
+      }
+    ],
+    "weatherOptions": [
+      {
+        "val": "",
+        "text": "🌦️ Tất cả"
+      },
+      {
+        "val": "cold",
+        "text": "❄️ Rét buốt / Tuyết (<45°F)"
+      },
+      {
+        "val": "rain",
+        "text": "🌧️ Mưa ẩm / Giông bão"
+      },
+      {
+        "val": "hot",
+        "text": "☀️ Nắng gắt (>80°F)"
+      },
+      {
+        "val": "mild",
+        "text": "🌤️ Ôn hòa (45-80°F)"
+      }
+    ],
+    "thCode": "Mã",
+    "thName": "Khách hàng & liên hệ",
+    "thLocation": "Địa điểm",
+    "thWeather": "Thời tiết & kịch bản",
+    "thCategory": "Loại hình",
+    "thAmazon": "Kênh Amazon",
+    "thProduct": "Sản phẩm gợi ý",
+    "thScore": "Điểm",
+    "thTier": "Hạng",
+    "thAction": "Hành động Sales",
+    "ownerLabel": "Chủ sở hữu / Đại diện:",
+    "ownerUnknown": "Đại diện: đang cập nhật",
+    "pageLbl": "Trang",
+    "prevBtn": "← Trước",
+    "nextBtn": "Sau →",
+    "scoreUnit": "đ",
+    "amzNone": "Chưa có Amazon",
+    "amzTargetBoth": "★ Cỏ + Đồ chơi TARGET",
+    "amzTargetGrass": "🌱 Cỏ / Potty TARGET",
+    "amzTargetToys": "🎾 Đồ chơi TARGET",
+    "amzOther": "Amazon (khác)",
+    "cold": "Rét buốt",
+    "rain": "Mưa ẩm",
+    "hot": "Nắng gắt",
+    "mild": "Ôn hòa",
+    "pitchCold": "Khay Potty & thảm cỏ chống buốt chân + đồ chơi xoa dịu",
+    "pitchRain": "Thảm cỏ thoát nước kháng khuẩn + khay vệ sinh trong nhà",
+    "pitchHot": "Cỏ nhân tạo góc râm mát + đồ chơi gặm hạ nhiệt",
+    "pitchMild": "Bộ quà tặng Puppy Take-Home Kit trọn gói",
+    "modalTitle": "Kịch bản chốt đơn theo thời tiết thời gian thực",
+    "modalClose": "Đóng",
+    "modalCopy": "📋 Sao chép kịch bản",
+    "modalCopied": "✅ Đã sao chép kịch bản!",
+    "weatherStation": "Trạm khí tượng",
+    "weatherTemp": "Nhiệt độ",
+    "weatherHumidity": "Độ ẩm",
+    "weatherWind": "Gió",
+    "weatherImpact": "Tác động tâm lý cún cưng:",
+    "weatherPitch": "Kịch bản Telesale / Email hôm nay:",
+    "weatherSyncing": "⚡ Đang đo nhiệt độ...",
+    "pbTitle1": "Kịch bản mở đầu cho đội Sales",
+    "pbQuote1": "\"Do you currently provide a puppy take-home package for your buyers?\"<br>(Hiện tại trại của anh/chị có chuẩn bị bộ quà tặng Take-Home Kit cho khách khi đón cún về nhà mới không?)",
+    "pbNote1": "<b>Với trại đã bán trên Amazon:</b> Nhấn mạnh giảm chi phí đóng gói tự túc nhờ combo giá sỉ in logo riêng của trại.",
+    "pbTitle2": "Đòn bẩy sản phẩm theo kênh Amazon",
+    "pbList2": "<li><b>Đang bán Cỏ/Khay vệ sinh:</b> Chào thảm cỏ thoát nước, kháng xé, kích thước chuồng trại + chiết khấu BOM số lượng lớn.</li><li><b>Đang bán Đồ chơi:</b> Giới thiệu đồ chơi ngứa răng mang mùi mẹ (Snuggle Puppy) kèm Take-Home Kit.</li><li><b>Chưa có Amazon:</b> Đề xuất Starter Kit trọn gói giúp tăng 15-20% giá trị cún xuất chuồng.</li>",
+    "pbTitle3": "Đòn bẩy tiếp thị theo ngữ cảnh thời tiết",
+    "pbQuote3": "\"Dữ liệu nhiệt độ & thời tiết là mỏ vàng để kích hoạt chốt đơn cỏ nhân tạo & đồ chơi theo ngữ cảnh thực tế.\"",
+    "pbList3": "<li><b>Mưa bão / Tuyết lạnh / Nắng gắt:</b> Cún ngại ra đường, nguy cơ cảm lạnh, bỏng chân &rarr; Kích hoạt thảm cỏ thoát nước & khay vệ sinh trong nhà.</li><li><b>Nhốt trong nhà kéo dài:</b> Cún cuồng chân, stress cắn xé &rarr; Đẩy đồ chơi gặm nhai xoa dịu.</li><li><b>Định giá động:</b> Mùa bão tuyết, chào combo Starter Kit với AOV cao hơn 20-30% vì nhu cầu tức thì.</li>",
+    "footer": "Dữ liệu: <b>{source}</b> • Chuẩn chấm điểm: <b>{spec}</b> • Thời tiết: <b>{weather}</b> • Tệp dữ liệu: <code>data/leads.json</code>, <code>data/analytics.json</code>, <code>data/meta.json</code>, <code>data/i18n.json</code>.",
+    "dataHint": "📦 Dữ liệu đã tách: leads.json ({leads} bản ghi) • analytics.json • meta.json • i18n.json",
+    "thAvatar": "Avatar",
+    "filterAvatar": "Phân loại Avatar",
+    "avatarOptions": [
+      {
+        "val": "",
+        "text": "🖼️ Tất cả Avatar"
+      },
+      {
+        "val": "dog",
+        "text": "🐶 Avatar Chó (2.304)"
+      },
+      {
+        "val": "person",
+        "text": "👤 Avatar Người (1.020)"
+      }
+    ],
+    "avatarModalTitle": "Chi Tiết Ảnh Đại Diện & Nhận Diện AI",
+    "avatarTypeDog": "🐶 Avatar: Chó cưng / Cún con (dog-model.onnx Verified)",
+    "avatarTypePerson": "👤 Avatar: Chủ trại / Người đại diện (Breeder Owner)",
+    "copyFbIdBtn": "📋 Sao chép FB ID",
+    "openFbProfileBtn": "🔗 Mở Trang Facebook"
+  },
+  "zh": {
+    "pageTitle": "Pet & Grass 潜客智能 CRM - 美国本土市场专案",
+    "brandBadge": "⚡ 美国本土市场专案 · RAG 智能检索与 CRM 潜客系统",
+    "title": "美国本土狗舍潜客与亚马逊渠道营销分析报告 2026",
+    "desc": "第一阶段战略重点：<b>100% 聚焦美国本土市场</b>。报告数据已完整拆分为 <code>data/</code> 目录下的独立 JSON 文件，便于二次调用与系统集成。本报告呈现 <b>3,324 条高净值潜客</b>，严格执行 <b>marketing_parameter.html</b> 评分标准，叠加亚马逊店铺背书校验，并集成 <b>OpenWeatherMap 实时气象雷达</b>，精准锚定三大核心品类：<b>宠物人造草坪</b>、<b>室内便盆 / 尿垫</b>、<b>幼犬益智玩具</b>。",
+    "btnExport": "📥 导出 Excel (.XLSX)",
+    "btnImport": "📤 导入 leads.json",
+    "btnReset": "↺ 清空筛选",
+    "btnRefreshRadar": "🔄 重新扫描雷达",
+    "sourceBuiltin": "内置数据",
+    "sourceImported": "已导入文件",
+    "batchLabel": "数据批次",
+    "importedAt": "导入于",
+    "builtinAt": "内置快照 · 生成于",
+    "recordsCount": "{count} 条记录",
+    "thFbId": "FB ID",
+    "importSuccess": "✅ 已导入 {name} — 共 {count} 条记录，统计已重新计算。",
+    "importFail": "❌ 导入失败：{msg}",
+    "importInvalid": "格式不正确，需要 leads 对象数组，例如：[{ \"name\": \"...\", \"score\": 90 }]",
+    "importEmpty": "文件中没有任何记录。",
+    "dropHint": "也可将 .json 文件拖放到此条区域快速导入。",
+    "radarTitle": "🛰️ 全美实时气象雷达与情境营销指挥中心",
+    "radarDesc": "按州 / 邮编实时测算气温与降水。恶劣天气直接催化人造草坪、排水便盆与解压玩具的刚性采购需求。",
+    "radarStatusLive": "🟢 已连接 OpenWeatherMap 实时数据",
+    "radarStatusFallback": "🟡 区域估算数据（接口不可用）",
+    "radarFallbackLabel": "估算",
+    "alertTitle": "标准评分模型与亚马逊渠道公信力",
+    "alertContent": "系统严格遵循 <b>marketing_parameter.html 客户评分标准</b>，直接在客户档案上计算，彻底杜绝满分饱和。<br>• <b>Tier S（85-100）：</b>规模化商业犬舍，联系方式完整，拥有目标品类亚马逊店铺 &rarr; <i>销售当天电话直联</i>。<br>• <b>Tier A（70-84）：</b>信誉良好的商业犬舍 &rarr; <i>优先电话 + 个性化邮件</i>。<br>• <b>Tier B（50-69）：</b>中等潜力 &rarr; <i>自动化培育邮件序列</i>。<br>• <b>Tier C/D（<50）：</b>小型或救助机构 &rarr; <i>社媒内容长期沉淀</i>。<br>• <b>战略地理范围：</b> <i>100% 美国本土客户（北美区号 +1、50 州及 5 位邮编）。</i>",
+    "alertFormula": "综合评分 = 基础资料 (官网 + 幼犬销售页 + 申请表 + 10+ 评价 + 多犬种) + 亚马逊背书 (双目标 +15 分) + 网站浏览行为",
+    "kpiTotal": "高净值潜客总量",
+    "kpiSubTotal": "100% 美国本土 B2B 档案",
+    "kpiTierS": "Tier S 顶级客群",
+    "kpiSubTierS": "平均分 {avg} • 区间 {min}–{max}",
+    "kpiBreeder": "商业繁育犬舍 (Breeder)",
+    "kpiSubBreeder": "占比 {percent}% • Take-Home Kit 主力买家",
+    "kpiAmz": "已验证亚马逊店铺",
+    "kpiSubAmz": "其中 {both} 家同时销售草坪便盆 + 玩具",
+    "kpiReach": "可直接触达客户",
+    "kpiSubReach": "含电话或邮箱 • 覆盖率 {percent}%",
+    "chartTier": "潜客评级分布 (Tier)",
+    "chartAmazon": "亚马逊渠道分布与商业公信力",
+    "chartScore": "综合评分分布 (Score)",
+    "chartCategory": "机构业务类型构成 (ICP Fit)",
+    "chartCoverage": "联系方式覆盖率",
+    "searchPlaceholder": "🔍 搜索犬舍名称、所有者、电话、邮箱、城市、州、邮编...",
+    "filterAmazon": "亚马逊渠道",
+    "filterTier": "客户评级",
+    "filterCategory": "业务类型",
+    "filterWeather": "天气情境",
+    "pageSizeLabel": "每页条数",
+    "resultCount": "已显示 <b>{shown}</b> / <b>{total}</b> 家客户 • 第 {page}/{pages} 页",
+    "noMatch": "未检索到符合条件的客户线索。",
+    "amzOptions": [
+      {
+        "val": "",
+        "text": "🛒 全部"
+      },
+      {
+        "val": "both_target",
+        "text": "★ 玩具 + 草坪便盆（双目标）"
+      },
+      {
+        "val": "grass_target",
+        "text": "草坪 / 便盆 TARGET"
+      },
+      {
+        "val": "toys_target",
+        "text": "玩具 TARGET"
+      },
+      {
+        "val": "has_amz",
+        "text": "已发现亚马逊链接（任意）"
+      },
+      {
+        "val": "no_amz",
+        "text": "暂无亚马逊店铺"
+      }
+    ],
+    "tierOptions": [
+      {
+        "val": "",
+        "text": "🏆 全部"
+      },
+      {
+        "val": "Tier S",
+        "text": "Tier S（85 - 100 分）"
+      },
+      {
+        "val": "Tier A",
+        "text": "Tier A（70 - 84 分）"
+      },
+      {
+        "val": "Tier B",
+        "text": "Tier B（50 - 69 分）"
+      },
+      {
+        "val": "Tier C",
+        "text": "Tier C（30 - 49 分）"
+      }
+    ],
+    "catOptions": [
+      {
+        "val": "",
+        "text": "🏢 全部"
+      },
+      {
+        "val": "breeder",
+        "text": "商业繁育犬舍 (Breeder)"
+      },
+      {
+        "val": "service",
+        "text": "训犬与寄宿 (Pet Care)"
+      },
+      {
+        "val": "rescue",
+        "text": "动物救助站 (Rescue)"
+      }
+    ],
+    "weatherOptions": [
+      {
+        "val": "",
+        "text": "🌦️ 全部"
+      },
+      {
+        "val": "cold",
+        "text": "❄️ 严寒暴雪（<45°F）"
+      },
+      {
+        "val": "rain",
+        "text": "🌧️ 阴雨雷暴"
+      },
+      {
+        "val": "hot",
+        "text": "☀️ 高温酷暑（>80°F）"
+      },
+      {
+        "val": "mild",
+        "text": "🌤️ 舒适温和（45-80°F）"
+      }
+    ],
+    "thCode": "序号",
+    "thName": "客户 / 犬舍与联系方式",
+    "thLocation": "地理位置",
+    "thWeather": "实时天气与话术触发",
+    "thCategory": "业务分类",
+    "thAmazon": "亚马逊渠道",
+    "thProduct": "推荐匹配产品",
+    "thScore": "综合评分",
+    "thTier": "评级",
+    "thAction": "销售动作",
+    "ownerLabel": "所有者 / 业务代表：",
+    "ownerUnknown": "代表：待进一步核实",
+    "pageLbl": "页码",
+    "prevBtn": "← 上一页",
+    "nextBtn": "下一页 →",
+    "scoreUnit": "分",
+    "amzNone": "暂无亚马逊",
+    "amzTargetBoth": "★ 草坪 + 玩具 TARGET",
+    "amzTargetGrass": "🌱 草坪 / 便盆 TARGET",
+    "amzTargetToys": "🎾 益智玩具 TARGET",
+    "amzOther": "亚马逊其他品类",
+    "cold": "严寒暴雪",
+    "rain": "多雨潮湿",
+    "hot": "高温炎热",
+    "mild": "气候温和",
+    "pitchCold": "室内草坪便盆套件 + 防拆解压益智玩具",
+    "pitchRain": "快排水抗菌人造草垫 + 室内排泄便盆",
+    "pitchHot": "抗 UV 遮阳草垫 + 洁齿耐咬咀嚼玩具",
+    "pitchMild": "幼犬回家大礼包 Take-Home Kit 现成方案",
+    "modalTitle": "实时天气情境话术与即时成交方案",
+    "modalClose": "关闭",
+    "modalCopy": "📋 一键复制话术",
+    "modalCopied": "✅ 话术已复制到剪贴板！",
+    "weatherStation": "气象观测站",
+    "weatherTemp": "气温",
+    "weatherHumidity": "湿度",
+    "weatherWind": "风速",
+    "weatherImpact": "幼犬心理与生理反应：",
+    "weatherPitch": "今日电销 / 邮件开场话术：",
+    "weatherSyncing": "⚡ 正在测算气温...",
+    "pbTitle1": "经典销售切入话术（邮件 & 电话）",
+    "pbQuote1": "\"Do you currently provide a puppy take-home package for your buyers?\"<br>（请问贵犬舍在幼犬交付时，是否会为买家准备幼犬回家大礼包 Take-Home Kit？）",
+    "pbNote1": "<b>针对已有亚马逊店铺的客户：</b>直接切入定制化批发方案，强调犬舍专属 Logo 印刷与打包成本优势。",
+    "pbTitle2": "基于亚马逊渠道的品类进攻策略",
+    "pbList2": "<li><b>已售草坪 / 便盆：</b>主推快排水、防咬抗撕裂人造草垫与室内幼犬托盘，出示批量订购 BOM 折扣。</li><li><b>已售玩具：</b>引入安抚幼犬心跳玩具（Snuggle Puppy 同类）与出牙咀嚼玩具包。</li><li><b>尚无电商渠道：</b>提供开箱即用的 Take-Home Starter Kit，赋能犬舍品牌溢价提升 15-20%。</li>",
+    "pbTitle3": "基于天气预报的情境营销杠杆",
+    "pbQuote3": "\"气温与天气数据，是刺激人造草坪、便盆托盘与益智玩具即时转化的核心外部杠杆。\"",
+    "pbList3": "<li><b>暴雪 / 酷暑（>90°F / <40°F）：</b>幼犬无法出门排泄，易受凉中暑 &rarr; 即时触发室内排水草垫与专用便盆托盘。</li><li><b>长时间闭门室内：</b>精力无处释放引发拆家焦虑 &rarr; 精准推送安抚心跳与高耐咬磨牙玩具。</li><li><b>动态定价与急迫性捆绑：</b>恶劣天气警报期主推应急 Starter Kit，客单价可提升 20-30%。</li>",
+    "footer": "数据源：<b>{source}</b> • 评分规范：<b>{spec}</b> • 气象引擎：<b>{weather}</b> • 数据文件：<code>data/leads.json</code>、<code>data/analytics.json</code>、<code>data/meta.json</code>、<code>data/i18n.json</code>。",
+    "dataHint": "📦 数据已分离：leads.json（{leads} 条记录）• analytics.json • meta.json • i18n.json",
+    "thAvatar": "头像",
+    "filterAvatar": "头像分类",
+    "avatarOptions": [
+      {
+        "val": "",
+        "text": "🖼️ 全部头像"
+      },
+      {
+        "val": "dog",
+        "text": "🐶 宠物犬头像 (2,304)"
+      },
+      {
+        "val": "person",
+        "text": "👤 繁育人头像 (1,020)"
+      }
+    ],
+    "avatarModalTitle": "头像放大详情与 AI 视觉识别",
+    "avatarTypeDog": "🐶 头像属性：宠物犬 / 幼犬 (dog-model.onnx 视觉验证)",
+    "avatarTypePerson": "👤 头像属性：犬舍主理人 / 个人代表 (Breeder Owner)",
+    "copyFbIdBtn": "📋 复制 FB ID",
+    "openFbProfileBtn": "🔗 打开 Facebook 主页"
+  }
+}

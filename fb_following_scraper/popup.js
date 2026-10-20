@@ -487,6 +487,7 @@ async function clearData() {
     const tab = await getActiveTab();
     if (tab && tab.id) {
       chrome.tabs.sendMessage(tab.id, { action: 'PURGE_JUNK_DATA' });
+      chrome.tabs.sendMessage(tab.id, { action: 'RESET_HARVESTING' });
     }
   } catch (e) {}
 

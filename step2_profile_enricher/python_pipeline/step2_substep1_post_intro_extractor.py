@@ -282,17 +282,21 @@ def extract_post_and_intro_from_html(html_content, source_url=""):
     latest_post_url = ""
 
     # Pattern A: Tìm timestamp từ các thuộc tính Relay / Comet JSON
-    # e.g. "creation_time": 1729350000 hoặc "publish_time": 1729350000
+    # e.g. "creation_time": 1729350000 hoặc "publish_time": "1729350000"
     timestamps_found = []
-    for m_ts in re.finditer(r'"(?:creation_time|publish_time|story_time)"\s*:\s*(\d{10})', html_content):
+    for m_ts in re.finditer(r'\"?(?:creation_time|publish_time|story_time)\"?\s*:\s*\"?(\d{9,13})\"?', html_content):
         val = int(m_ts.group(1))
+        if val > 10000000000:
+            val = val // 1000
         # Lọc timestamp hợp lý trong khoảng 2020 - 2027
         if 1577836800 <= val <= 1800000000:
             timestamps_found.append(val)
 
     # Pattern B: Tìm timestamp từ thẻ DOM data-utime="..."
-    for m_utime in re.finditer(r'data-utime="(\d{10})"', html_content):
+    for m_utime in re.finditer(r'data-utime=\"?(\d{9,13})\"?', html_content):
         val = int(m_utime.group(1))
+        if val > 10000000000:
+            val = val // 1000
         if 1577836800 <= val <= 1800000000:
             timestamps_found.append(val)
 

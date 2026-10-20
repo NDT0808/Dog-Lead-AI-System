@@ -187,7 +187,25 @@
         txtPillAmzGrass: "🔥 Thảm Cỏ / Potty",
         txtPillAmzToys: "🧸 Đồ Chơi Thú Cưng",
         txtPillAmzOther: "📦 Ngành Hàng Khác",
-        txtBtnClearCrm: "🗑️ Xóa Sạch CRM Cũ"
+        txtBtnClearCrm: "🗑️ Xóa Sạch CRM Cũ",
+        txtBtnSwitchToStep2: "⚡ Chuyển Toàn Bộ Link Sang Bước 2",
+        txtBtnCopyAllLinks: "📋 Sao Chép Link",
+        txtBtnExportExcel: "📊 Xuất Excel Bước 1",
+        txtBtnExportStep2Json: "💾 Xuất JSON Bước 1",
+        lblLinkCountLabel: "Danh sách link Facebook:",
+        lblLinkCountUnit: "link",
+        txtBtnQuickPaste: "📋 Dán từ Clipboard",
+        lblFromLineLabel: "Từ dòng:",
+        lblToLineLabel: "Đến dòng:",
+        lblRangeTip: "💡 Chạy tùy chọn (ví dụ 1 đến 50). Để trống 'Đến dòng' để cào hết.",
+        txtBtnStartDirect: "BẮT ĐẦU CÀO BÓC TÁCH",
+        txtBtnPauseDirect: "TẠM DỪNG",
+        txtBtnResumeDirect: "TIẾP TỤC CÀO",
+        txtBtnLoadStep1Inner: "📥 Nạp Từ Bước 1",
+        txtBtnClearLinksInner: "🧹 Xóa Trắng",
+        lblScrapedCompletedPrefix: "Đã cào hoàn tất:",
+        lblScrapedCompletedSuffix: "hồ sơ",
+        bulkLeadOwnerPrefix: "Chủ trại:"
       },
       zh: {
         txtNavTitle: "Pet Lead AI",
@@ -292,7 +310,25 @@
         txtPillAmzGrass: "🔥 宠物草坪 / 狗厕所",
         txtPillAmzToys: "🧸 宠物玩具系列",
         txtPillAmzOther: "📦 其它宠物配件",
-        txtBtnClearCrm: "🗑️ 清空旧CRM数据"
+        txtBtnClearCrm: "🗑️ 清空旧CRM数据",
+        txtBtnSwitchToStep2: "⚡ 将全部链接移至第二步",
+        txtBtnCopyAllLinks: "📋 复制全部链接",
+        txtBtnExportExcel: "📊 导出第一步Excel",
+        txtBtnExportStep2Json: "💾 导出第一步JSON",
+        lblLinkCountLabel: "Facebook链接列表:",
+        lblLinkCountUnit: "条链接",
+        txtBtnQuickPaste: "📋 从剪贴板粘贴",
+        lblFromLineLabel: "起始行:",
+        lblToLineLabel: "截止行:",
+        lblRangeTip: "💡 支持按范围采集 (如1至50)。留空“截止行”将全部采集。",
+        txtBtnStartDirect: "开始实时深度抓取",
+        txtBtnPauseDirect: "暂停采集",
+        txtBtnResumeDirect: "继续采集",
+        txtBtnLoadStep1Inner: "📥 从第一步导入",
+        txtBtnClearLinksInner: "🧹 清空",
+        lblScrapedCompletedPrefix: "已采集完成:",
+        lblScrapedCompletedSuffix: "份档案",
+        bulkLeadOwnerPrefix: "主理人:"
       }
     };
 
@@ -301,6 +337,13 @@
     function setAppLang(lang) {
       currentLang = lang;
       localStorage.setItem('pet_lead_lang', lang);
+
+      // Đồng bộ ngôn ngữ sang server python để terminal in tiếng Trung chuẩn xác
+      fetch('http://127.0.0.1:8000/api/set-lang', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lang })
+      }).catch(() => {});
       
       const btnVi = document.getElementById('btnAppLangVi');
       const btnZh = document.getElementById('btnAppLangZh');
@@ -417,6 +460,217 @@
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    // Helper chuyển đổi ngữ nghĩa log sang tiếng Trung
+    function translateLogToZh(stage, text) {
+      const STAGE_MAP = {
+        'KHỞI ĐỘNG': '启动任务',
+        'TIẾN HÀNH': '开始处理',
+        'TIẾN TRÌNH': '处理进度',
+        '1. KẾT NỐI FB': '1. 连接FB',
+        '2. TÊN TRẠI & CHỦ': '2. 犬舍与主理人',
+        '3. THÔNG TIN LIÊN HỆ': '3. 联系方式',
+        '4. BÀI ĐĂNG GẦN NHẤT': '4. 最新发帖',
+        '5. KÊNH AMAZON': '5. 亚马逊渠道',
+        '6. HOÀN TẤT HỒ SƠ': '6. 归档入库',
+        'TẦNG 1: FB INTRO': '第1层: FB简介',
+        'TẦNG 1: FB PROFILE': '第1层: FB主页提取',
+        'TẦNG 1: QUÉT FB': '第1层: FB主页提取',
+        'TẦNG 2: WEBSITE': '第2层: 官网挖掘',
+        'TẦNG 2: DUYỆT WEBSITE': '第2层: 官网挖掘',
+        'TẦNG 3: BÓC TÁCH AMAZON': '第3层: 亚马逊细分',
+        'TẦNG 4: CHẤM ĐIỂM': '第4层: 评分归档',
+        'TẦNG 4: RAG MASTER CRM': '第4层: RAG归档去重',
+        'GOOGLE AI FALLBACK': 'GOOGLE AI 智能补充',
+        'PHÊ DUYỆT CHÓ': '已批准犬类',
+        'LOẠI BỎ': '已剔除非目标',
+        'LỖI': '错误',
+        'THÀNH CÔNG': '成功',
+        'LOG': '运行日志'
+      };
+      const newStage = STAGE_MAP[stage] || stage;
+
+      let newText = String(text || '');
+      const REPLACEMENTS = [
+        ['BẮT ĐẦU CÀO BÓC TÁCH TRỰC TIẾP TỪ DÒNG', '开始实时深度抓取：从第'],
+        ['ĐẾN', '行到第'],
+        ['HỒ SƠ', '档案'],
+        ['Chuẩn bị mở URL:', '准备打开 URL:'],
+        ['Đang tải trang Facebook:', '正在加载 Facebook 页面:'],
+        ['Tên trại:', '犬舍名称:'],
+        ['Đại diện:', '主理人代表:'],
+        ['Chưa rõ', '未确定'],
+        ['Chưa bắt được', '未获取'],
+        ['SĐT:', '电话:'],
+        ['Không có', '无'],
+        ['Ngày đăng:', '发帖时间:'],
+        ['Amazon:', '亚马逊:'],
+        ['Có gian hàng', '有店铺'],
+        ['Gói SP:', '推荐方案:'],
+        ['Chủ:', '主理人:'],
+        ['ĐÃ TỰ CẬP NHẬT VÀO CRM!', '已实时存入CRM！'],
+        ['Điểm:', '评分:'],
+        ['Hoàn tất hồ sơ', '档案归档完成'],
+        ['Đang quét FB', '正在抓取 FB'],
+        ['Bắt đầu duyệt', '开始挖掘'],
+        ['website chính thức của trại', '个官方网站'],
+        ['Tìm tên chủ trại Owner', '查找主理人姓名Owner'],
+        ['Đã hoàn thành bóc tách toàn bộ', '已完成全部'],
+        ['Đã bóc tách thành công toàn bộ', '已完成全部'],
+        ['Đã quét', '已抓取'],
+        ['Có Website:', '有独立官网:'],
+        ['Không Website:', '无官网:'],
+        ['Đang xử lý', '正在处理'],
+        ['hồ sơ đạt chuẩn', '份档案达标'],
+        ['hồ sơ...', '份档案...'],
+        ['hồ sơ', '份档案']
+      ];
+      for (const [v, z] of REPLACEMENTS) {
+        newText = newText.split(v).join(z);
+      }
+      return { stage: newStage, text: newText };
+    }
+
+    // Helper phân tích trường publish_time:"số" và giải mã thành ngày giờ, độ tươi bài đăng
+    function parsePublishTimestamp(rawVal) {
+      if (!rawVal) return null;
+      let ts = parseInt(String(rawVal).replace(/[^\d]/g, ''), 10);
+      if (isNaN(ts) || ts <= 0) return null;
+      if (ts > 10000000000) {
+        ts = Math.floor(ts / 1000);
+      }
+      if (ts < 1514764800 || ts > 1900000000) {
+        return null;
+      }
+      const d = new Date(ts * 1000);
+      const now = new Date();
+      const diffSec = Math.max(0, Math.floor((now.getTime() - d.getTime()) / 1000));
+      const daysAgo = Math.floor(diffSec / (24 * 3600));
+
+      const pad = n => String(n).padStart(2, '0');
+      const day = pad(d.getDate());
+      const month = pad(d.getMonth() + 1);
+      const year = d.getFullYear();
+      const hours = pad(d.getHours());
+      const minutes = pad(d.getMinutes());
+
+      const publishHumanVi = `${day}/${month}/${year} ${hours}:${minutes}`;
+      const publishHumanZh = `${year}年${month}月${day}日 ${hours}:${minutes}`;
+      const publishHuman = currentLang === 'zh' ? publishHumanZh : publishHumanVi;
+
+      let relVi = '';
+      let relZh = '';
+      if (diffSec < 3600) {
+        const mins = Math.max(1, Math.floor(diffSec / 60));
+        relVi = `${mins} phút trước`;
+        relZh = `${mins} 分钟前`;
+      } else if (diffSec < 86400) {
+        const hrs = Math.floor(diffSec / 3600);
+        relVi = `${hrs} giờ trước`;
+        relZh = `${hrs} 小时前`;
+      } else if (daysAgo < 30) {
+        relVi = `${daysAgo} ngày trước`;
+        relZh = `${daysAgo} 天前`;
+      } else if (daysAgo < 365) {
+        const m = Math.floor(daysAgo / 30);
+        relVi = `${m} tháng trước`;
+        relZh = `${m} 个月前`;
+      } else {
+        const y = Math.floor(daysAgo / 365);
+        relVi = `${y} năm trước`;
+        relZh = `${y} 年前`;
+      }
+      const relativeTime = currentLang === 'zh' ? relZh : relVi;
+
+      let actVi = '';
+      let actZh = '';
+      if (daysAgo <= 14) {
+        actVi = "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)";
+        actZh = "🔥 极度活跃 (近2周发帖)";
+      } else if (daysAgo <= 45) {
+        actVi = "✓ TÍCH CỰC (Đăng trong 1.5 tháng qua)";
+        actZh = "✓ 活跃 (近1.5个月发帖)";
+      } else if (daysAgo <= 90) {
+        actVi = "⚠️ TRUNG BÌNH (Đăng trong 3 tháng qua)";
+        actZh = "⚠️ 一般 (近3个月发帖)";
+      } else {
+        const m = Math.floor(daysAgo / 30);
+        actVi = `❄️ ĐÓNG BĂNG (> ${m} tháng chưa có bài)`;
+        actZh = `❄️ 冻结 (> ${m} 个月未发帖)`;
+      }
+      const activityStatus = currentLang === 'zh' ? actZh : actVi;
+
+      return {
+        timestamp: ts,
+        iso: d.toISOString(),
+        publish_human: publishHuman,
+        publish_human_vi: publishHumanVi,
+        publish_human_zh: publishHumanZh,
+        relative_time: relativeTime,
+        days_ago: daysAgo,
+        activity_status: activityStatus
+      };
+    }
+
+    function formatPublishTime(rawVal, lang = currentLang) {
+      if (!rawVal) return lang === 'zh' ? '未获取发帖时间' : 'Chưa có bài đăng';
+      const parsed = parsePublishTimestamp(rawVal);
+      if (parsed) {
+        return lang === 'zh' ? parsed.publish_human_zh : parsed.publish_human_vi;
+      }
+      const str = String(rawVal).trim();
+      if (lang === 'zh') {
+        const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}:\d{2}))?/);
+        if (m) {
+          return `${m[3]}年${m[2].padStart(2, '0')}月${m[1].padStart(2, '0')}日` + (m[4] ? ` ${m[4]}` : '');
+        }
+      }
+      return str;
+    }
+
+    function translateActivityStatusZh(status) {
+      if (!status) return '';
+      return status
+        .replace(/RẤT TÍCH CỰC/g, '极度活跃')
+        .replace(/TÍCH CỰC/g, '活跃')
+        .replace(/TRUNG BÌNH/g, '一般')
+        .replace(/ĐÓNG BĂNG/g, '冻结')
+        .replace(/Đăng trong/g, '近')
+        .replace(/tuần qua/g, '周内发帖')
+        .replace(/tháng qua/g, '个月内发帖')
+        .replace(/tháng chưa có bài/g, '个月未发帖')
+        .replace(/Trại đang hoạt động/g, '犬舍正常运营');
+    }
+
+    function resolveAvatarFallback(fbId, url, currentAvatar) {
+      if (currentAvatar && (currentAvatar.startsWith('http') || currentAvatar.startsWith('data:')) && !currentAvatar.includes('ui-avatars.com')) {
+        return currentAvatar;
+      }
+      const cleanId = fbId ? String(fbId).trim() : '';
+      const cleanUrl = url ? String(url).trim().toLowerCase() : '';
+
+      const pool = [
+        ...(crmLeads || []),
+        ...(verifiedLeads || []),
+        ...(rawFollowers || []),
+        ...(window.DOG_GALLERY_DATA || [])
+      ];
+
+      for (const item of pool) {
+        if (!item) continue;
+        const itemAv = item.avatar_url || item.avatar || item.photo || item.image || item.img || '';
+        if (!itemAv || itemAv.includes('ui-avatars.com') || (!itemAv.startsWith('http') && !itemAv.startsWith('data:'))) continue;
+
+        if (cleanId && item.fb_id && String(item.fb_id).trim() === cleanId) {
+          return itemAv;
+        }
+        if (cleanUrl && item.url && String(item.url).trim().toLowerCase() === cleanUrl) {
+          return itemAv;
+        }
+      }
+
+      return currentAvatar || '';
+    }
+
     function appendTerminalLog(entry) {
       const body = document.getElementById('terminalBody');
       if (!body) return;
@@ -425,21 +679,56 @@
       row.style.margin = '3px 0';
       row.style.wordBreak = 'break-word';
 
+      const timeStr = (entry && entry.timestamp) || new Date().toLocaleTimeString();
+
       if (typeof entry === 'string') {
-        row.innerHTML = `<span style="color:#64748b;">[${new Date().toLocaleTimeString()}]</span> ${entry}`;
+        const textOut = currentLang === 'zh' ? translateLogToZh('LOG', entry).text : entry;
+        row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${escapeHtml(textOut)}`;
       } else {
-        const timeStr = entry.timestamp || new Date().toLocaleTimeString();
         const idxStr = entry.index ? `[${entry.index}/${entry.total}]` : '';
         const nameStr = entry.name ? `<strong>${escapeHtml(entry.name)}</strong>` : '';
         const idStr = entry.fb_id ? `<span style="color:#38bdf8;">(#${entry.fb_id})</span>` : '';
-        const reasonStr = entry.reason ? `<span>${escapeHtml(entry.reason)}</span>` : '';
+        const rawReason = entry.reason || entry.message || '';
+        const reasonStr = escapeHtml(currentLang === 'zh' ? translateLogToZh('LOG', rawReason).text : rawReason);
         
         if (entry.status === 'APPROVED') {
-          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${idxStr} <span style="color:#10b981; font-weight:700;">✓ [PHÊ DUYỆT CHÓ]</span> ${nameStr} ${idStr} ➔ <span style="color:#34d399;">${reasonStr}</span>`;
+          const approvedTag = currentLang === 'zh' ? '✓ [已批准犬类档案]' : '✓ [PHÊ DUYỆT CHÓ]';
+          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${idxStr} <span style="color:#10b981; font-weight:700;">${approvedTag}</span> ${nameStr} ${idStr} ➔ <span style="color:#34d399;">${reasonStr}</span>`;
+          
+          fetch('http://127.0.0.1:8000/api/step1/log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              log: {
+                stage: currentLang === 'zh' ? '已批准犬类' : 'PHÊ DUYỆT CHÓ',
+                text: `${idxStr} ${entry.name} (#${entry.fb_id}) -> ${rawReason}`,
+                level: 'approved',
+                timestamp: timeStr,
+                lang: currentLang
+              },
+              lang: currentLang
+            })
+          }).catch(() => {});
         } else if (entry.status === 'REJECTED') {
-          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${idxStr} <span style="color:#f43f5e; font-weight:700;">❌ [LOẠI BỎ]</span> ${nameStr} ${idStr} ➔ <span style="color:#fbbf24;">${reasonStr}</span>`;
+          const rejectedTag = currentLang === 'zh' ? '❌ [已剔除非目标]' : '❌ [LOẠI BỎ]';
+          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${idxStr} <span style="color:#f43f5e; font-weight:700;">${rejectedTag}</span> ${nameStr} ${idStr} ➔ <span style="color:#fbbf24;">${reasonStr}</span>`;
+
+          fetch('http://127.0.0.1:8000/api/step1/log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              log: {
+                stage: currentLang === 'zh' ? '已剔除非目标' : 'LOẠI BỎ',
+                text: `${idxStr} ${entry.name} (#${entry.fb_id}) -> ${rawReason}`,
+                level: 'rejected',
+                timestamp: timeStr,
+                lang: currentLang
+              },
+              lang: currentLang
+            })
+          }).catch(() => {});
         } else {
-          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:#38bdf8;">[*]</span> ${escapeHtml(entry.reason || entry.message || '')}`;
+          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:#38bdf8;">[*]</span> ${reasonStr}`;
         }
       }
 
@@ -461,13 +750,23 @@
       row.style.margin = '3px 0';
       row.style.wordBreak = 'break-word';
 
+      const timeStr = (entry && entry.timestamp) || new Date().toLocaleTimeString();
+
       if (typeof entry === 'string') {
-        row.innerHTML = `<span style="color:#64748b;">[${new Date().toLocaleTimeString()}]</span> ${entry}`;
+        const textOut = currentLang === 'zh' ? translateLogToZh('LOG', entry).text : entry;
+        row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${escapeHtml(textOut)}`;
       } else {
-        const timeStr = entry.timestamp || new Date().toLocaleTimeString();
-        const stage = entry.stage || 'TIẾN TRÌNH';
-        const text = escapeHtml(entry.text || '');
+        let rawStage = entry.stage || 'TIẾN TRÌNH';
+        let rawText = entry.text || '';
         const level = entry.level || 'info';
+
+        let stage = rawStage;
+        let text = rawText;
+        if (currentLang === 'zh') {
+          const trans = translateLogToZh(rawStage, rawText);
+          stage = trans.stage;
+          text = trans.text;
+        }
 
         let color = '#38bdf8'; // Blue
         if (level === 'web') color = '#34d399'; // Emerald
@@ -476,7 +775,23 @@
         else if (level === 'success') color = '#4ade80'; // Bright green
         else if (level === 'err') color = '#f87171'; // Red
 
-        row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:${color}; font-weight:700;">[${escapeHtml(stage)}]</span> <span>${text}</span>`;
+        row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:${color}; font-weight:700;">[${escapeHtml(stage)}]</span> <span>${escapeHtml(text)}</span>`;
+
+        // Đồng bộ trực tiếp ra terminal cmd/powershell của máy chủ python
+        fetch('http://127.0.0.1:8000/api/step2/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            log: {
+              stage: stage,
+              text: text,
+              level: level,
+              timestamp: timeStr,
+              lang: currentLang
+            },
+            lang: currentLang
+          })
+        }).catch(() => {});
       }
 
       body.appendChild(row);
@@ -1365,6 +1680,7 @@
       // 5. Load Step 2 CRM Data if available
       if (window.CRM_ENRICHED_DATA && Array.isArray(window.CRM_ENRICHED_DATA) && window.CRM_ENRICHED_DATA.length > 0) {
         crmLeads = window.CRM_ENRICHED_DATA;
+        syncFunnelFromCrmLeads();
         renderCrmTable(crmLeads);
         updateCrmKpis(crmLeads);
       }
@@ -1664,15 +1980,45 @@
       renderFilteredFunnelTable();
     }
 
+    function syncFunnelFromCrmLeads() {
+      if (!crmLeads || crmLeads.length === 0) return;
+      funnelAllLeads = [...crmLeads];
+      funnelHasWebLeads = crmLeads.filter(x => {
+        const w = (x.website || '').trim();
+        return w && (w.startsWith('http') || w.includes('.')) && !/amazon\.com|amzn\.to|facebook\.com|fb\.me|instagram\.com|threads\.net|tiktok\.com|youtube\.com|bing\.com|yahoo\.com|gmail\.com/i.test(w);
+      });
+      funnelNoWebLeads = crmLeads.filter(x => !funnelHasWebLeads.includes(x));
+      funnelHasAmzLeads = crmLeads.filter(x => x.has_amazon || x.amazon_url || (x.amz_cat && !x.amz_cat.includes('not found') && !x.amz_cat.includes('Không') && !x.amz_cat.includes('未发现')));
+      funnelAmzGrassLeads = funnelHasAmzLeads.filter(x => (x.amz_cat || '').includes('Cỏ') || (x.product_fit || '').includes('Cỏ'));
+      funnelAmzToysLeads = funnelHasAmzLeads.filter(x => (x.amz_cat || '').includes('Đồ chơi') || (x.product_fit || '').includes('Đồ chơi'));
+      funnelAmzOtherLeads = funnelHasAmzLeads.filter(x => !funnelAmzGrassLeads.includes(x) && !funnelAmzToysLeads.includes(x));
+      updateFunnelBadges();
+    }
+
     function renderFilteredFunnelTable() {
       let dataset = [];
       if (funnelActiveTab === 'all') {
         dataset = funnelAllLeads.length > 0 ? [...funnelAllLeads] : [...crmLeads];
       } else if (funnelActiveTab === 'hasWeb') {
-        dataset = [...funnelHasWebLeads];
+        if (!funnelHasWebLeads || funnelHasWebLeads.length === 0) {
+          syncFunnelFromCrmLeads();
+        }
+        dataset = funnelHasWebLeads.length > 0 ? [...funnelHasWebLeads] : crmLeads.filter(x => {
+          const w = (x.website || '').trim();
+          return w && (w.startsWith('http') || w.includes('.')) && !/amazon\.com|amzn\.to|facebook\.com|fb\.me|instagram\.com|threads\.net|tiktok\.com|youtube\.com|bing\.com|yahoo\.com|gmail\.com/i.test(w);
+        });
       } else if (funnelActiveTab === 'noWeb') {
-        dataset = [...funnelNoWebLeads];
+        if (!funnelNoWebLeads || funnelNoWebLeads.length === 0) {
+          syncFunnelFromCrmLeads();
+        }
+        dataset = funnelNoWebLeads.length > 0 ? [...funnelNoWebLeads] : crmLeads.filter(x => {
+          const w = (x.website || '').trim();
+          return !w || !w.includes('.') || /amazon\.com|amzn\.to|facebook\.com|fb\.me|instagram\.com|threads\.net|tiktok\.com|youtube\.com|bing\.com|yahoo\.com|gmail\.com/i.test(w);
+        });
       } else if (funnelActiveTab === 'hasAmz') {
+        if (!funnelHasAmzLeads || funnelHasAmzLeads.length === 0) {
+          syncFunnelFromCrmLeads();
+        }
         if (funnelActiveAmzSubPill === 'grass') {
           dataset = funnelAmzGrassLeads.length > 0 ? [...funnelAmzGrassLeads] : funnelHasAmzLeads.filter(l => (l.amz_cat || '').includes('Cỏ') || (l.product_fit || '').includes('Cỏ'));
         } else if (funnelActiveAmzSubPill === 'toys') {
@@ -2040,9 +2386,9 @@
 
       // 3. AVATAR HD
       let foundAvatar = '';
-      const avImg = document.querySelector('image[preserveAspectRatio*="xMidYMid"], img[alt*="ảnh đại diện" i], img[alt*="profile picture" i]');
+      const avImg = document.querySelector('svg image, image[preserveAspectRatio*="xMidYMid"], image[xlink\\:href], image[href], img[alt*="ảnh đại diện" i], img[alt*="profile picture" i], img[alt*="头像" i], img[alt*="头贴" i], img[alt*="avatar" i], img[src*="fbcdn.net"][src*="t39.30808-1"]');
       if (avImg) {
-        const src = avImg.getAttribute('xlink:href') || avImg.getAttribute('src') || '';
+        const src = avImg.getAttribute('xlink:href') || avImg.getAttribute('href') || avImg.getAttribute('src') || '';
         if (src && !src.startsWith('data:') && !src.includes('blank_profile')) {
           foundAvatar = src.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
         }
@@ -2055,6 +2401,13 @@
       }
       if (!foundAvatar && initAvatar && (initAvatar.startsWith('http') || initAvatar.startsWith('data:'))) {
         foundAvatar = initAvatar;
+      }
+      if (!foundAvatar) {
+        const s1Pool = (verifiedLeads || []).concat(rawFollowers || []).concat(window.DOG_GALLERY_DATA || []);
+        const m = s1Pool.find(x => (resolvedFbId && x.fb_id && x.fb_id === resolvedFbId) || (x.url && x.url === window.location.href) || (x.name && x.name === res.name));
+        if (m && (m.avatar_url || m.avatar)) {
+          foundAvatar = m.avatar_url || m.avatar;
+        }
       }
       res.avatar_url = foundAvatar;
 
@@ -2255,22 +2608,26 @@
       res.owner = extractOwnerRepresentative(res.name, res.intro.email, document.documentElement.innerHTML);
 
       // =========================================================================
-      // 9. BÓC TÁCH BÀI VIẾT GẦN NHẤT & PUBLISH TIME (GIỮ NGUYÊN 100% LOGIC CHUẨN XÁC)
+      // 9. BÓC TÁCH BÀI VIẾT GẦN NHẤT & PUBLISH TIME (TRÍCH XUẤT publish_time:"số" & PHÂN TÍCH CON SỐ)
       // =========================================================================
       const foundTimestamps = [];
+      const htmlFull = document.documentElement ? document.documentElement.innerHTML : '';
+      
+      // Quét chính xác trường publish_time:"số" (hoặc creation_time:"số", story_time:"số")
+      const regexPub = /(?:"publish_time"|publish_time|"creation_time"|creation_time|"story_time"|story_time)\s*:\s*"?(\d{9,13})"?/g;
+      let mPub;
+      while ((mPub = regexPub.exec(htmlFull)) !== null) {
+        const parsed = parsePublishTimestamp(mPub[1]);
+        if (parsed) {
+          foundTimestamps.push(parsed.timestamp);
+        }
+      }
+
+      // Quét các script tags tìm website, email, phone
       const scripts = document.querySelectorAll('script');
       for (const sc of scripts) {
         const text = sc.textContent || '';
         if (!text) continue;
-        if (text.includes('creation_time') || text.includes('publish_time') || text.includes('story_time')) {
-          const matches = text.matchAll(/"(?:creation_time|publish_time|story_time)"\s*:\s*(\d{10})/g);
-          for (const m of matches) {
-            const val = parseInt(m[1]);
-            if (val >= 1577836800 && val <= 1800000000) {
-              foundTimestamps.push(val);
-            }
-          }
-        }
         if (!res.intro.website && (text.includes('"website"') || text.includes('"external_url"') || text.includes('"profile_website"'))) {
           const mW = text.match(/"(?:website|external_url|profile_website)"\s*:\s*(?:\{\s*"text"\s*:\s*)?"(https?:\\\/\\\/[^"]+)"/);
           if (mW) {
@@ -2306,7 +2663,10 @@
           const href = timeLink.getAttribute('href') || '';
           if (!res.latest_post.post_url) res.latest_post.post_url = href.startsWith('/') ? `https://www.facebook.com${href}` : href;
           const utime = timeLink.getAttribute('data-utime') || timeLink.closest('[data-utime]')?.getAttribute('data-utime');
-          if (utime) foundTimestamps.push(parseInt(utime));
+          if (utime) {
+            const parsed = parsePublishTimestamp(utime);
+            if (parsed) foundTimestamps.push(parsed.timestamp);
+          }
           const rawTxt = (timeLink.innerText || timeLink.getAttribute('aria-label') || '').trim();
           if (rawTxt && !res.latest_post.relative_time && (
             /ngày|giờ|phút|tháng|năm|hôm|day|hr|hour|min|yesterday|just now/i.test(rawTxt)
@@ -2317,36 +2677,39 @@
         if (res.latest_post.post_text && foundTimestamps.length > 0) break;
       }
 
-      // Tổng hợp Publish Time chuẩn xác
+      // Tổng hợp và phân tích con số publish_time chuẩn xác
       if (foundTimestamps.length > 0) {
         const maxTs = Math.max(...foundTimestamps);
-        res.latest_post.publish_timestamp = maxTs;
-        const d = new Date(maxTs * 1000);
-        res.latest_post.publish_time = d.toISOString();
-        res.latest_post.publish_human = d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-        const days = Math.max(0, Math.floor((Date.now() - d.getTime()) / (24 * 3600 * 1000)));
-        res.latest_post.days_ago = days;
-        if (!res.latest_post.relative_time) res.latest_post.relative_time = `${days} ngày trước`;
-        if (days <= 14) res.latest_post.activity_status = "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)";
-        else if (days <= 45) res.latest_post.activity_status = "✓ TÍCH CỰC (Đăng trong 1.5 tháng qua)";
-        else if (days <= 90) res.latest_post.activity_status = "⚠️ TRUNG BÌNH (Đăng trong 3 tháng qua)";
-        else res.latest_post.activity_status = `❄️ ĐÓNG BĂNG (> ${Math.floor(days/30)} tháng chưa có bài)`;
+        const parsedTime = parsePublishTimestamp(maxTs);
+        if (parsedTime) {
+          res.latest_post.publish_timestamp = parsedTime.timestamp;
+          res.latest_post.publish_time = parsedTime.iso;
+          res.latest_post.publish_human = parsedTime.publish_human;
+          res.latest_post.relative_time = parsedTime.relative_time;
+          res.latest_post.days_ago = parsedTime.days_ago;
+          res.latest_post.activity_status = parsedTime.activity_status;
+        }
       } else if (res.latest_post.relative_time) {
         const rel = res.latest_post.relative_time.toLowerCase();
         let daysAgo = 1;
         const mDays = rel.match(/(\d+)\s*(?:ngày|day)/);
         if (mDays) daysAgo = parseInt(mDays[1]);
         const d = new Date(Date.now() - daysAgo * 24 * 3600 * 1000);
-        res.latest_post.publish_time = d.toISOString();
-        res.latest_post.publish_human = d.toLocaleDateString('vi-VN') + ' 10:00';
-        res.latest_post.days_ago = daysAgo;
-        res.latest_post.activity_status = daysAgo <= 14 ? "🔥 RẤT TÍCH CỰC (Đăng gần đây)" : "✓ TÍCH CỰC (Trại đang hoạt động)";
+        const parsedTime = parsePublishTimestamp(Math.floor(d.getTime() / 1000));
+        if (parsedTime) {
+          res.latest_post.publish_time = parsedTime.iso;
+          res.latest_post.publish_human = parsedTime.publish_human;
+          res.latest_post.days_ago = parsedTime.days_ago;
+          res.latest_post.activity_status = parsedTime.activity_status;
+        }
       } else {
-        const d = new Date();
-        res.latest_post.publish_time = d.toISOString();
-        res.latest_post.publish_human = d.toLocaleDateString('vi-VN') + ' 09:30';
-        res.latest_post.relative_time = "Gần đây";
-        res.latest_post.activity_status = "✓ TÍCH CỰC (Trại đang hoạt động)";
+        const parsedTime = parsePublishTimestamp(Math.floor(Date.now() / 1000));
+        if (parsedTime) {
+          res.latest_post.publish_time = parsedTime.iso;
+          res.latest_post.publish_human = parsedTime.publish_human;
+          res.latest_post.relative_time = currentLang === 'zh' ? '近期' : 'Gần đây';
+          res.latest_post.activity_status = currentLang === 'zh' ? '✓ 活跃 (犬舍正常运营)' : '✓ TÍCH CỰC (Trại đang hoạt động)';
+        }
       }
 
       // 10. Sales Intelligence
@@ -2739,16 +3102,43 @@
         }
       } else if (msg.action === 'STEP2_LEAD_DONE' && msg.lead) {
         const lead = msg.lead;
+        // UI RAG Deduplication: Kiểm tra đối soát theo FB_ID và URL để chống trùng lặp
+        const leadFbId = lead.profile_id || lead.fb_id || '';
+        const leadUrl = lead.url || '';
+        const existingIdx = crmLeads.findIndex(l => 
+          (leadFbId && l.fb_id && l.fb_id === leadFbId) || 
+          (leadUrl && l.url && l.url === leadUrl)
+        );
+
+        let leadAvatar = lead.avatar_url || lead.avatar || '';
+        if (!leadAvatar) {
+          const s1Pool = (verifiedLeads || []).concat(rawFollowers || []).concat(window.DOG_GALLERY_DATA || []);
+          const m = s1Pool.find(x => 
+            (leadFbId && x.fb_id && x.fb_id === leadFbId) || 
+            (leadUrl && x.url && x.url === leadUrl) || 
+            (lead.name && x.name && x.name === lead.name)
+          );
+          if (m && (m.avatar_url || m.avatar)) {
+            leadAvatar = m.avatar_url || m.avatar;
+          }
+        }
+        if (!leadAvatar && existingIdx !== -1 && crmLeads[existingIdx].avatar_url) {
+          leadAvatar = crmLeads[existingIdx].avatar_url;
+        }
+
         const newLead = {
           stt: lead.lead_id || `LEAD-US-${crmLeads.length + 1}`,
           owner: lead.owner_name || lead.owner || 'Dog Breeder',
           name: lead.name || 'Dog Breeder',
           cat: lead.category || 'Dog Breeder / Commercial Kennel (B2B)',
           amz_cat: lead.amazon_channel || lead.amz_cat || 'Amazon link not found',
-          fb_id: lead.profile_id || lead.fb_id || '',
-          url: lead.url || '',
-          avatar_url: lead.avatar_url || lead.avatar || '',
+          fb_id: leadFbId,
+          url: leadUrl,
+          avatar_url: leadAvatar,
           website: lead.website || '',
+          has_website: !!(lead.website && (lead.website.startsWith('http') || lead.website.includes('.')) && !/amazon\.com|amzn\.to/i.test(lead.website)),
+          has_amazon: !!(lead.has_amazon || lead.amazon_url),
+          amazon_url: lead.amazon_url || '',
           phone: lead.phone || '',
           email: lead.email || '',
           city: lead.city || '',
@@ -2762,6 +3152,7 @@
           },
           publish_time: lead.publish_time || '',
           publishTime: lead.publish_time || '',
+          publish_human: lead.publish_human || lead.publish_time || '',
           relative_time: lead.relative_time || '',
           relativeTime: lead.relative_time || '',
           activity_status: lead.activity_status || '✓ TÍCH CỰC',
@@ -2770,12 +3161,6 @@
           rank_tier: lead.tier || lead.rank_tier || 'Tier B',
           sales_action: lead.sales_action || 'Chào giải pháp thảm cỏ cún'
         };
-
-        // UI RAG Deduplication: Kiểm tra đối soát theo FB_ID và URL để chống trùng lặp
-        const existingIdx = crmLeads.findIndex(l => 
-          (newLead.fb_id && l.fb_id && l.fb_id === newLead.fb_id) || 
-          (newLead.url && l.url && l.url === newLead.url)
-        );
 
         if (existingIdx !== -1) {
           crmLeads[existingIdx] = {
@@ -2788,12 +3173,31 @@
         }
         renderCrmTable(crmLeads);
         updateCrmKpis(crmLeads);
+        syncFunnelFromCrmLeads();
 
-        document.getElementById('bulkLeadPreviewRow').style.display = 'flex';
+        const prevRow = document.getElementById('bulkLeadPreviewRow');
+        if (prevRow) prevRow.style.display = 'flex';
         document.getElementById('bulkLeadName').textContent = newLead.name;
-        document.getElementById('bulkLeadOwner').textContent = `Chủ trại: ${newLead.owner}`;
+        document.getElementById('bulkLeadOwner').textContent = `${currentLang === 'zh' ? '主理人' : 'Chủ trại'}: ${newLead.owner}`;
         document.getElementById('bulkLeadFbid').textContent = `ID: ${newLead.fb_id || '---'}`;
-        if (newLead.avatar_url) document.getElementById('bulkLeadAvatar').src = newLead.avatar_url;
+
+        const avEl = document.getElementById('bulkLeadAvatar');
+        const fallbackInitials = encodeURIComponent((newLead.owner && newLead.owner !== '---') ? newLead.owner : (newLead.name || 'Dog Breeder'));
+        const defaultUiAvatar = `https://ui-avatars.com/api/?name=${fallbackInitials}&background=0f172a&color=38bdf8&bold=true`;
+        const finalAv = (newLead.avatar_url && (newLead.avatar_url.startsWith('http') || newLead.avatar_url.startsWith('data:'))) ? newLead.avatar_url : defaultUiAvatar;
+        if (avEl) {
+          avEl.src = finalAv;
+          avEl.onerror = () => { avEl.src = defaultUiAvatar; };
+        }
+        const profileUrl = newLead.url || (newLead.fb_id ? `https://www.facebook.com/profile.php?id=${newLead.fb_id}` : '#');
+        const wrapEl = document.getElementById('bulkLeadAvatarWrap');
+        if (wrapEl) {
+          wrapEl.style.cursor = 'pointer';
+          wrapEl.title = currentLang === 'zh' ? '点击打开Facebook主页' : 'Nhấn để mở trang Facebook cá nhân';
+          wrapEl.onclick = () => {
+            if (profileUrl && profileUrl !== '#') window.open(profileUrl, '_blank');
+          };
+        }
       } else if (msg.action === 'STEP2_ALL_DONE') {
         isDirectScrapingRunning = false;
         isDirectScrapingPaused = false;
@@ -3161,6 +3565,12 @@
         const leadNum = String(i + 1).padStart(5, '0');
         const leadId = `LEAD-US-${leadNum}`;
 
+        let directAvatar = resolveAvatarFallback(fbData.profile_id, rawUrl, fbData.avatar_url);
+        const existingIdx = crmLeads.findIndex(l => (fbData.profile_id && l.fb_id && l.fb_id === fbData.profile_id) || (rawUrl && l.url && l.url === rawUrl));
+        if (!directAvatar && existingIdx !== -1 && crmLeads[existingIdx].avatar_url) {
+          directAvatar = crmLeads[existingIdx].avatar_url;
+        }
+
         const newLead = {
           stt: leadId,
           lead_id: leadId,
@@ -3169,9 +3579,9 @@
           name: fbData.name,
           fb_id: fbData.profile_id,
           url: rawUrl,
-          avatar_url: fbData.avatar_url,
+          avatar_url: directAvatar,
           website: fbData.intro.website,
-          has_website: !!fbData.intro.website,
+          has_website: !!(fbData.intro.website && (fbData.intro.website.startsWith('http') || fbData.intro.website.includes('.')) && !/amazon\.com|amzn\.to/i.test(fbData.intro.website)),
           has_amazon: fbData.has_amazon,
           amazon_url: fbData.amazon_url,
           amazon_channel: fbData.has_amazon ? 'Selling on Amazon (Target)' : 'Amazon link not found',
@@ -3199,7 +3609,6 @@
         };
 
         // UI RAG Deduplication: Kiểm tra đối soát theo FB_ID và URL để chống trùng lặp
-        const existingIdx = crmLeads.findIndex(l => (newLead.fb_id && l.fb_id && l.fb_id === newLead.fb_id) || (newLead.url && l.url && l.url === newLead.url));
         if (existingIdx !== -1) {
           crmLeads[existingIdx] = { ...crmLeads[existingIdx], ...newLead, stt: crmLeads[existingIdx].stt };
         } else {
@@ -3209,12 +3618,20 @@
         // TỰ ĐỘNG CẬP NHẬT GIAO DIỆN VÀ BẢNG CRM NGAY LẬP TỨC CHO TỪNG HỒ SƠ
         renderCrmTable(crmLeads);
         updateCrmKpis(crmLeads);
+        syncFunnelFromCrmLeads();
 
-        // Cập nhật card avatar preview
+        // Cập nhật card avatar preview & nhấp vào để mở liên kết
         document.getElementById('bulkLeadName').textContent = newLead.name;
         document.getElementById('bulkLeadOwner').textContent = `${currentLang === 'zh' ? '主理人' : 'Chủ trại'}: ${newLead.owner}`;
         document.getElementById('bulkLeadFbid').textContent = `ID: ${newLead.fb_id || '---'}`;
-        if (newLead.avatar_url) document.getElementById('bulkLeadAvatar').src = newLead.avatar_url;
+        const avEl = document.getElementById('bulkLeadAvatar');
+        if (avEl && newLead.avatar_url) avEl.src = newLead.avatar_url;
+        const wrapEl = document.getElementById('bulkLeadAvatarWrap');
+        if (wrapEl) {
+          wrapEl.style.cursor = 'pointer';
+          wrapEl.title = currentLang === 'zh' ? '点击打开Facebook主页' : 'Nhấp để mở trang Facebook cá nhân';
+          wrapEl.onclick = () => { window.open(rawUrl, '_blank'); };
+        }
 
         appendTerminalLogStep2({
           stage: '5. KÊNH AMAZON',
@@ -3541,8 +3958,8 @@
             resolvedId = (initialFbId && initialFbId !== '100060157728939') ? initialFbId : '';
           }
 
-          // 5. Avatar HD nguyên bản từ Facebook
-          let finalAvatar = fbData.avatar_url || initialAvatar || '';
+          // 5. Avatar HD nguyên bản từ Facebook kết hợp tra cứu pool Bước 1
+          let finalAvatar = resolveAvatarFallback(resolvedId, rawUrl, fbData.avatar_url || initialAvatar || '');
 
           // 6. GIỮ NGUYÊN 100% CÁC TRƯỜNG THỜI GIAN ĐĂNG BÀI
           const pubTime = fbData.latest_post.publish_human || fbData.latest_post.publish_time || 'Gần đây';
@@ -3587,12 +4004,19 @@
             funnelHasAmzLeads.push(leadObj);
           }
 
-          // Live card preview
+          // Live card preview & nhấp vào để mở liên kết
           document.getElementById('bulkLeadPreviewRow').style.display = 'flex';
           document.getElementById('bulkLeadName').textContent = leadObj.name;
           document.getElementById('bulkLeadOwner').textContent = `${currentLang === 'zh' ? '主理人' : 'Chủ trại'}: ${leadObj.owner}`;
           document.getElementById('bulkLeadFbid').textContent = `ID: ${leadObj.fb_id || '---'}`;
-          if (leadObj.avatar_url) document.getElementById('bulkLeadAvatar').src = leadObj.avatar_url;
+          const avEl = document.getElementById('bulkLeadAvatar');
+          if (avEl && leadObj.avatar_url) avEl.src = leadObj.avatar_url;
+          const wrapEl = document.getElementById('bulkLeadAvatarWrap');
+          if (wrapEl) {
+            wrapEl.style.cursor = 'pointer';
+            wrapEl.title = currentLang === 'zh' ? '点击打开Facebook主页' : 'Nhấp để mở trang Facebook cá nhân';
+            wrapEl.onclick = () => { window.open(rawUrl, '_blank'); };
+          }
 
           appendTerminalLogStep2({
             stage: currentLang === 'zh' ? '第1层: FB完成' : 'TẦNG 1: FB PROFILE',
@@ -3622,6 +4046,9 @@
     }
 
     async function executeFunnelStage2() {
+      if (!funnelHasWebLeads || funnelHasWebLeads.length === 0) {
+        syncFunnelFromCrmLeads();
+      }
       if (!funnelHasWebLeads || funnelHasWebLeads.length === 0) {
         showToast(currentLang === 'zh'
           ? '暂无可分析的独立官网档案！请先运行第1层或输入包含Website的链接。'
@@ -4352,9 +4779,9 @@
         const tr = document.createElement('tr');
         const fbId = item.fb_id || '';
         const profileUrl = item.url || (fbId ? `https://www.facebook.com/profile.php?id=${fbId}` : '#');
-        const rawAvatar = item.avatar_url || item.avatar || '';
         const fallbackInitials = encodeURIComponent((item.owner && item.owner !== '---') ? item.owner : (item.name || 'Dog Breeder'));
         const defaultUiAvatar = `https://ui-avatars.com/api/?name=${fallbackInitials}&background=0f172a&color=38bdf8&bold=true`;
+        const rawAvatar = resolveAvatarFallback(fbId, profileUrl, item.avatar_url || item.avatar || '');
         const avatarUrl = (rawAvatar && (rawAvatar.startsWith('http') || rawAvatar.startsWith('data:')))
           ? rawAvatar
           : defaultUiAvatar;
@@ -4371,25 +4798,42 @@
 
         const phone = item.phone || '---';
         const location = [item.city, item.state].filter(Boolean).join(', ') || (item.country || 'United States');
-        const category = item.cat || item.category || 'Dog Breeder / Commercial Kennel (B2B)';
+        const rawCat = item.cat || item.category || 'Dog Breeder / Commercial Kennel (B2B)';
+        const category = currentLang === 'zh'
+          ? rawCat.replace(/Dog Breeder \/ Commercial Kennel \(B2B\)/g, '犬舍繁殖基地 / 商业犬舍 (B2B)').replace(/Dog Breeder/g, '犬舍繁殖基地')
+          : rawCat;
+
         const amzCat = item.amz_cat || item.amazon_channel || 'Amazon link not found';
+
+        let ownerDisplay = item.owner || '---';
+        if (currentLang === 'zh') {
+          ownerDisplay = ownerDisplay.replace(/\(Chủ trại \/ Quản lý\)/g, '(主理人/管理员)')
+                                     .replace(/\(Chủ trại\)/g, '(主理人)')
+                                     .replace(/Chủ trại/g, '主理人');
+        }
+
+        let productDisplay = item.product_fit || 'Puppy Starter Kit V2/V3';
+        if (currentLang === 'zh') {
+          productDisplay = productDisplay.replace(/B2B Wholesale: Thảm Cỏ Huấn Luyện \+ Pet Potty \+ Toys Bundle/g, 'B2B批发: 抗菌训练草坪 + 宠物厕所 + 玩具大礼包')
+                                         .replace(/Take-Home Puppy Starter Kit V2\/V3/g, '幼犬带回新手启蒙礼包 V2/V3');
+        }
 
         // Phân loại và tạo Link Amazon chuyên dụng
         let amzBadge = `<span style="font-size:11px; color:#64748b;">${currentLang === 'zh' ? '未发现亚马逊店铺' : 'Không có link'}</span>`;
         if (item.amazon_url || item.has_amazon) {
           const amzUrl = item.amazon_url || `https://www.amazon.com/s?k=${encodeURIComponent(item.name || 'dog supplies')}`;
-          let catLabel = 'Kênh Bán Amazon';
+          let catLabel = currentLang === 'zh' ? '亚马逊渠道' : 'Kênh Bán Amazon';
           if (amzCat.includes('TARGET') || amzCat.includes('Artificial grass') || amzCat.includes('Cỏ')) {
-            catLabel = '★ Cỏ + Đồ chơi TARGET';
+            catLabel = currentLang === 'zh' ? '★ 草坪+玩具 TARGET' : '★ Cỏ + Đồ chơi TARGET';
           } else if (amzCat.includes('toys') || amzCat.includes('Đồ chơi')) {
-            catLabel = '🧸 Đồ chơi cún';
+            catLabel = currentLang === 'zh' ? '🧸 宠物玩具' : '🧸 Đồ chơi cún';
           } else if (amzCat.includes('other') || amzCat.includes('Khác') || amzCat.includes('supplies')) {
-            catLabel = '📦 Phụ kiện khác';
+            catLabel = currentLang === 'zh' ? '📦 其它配件' : '📦 Phụ kiện khác';
           }
           amzBadge = `
             <div>
               <a href="${amzUrl}" target="_blank" rel="noopener noreferrer" style="color:#fbbf24; text-decoration:none; font-weight:700; font-size:11.5px; display:inline-flex; align-items:center; gap:4px;">
-                <span>🛒 Link Amazon</span>
+                <span>🛒 ${currentLang === 'zh' ? '亚马逊店铺' : 'Link Amazon'}</span>
               </a>
               <div style="margin-top:3px;">
                 <span style="font-size:10px; font-weight:700; color:#fbbf24; background:rgba(251,191,36,0.15); border:1px solid rgba(251,191,36,0.4); padding:2px 6px; border-radius:5px; display:inline-block;" title="${escapeHtml(amzCat)}">${catLabel}</span>
@@ -4412,21 +4856,30 @@
           tierColor = '#94a3b8'; tierBg = 'rgba(148, 163, 184, 0.15)'; tierBorder = 'rgba(148, 163, 184, 0.4)';
         }
 
+        // Xử lý bài đăng gần nhất (Publish Time) & phân tích con số timestamp
+        const rawPubVal = item.publish_timestamp || (item.latest_post && item.latest_post.publish_timestamp) || item.publish_time || item.publishTime || '';
+        const parsedPub = parsePublishTimestamp(rawPubVal);
+        const pubTimeDisplay = parsedPub ? (currentLang === 'zh' ? parsedPub.publish_human_zh : parsedPub.publish_human_vi) : formatPublishTime(rawPubVal, currentLang);
+        const relTimeDisplay = parsedPub ? parsedPub.relative_time : (item.relative_time || (item.latest_post && item.latest_post.relative_time) || '');
+        let actStatusText = (currentLang === 'zh')
+          ? (parsedPub ? parsedPub.activity_status : translateActivityStatusZh(item.activity_status || (item.latest_post && item.latest_post.activity_status) || ''))
+          : (parsedPub ? parsedPub.activity_status : (item.activity_status || (item.latest_post && item.latest_post.activity_status) || ''));
+
         tr.innerHTML = `
           <td style="font-family:var(--mono); font-size:11px; color:var(--text-muted);">${item.stt || `LEAD-US-${index+1}`}</td>
           <td>
-            <div class="circle-avatar-box" style="width:44px; height:44px; min-width:44px;" title="Mở trang Facebook cá nhân" onclick="window.open('${profileUrl}', '_blank')">
+            <div class="circle-avatar-box" style="width:44px; height:44px; min-width:44px; cursor:pointer;" title="${currentLang === 'zh' ? '点击打开Facebook主页' : 'Mở trang Facebook cá nhân'}" onclick="window.open('${profileUrl}', '_blank')">
               <img class="circle-avatar-img" src="${avatarUrl}" referrerpolicy="no-referrer" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='${defaultUiAvatar}'" />
             </div>
           </td>
           <td>
-            <strong style="color:#fff; font-size:13px;">${escapeHtml(item.owner || '---')}</strong>
+            <strong style="color:#fff; font-size:13px;">${escapeHtml(ownerDisplay)}</strong>
           </td>
           <td>
             <div style="font-weight:600; color:#cbd5e1;">${escapeHtml(item.name || '---')}</div>
           </td>
           <td>
-            <span class="badge-fbid" onclick="copyText('${fbId}')" title="Sao chép ID số" style="cursor:pointer;">
+            <span class="badge-fbid" onclick="copyText('${fbId}')" title="${currentLang === 'zh' ? '点击复制纯数字ID' : 'Sao chép ID số'}" style="cursor:pointer;">
               # ${fbId || '---'}
             </span>
           </td>
@@ -4440,9 +4893,10 @@
             ${escapeHtml(location)}
           </td>
           <td>
-            <div style="font-weight:700; color:#38bdf8; font-size:11.5px;">${escapeHtml(item.publish_time || 'Chưa xác định')}</div>
+            <div style="font-weight:700; color:#38bdf8; font-size:11.5px;">${escapeHtml(pubTimeDisplay)}</div>
             <div style="font-size:11px; margin-top:2px;">
-              ${item.activity_status ? `<span style="font-size:10px; padding:1px 6px; border-radius:4px; font-weight:700; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); color:#38bdf8;">${escapeHtml(item.activity_status)}</span>` : ''}
+              ${relTimeDisplay ? `<span style="color:#94a3b8; font-size:10px; margin-right:4px;">⏱️ ${escapeHtml(relTimeDisplay)}</span>` : ''}
+              ${actStatusText ? `<span style="font-size:10px; padding:1px 6px; border-radius:4px; font-weight:700; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); color:#38bdf8;">${escapeHtml(actStatusText)}</span>` : ''}
             </div>
             ${item.latest_post && item.latest_post.post_text ? `<div style="font-size:10.5px; color:#94a3b8; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;" title="${escapeHtml(item.latest_post.post_text)}">"${escapeHtml(item.latest_post.post_text)}"</div>` : ''}
           </td>
@@ -4453,7 +4907,7 @@
             ${amzBadge}
           </td>
           <td>
-            <span class="badge-product" title="${escapeHtml(item.product_fit || '')}">${escapeHtml(item.product_fit || 'Puppy Starter Kit V2/V3')}</span>
+            <span class="badge-product" title="${escapeHtml(productDisplay)}">${escapeHtml(productDisplay)}</span>
           </td>
           <td>
             <span class="badge-tier" style="color:${tierColor}; background:${tierBg}; border:1px solid ${tierBorder};">${tier} (${score}đ)</span>
@@ -4463,7 +4917,7 @@
               <a href="${profileUrl}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="padding:4px 8px; font-size:11px; text-decoration:none;">
                 <span>FB</span>
               </a>
-              <button class="btn-action" onclick="copyText('${fbId}')" style="padding:4px 8px; font-size:11px;" title="Sao chép ID">
+              <button class="btn-action" onclick="copyText('${fbId}')" style="padding:4px 8px; font-size:11px;" title="${currentLang === 'zh' ? '复制ID' : 'Sao chép ID'}">
                 <span>ID</span>
               </button>
             </div>

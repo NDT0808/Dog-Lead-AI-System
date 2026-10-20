@@ -1,0 +1,227 @@
+{
+  "report": {
+    "id": "pet-grass-potty-toys-usa-2026",
+    "title": "美国本土狗舍潜客与亚马逊渠道营销分析报告",
+    "market": "United States",
+    "sourceFile": "Master_Standard_Leads_PetGrass_Potty_Toys_2026.xlsx",
+    "scoringSpec": "marketing_parameter.html",
+    "weatherSource": "OpenWeatherMap API",
+    "generatedAt": "2026-10-16"
+  },
+  "masterDataset": {
+    "note": "主数据集（Master_Standard_Leads_PetGrass_Potty_Toys_2026.xlsx）层面的清洗口径，用于对照；data/leads.json 为其中 3,324 条 Class A 高净值潜客子集。",
+    "totalCleanedProfiles": 14138,
+    "coreProfiles": 6330,
+    "negativeFiltered": 3745,
+    "negativeFilterTargets": [
+      "AKC",
+      "UKC",
+      "PetSmart",
+      "Chewy",
+      "Meme / 非商业账号"
+    ],
+    "classAHotLeads": 3324,
+    "scoreThreshold": 61
+  },
+  "scoringModel": {
+    "formula": "综合评分 = 基础资料 (官网 + 销售页 + 申请表 + 10+评价 + 多犬种) + 亚马逊背书 (+15分 双目标) + 网站浏览行为",
+    "tiers": [
+      {
+        "tier": "Tier S",
+        "min": 85,
+        "max": 100,
+        "action": "销售团队当天电话直联，主推定制 Logo Take-Home Kit"
+      },
+      {
+        "tier": "Tier A",
+        "min": 70,
+        "max": 84,
+        "action": "优先电话 + 个性化邮件，主推 Starter Kit 批发价"
+      },
+      {
+        "tier": "Tier B",
+        "min": 50,
+        "max": 69,
+        "action": "自动化培育邮件序列 + 周期跟进"
+      },
+      {
+        "tier": "Tier C",
+        "min": 30,
+        "max": 49,
+        "action": "社交媒体内容长期沉淀"
+      },
+      {
+        "tier": "Tier D",
+        "min": 0,
+        "max": 29,
+        "action": "仅保留在储备池"
+      }
+    ]
+  },
+  "config": {
+    "pageSize": 25,
+    "pageSizeOptions": [
+      25
+    ],
+    "owmApiKey": "2e519601af416c660ebaa2323bee4f54",
+    "owmUnits": "imperial",
+    "owmEndpoint": "https://api.openweathermap.org/data/2.5/weather"
+  },
+  "weatherHubs": [
+    {
+      "id": "pnw",
+      "nameVi": "Tây Bắc Thái Bình Dương (PNW)",
+      "nameZh": "太平洋西北 (WA / OR)",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98101",
+      "defaultTemp": 48,
+      "defaultMain": "Rain",
+      "defaultDesc": "Mưa ẩm triền miên",
+      "triggerVi": "🌧️ Cún ngại ướt chân -> Chốt Cỏ nhân tạo & Khay Potty thoát nước",
+      "triggerZh": "🌧️ 多雨泥泞：力推快排水人造草垫与室内幼犬便盆托盘"
+    },
+    {
+      "id": "midwest",
+      "nameVi": "Vùng Trung Tây & Tuyết Rơi",
+      "nameZh": "中西部大湖区 (IL / MN / OH)",
+      "city": "Chicago",
+      "state": "IL",
+      "zip": "60601",
+      "defaultTemp": 32,
+      "defaultMain": "Snow",
+      "defaultDesc": "Rét buốt / Tuyết",
+      "triggerVi": "❄️ Bão tuyết cấm ra ngoài -> Chốt combo Cỏ + Đồ chơi gặm xoa dịu stress",
+      "triggerZh": "❄️ 严寒暴雪：足不出户排泄，力推防拆益智玩具 + 室内草坪"
+    },
+    {
+      "id": "east",
+      "nameVi": "Bờ Đông & Đô Thị Lớn",
+      "nameZh": "东部走廊 (NY / PA / VA)",
+      "city": "New York",
+      "state": "NY",
+      "zip": "10001",
+      "defaultTemp": 55,
+      "defaultMain": "Clouds",
+      "defaultDesc": "Mây rải rác",
+      "triggerVi": "🏢 Chung cư/Nhà phố hẹp -> Chốt Starter Kit tiện lợi",
+      "triggerZh": "🏢 紧凑公寓生活：极度需要防臭抗菌宠物草坪与便垫"
+    },
+    {
+      "id": "sunbelt",
+      "nameVi": "Bờ Nam & Bờ Tây Nắng Nóng",
+      "nameZh": "阳光带与西岸 (CA / TX / FL)",
+      "city": "San Diego",
+      "state": "CA",
+      "zip": "92114",
+      "defaultTemp": 78,
+      "defaultMain": "Clear",
+      "defaultDesc": "Nắng ấm",
+      "triggerVi": "☀️ Sốc nhiệt trưa hè -> Chốt Thảm cỏ râm mát + Đồ chơi cấp nước",
+      "triggerZh": "☀️ 酷暑路面烫脚：力推遮阳抗UV草垫与耐咬洁齿玩具"
+    }
+  ],
+  "weatherRules": {
+    "cold": {
+      "states": [
+        "NY",
+        "MN",
+        "ND",
+        "NE",
+        "IL",
+        "PA",
+        "IN",
+        "SD",
+        "IA",
+        "RI",
+        "OH",
+        "WI",
+        "MI"
+      ],
+      "fallback": {
+        "tempF": 36,
+        "main": "Snow",
+        "desc": "Gió lạnh / Rét buốt",
+        "icon": "13d"
+      }
+    },
+    "rain": {
+      "states": [
+        "WA",
+        "OR",
+        "VA",
+        "NC",
+        "LA",
+        "FL"
+      ],
+      "fallback": {
+        "tempF": 48,
+        "main": "Rain",
+        "desc": "Mưa ẩm cục bộ",
+        "icon": "10d"
+      }
+    },
+    "hot": {
+      "states": [
+        "CA",
+        "FL",
+        "TX",
+        "AZ",
+        "NV"
+      ],
+      "fallback": {
+        "tempF": 82,
+        "main": "Clear",
+        "desc": "Nắng ráo / Nhiệt cao",
+        "icon": "01d"
+      }
+    },
+    "mild": {
+      "fallback": {
+        "tempF": 68,
+        "main": "Clear",
+        "desc": "Trời mát / Ôn hòa",
+        "icon": "01d"
+      }
+    },
+    "thresholds": {
+      "coldBelowF": 45,
+      "hotAboveF": 80
+    }
+  },
+  "weatherScripts": {
+    "_note": "天气情境话术模板。占位符：{name} 客户名 / {city} 城市 / {tempF} 华氏温度 / {tempC} 摄氏温度。",
+    "cold": {
+      "titleVi": "❄️ Rét Buốt & Đóng Băng ({tempF}°F / {tempC}°C)",
+      "titleZh": "❄️ 严寒冰冻与暴雪气候 ({tempF}°F / {tempC}°C)",
+      "behaviorVi": "Nhiệt độ xuống thấp khiến cún con co ro, ngại ra thảm cỏ ngoài sân; nguy cơ viêm phổi, bỏng lạnh đệm chân và nhịn tiểu kéo dài. Bị nhốt trong nhà nhiều giờ, cún sinh cuồng chân, sủa dai và cắn xé đồ đạc.",
+      "behaviorZh": "极低温度导致幼犬排斥出门，极易引发受凉、肉垫冻伤及憋尿感染。长时间室内禁足导致幼犬精力过剩、焦虑吠叫并拆毁家具。",
+      "pitchVi": "Chào anh/chị [{name}], khu vực {city} đợt này nhiệt độ đang xuống tới {tempF}°F. Bên em có giải pháp Khay Vệ Sinh Potty & Thảm Cỏ Nhân Tạo thoát nước đặt ngay trong chuồng ấm, kèm đồ chơi ngứa răng xoa dịu stress. Trại mình có muốn xem bảng giá sỉ và mẫu Take-Home Kit in logo riêng không ạ?",
+      "pitchZh": "您好 [{name}]，看到贵犬舍所在的 {city} 气温已骤降至 {tempF}°F。极寒暴雪期我们专为商业犬舍提供室内排水防咬人造草垫托盘套装，以及针对幼犬室内焦虑的安抚咬胶玩具。现有犬舍专属定制批发样包，可以发给您审阅吗？"
+    },
+    "rain": {
+      "titleVi": "🌧️ Mưa Ẩm Kéo Dài & Lầy Lội ({tempF}°F / {tempC}°C)",
+      "titleZh": "🌧️ 阴雨连绵与泥泞天气 ({tempF}°F / {tempC}°C)",
+      "behaviorVi": "Mưa ướt khiến lông cún bết dính bùn đất, phát sinh mùi hôi và nấm da. Chủ nuôi rất ngại dọn bãi cỏ tự nhiên ướt sũng.",
+      "behaviorZh": "雨水导致幼犬毛发潮湿泥泞，极易滋生真菌皮肤病及严重异味。繁育者打理室外泥地极其耗时费力。",
+      "pitchVi": "Chào anh/chị, thời tiết mưa ẩm tại {city} khiến việc vệ sinh cho đàn cún rất vất vả. Thảm cỏ nhân tạo chuyên dụng có màng thoát nước siêu tốc và kháng khuẩn bên em giúp chuồng trại khô ráo 100%, xịt nước là sạch ngay. Anh/chị xem bảng giá ưu đãi theo m2 chuồng trại nhé?",
+      "pitchZh": "您好，近期 {city} 多雨潮湿，打理幼犬极易出现泥水异味。我们专供繁育犬舍的超快渗水人造草垫具备抗菌抗撕裂层，水冲即净，能彻底解决雨天幼犬排泄与卫生难题。可以给您寄送一份犬舍规格方案吗？"
+    },
+    "hot": {
+      "titleVi": "☀️ Nắng Gắt & Nhiệt Cao ({tempF}°F / {tempC}°C)",
+      "titleZh": "☀️ 高温烈日与地面炙热 ({tempF}°F / {tempC}°C)",
+      "behaviorVi": "Mặt đường bê tông và sân ngoài trời hấp nhiệt trên 120°F gây bỏng đệm chân cún; nguy cơ sốc nhiệt đe dọa tính mạng cún.",
+      "behaviorZh": "水泥地面受烈日暴晒温度超 120°F，极易烫伤幼犬肉垫；正午高温易诱发犬只中暑休克。",
+      "pitchVi": "Chào anh/chị, nắng gắt trên {tempF}°F tại {city} khiến cún không thể chạy nhảy trên sân xi măng. Thảm cỏ nhân tạo làm mát chống tia UV bên em là lựa chọn số 1 của các trại chó lớn tại California & Texas, kèm đồ chơi gặm nhai hạ nhiệt. Em gửi bảng báo giá combo sỉ cho trại mình nhé?",
+      "pitchZh": "您好，{city} 目前气温高达 {tempF}°F，烈日暴晒下幼犬无法在室外活动。我们在加州和德州顶级犬舍广泛普及的抗 UV 隔热人造草坪垫与冰感益智咬胶，是繁育基地的夏日标配。请问是否方便给您发送批发折扣表？"
+    },
+    "mild": {
+      "titleVi": "🌤️ Khí Hậu Dễ Chịu & Ôn Hòa ({tempF}°F / {tempC}°C)",
+      "titleZh": "🌤️ 舒适宜人与交付旺季 ({tempF}°F / {tempC}°C)",
+      "behaviorVi": "Thời tiết lý tưởng nhất trong năm để khách đón cún về nhà mới (Puppy Adoption Peak Season). Nhu cầu mua trọn gói Starter Kit tăng vọt.",
+      "behaviorZh": "全年最适宜幼犬新家交付的黄金旺季（Adoption Peak）。客户对一站式回家礼包（Starter Kit）需求最为强烈。",
+      "pitchVi": "Chào anh/chị [{name}], mùa xuất chuồng này bên em cung cấp trọn gói Puppy Take-Home Kit (thảm cỏ tập đi vệ sinh, khay lót và đồ chơi ôm ấm có mùi mẹ) in logo riêng của trại. Bán kèm cún con, trại vừa tăng 15-20% giá trị cún, vừa giúp khách chăm cún không lo tè bậy. Em gửi mẫu demo nhé?",
+      "pitchZh": "您好 [{name}]，当前正是幼犬新家交付旺季。我们为优质犬舍专属定制一站式 Puppy Take-Home Kit（含入厕训练草坪便垫、便盆与母犬气味心跳安抚玩具），支持印刷犬舍专属 Logo。既能增加 15-20% 溢价，又能提升买家口碑。方便给您发送样品包吗？"
+    }
+  }
+}

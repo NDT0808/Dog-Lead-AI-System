@@ -49,14 +49,19 @@ class TestExtensionBridgeAndUI(unittest.TestCase):
         self.assertIn("btnOpenAiDashboard", match.group(1))
 
     def test_web_dashboard_i18n_parity(self):
-        """Kiểm tra tính đồng nhất giữa từ điển tiếng Việt (VI) và tiếng Trung (ZH) trong Web Dashboard index.html."""
+        """Kiểm tra tính đồng nhất giữa từ điển tiếng Việt (VI) và tiếng Trung (ZH) trong Web Dashboard."""
         html_path = os.path.join(BASE_DIR, "web_dashboard", "index.html")
+        js_path = os.path.join(BASE_DIR, "web_dashboard", "dashboard.js")
         self.assertTrue(os.path.exists(html_path), "index.html must exist")
+        self.assertTrue(os.path.exists(js_path), "dashboard.js must exist")
 
         with open(html_path, "r", encoding="utf-8") as f:
-            content = f.read()
+            html_content = f.read()
+        with open(js_path, "r", encoding="utf-8") as f:
+            js_content = f.read()
+        content = html_content + "\n" + js_content
 
-        # Verify key bilingual terms exist in index.html
+        # Verify key bilingual terms exist in Web Dashboard
         self.assertIn("const I18N_APP =", content)
         self.assertIn("setAppLang", content)
         self.assertIn("btnAppLangVi", content)
