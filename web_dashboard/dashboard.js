@@ -676,7 +676,7 @@
         ['Đang thẩm định:', '正在审核:'],
         ['Đang phân loại:', '正在分类:'],
 
-        # Step 2: Headless Bulk Enricher & Multi-Stage Funnel
+        // Step 2: Headless Bulk Enricher & Multi-Stage Funnel
         ['BẮT ĐẦU CÀO BÓC TÁCH TRỰC TIẾP TỪ DÒNG', '开始实时深度抓取：从第'],
         ['ĐẾN', '行到第'],
         ['HỒ SƠ', '档案'],
