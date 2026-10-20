@@ -50,13 +50,29 @@
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:rgba(0,0,0,0.25); padding:8px 12px; border-radius:8px; border:1px solid rgba(245,158,11,0.3);">
             <span style="font-weight:700; color:#fbbf24; font-size:12px;">⚙️ Địa chỉ Máy chủ (Server URL / IP):</span>
             <input id="inpCustomServerUrl" type="text" placeholder="http://127.0.0.1:8000 hoặc http://IP-Server:8000" style="background:#0f172a; border:1px solid #475569; color:#fff; padding:5px 10px; border-radius:6px; font-size:12px; min-width:280px; flex:1;" value="${API_BASE}" />
-            <button id="btnSaveCustomServerUrl" style="background:#10b981; color:#fff; font-weight:700; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:12px; transition:all 0.2s;">💾 Lưu & Kết Nối Ngay</button>
+            <button id="btnSaveCustomServerUrl" style="background:#10b981; color:#fff; font-weight:700; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:12px; transition:all 0.2s;">💾 Lưu & Kết Nối</button>
+            <button id="btnResetLocalServerUrl" style="background:#475569; color:#fff; font-weight:700; border:none; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:12px; transition:all 0.2s;" title="Xóa cấu hình từ xa và chạy trên máy tính này">🏠 Về Localhost (127.0.0.1)</button>
           </div>
         `;
         document.body.insertBefore(banner, document.body.firstChild);
 
         const btnRetry = document.getElementById('btnRetryServerConn');
         if (btnRetry) btnRetry.addEventListener('click', retryServerConnection);
+
+        const btnResetLocal = document.getElementById('btnResetLocalServerUrl');
+        if (btnResetLocal) {
+          btnResetLocal.addEventListener('click', () => {
+            localStorage.removeItem('pet_lead_server_url');
+            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+              chrome.storage.local.remove(['pet_lead_server_url']);
+            }
+            API_BASE = 'http://127.0.0.1:8000';
+            const inp = document.getElementById('inpCustomServerUrl');
+            if (inp) inp.value = 'http://127.0.0.1:8000';
+            showToast(currentLang === 'zh' ? '已恢复默认本地模式 (127.0.0.1:8000)' : 'Đã khôi phục về máy tính này (127.0.0.1:8000)');
+            retryServerConnection();
+          });
+        }
 
         const btnSaveUrl = document.getElementById('btnSaveCustomServerUrl');
         if (btnSaveUrl) {
@@ -67,6 +83,12 @@
               if (!newUrl.startsWith('http://') && !newUrl.startsWith('https://')) {
                 newUrl = 'http://' + newUrl;
               }
+              try {
+                const parsed = new URL(newUrl);
+                if (!parsed.port) {
+                  newUrl = `${parsed.protocol}//${parsed.hostname}:8000`;
+                }
+              } catch (e) {}
               API_BASE = newUrl;
               localStorage.setItem('pet_lead_server_url', newUrl);
               if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
