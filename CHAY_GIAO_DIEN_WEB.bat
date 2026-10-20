@@ -1,44 +1,42 @@
 @echo off
+chcp 65001 >nul
 cd /d "%~dp0"
-title PET LEAD AI - GIAO DIEN WEB TRUC QUAN (WEB DASHBOARD)
+title PET LEAD AI - GIAO DIEN WEB TRUC QUAN
 
 echo ===========================================================================
-echo       🐾 PET LEAD AI - GIAO DIEN WEB TRUC QUAN (WEB DASHBOARD) 🐾
+echo       PET LEAD AI - GIAO DIEN WEB TRUC QUAN (WEB DASHBOARD)
 echo ===========================================================================
-echo [*] Thu muc lam viec: %~dp0
-echo [*] Dang khoi chay may chu Python tren cong 8000...
+echo [*] Thu muc: "%~dp0"
+echo [*] Dang khoi chay may chu Python backend tren cong 8000...
 echo [*] Trinh duyet se tu dong mo tai: http://127.0.0.1:8000/index.html
 echo [*] Vui long GIU NGUYEN cua so nay (khong tat) trong khi su dung!
 echo ===========================================================================
 echo.
 
-:: Hen gio tu dong bat trinh duyet sau 1.5 giay
-start "" cmd /c "timeout /t 2 /nobreak >nul & start http://127.0.0.1:8000/index.html"
-
 :: 1. Uu tien chay bang py -3.11
 py -3.11 -c "import sys" >nul 2>&1
 if not errorlevel 1 (
-    py -3.11 web_dashboard\run_server.py
+    py -3.11 "%~dp0web_dashboard\run_server.py"
     goto :end
 )
 
 :: 2. Uu tien Python 3.11 trong LocalAppData
 if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" (
-    "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" web_dashboard\run_server.py
+    "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" "%~dp0web_dashboard\run_server.py"
     goto :end
 )
 
 :: 3. Chay bang python mac dinh
 python -c "import sys" >nul 2>&1
 if not errorlevel 1 (
-    python web_dashboard\run_server.py
+    python "%~dp0web_dashboard\run_server.py"
     goto :end
 )
 
 :: 4. Chay bang py mac dinh
 py -c "import sys" >nul 2>&1
 if not errorlevel 1 (
-    py web_dashboard\run_server.py
+    py "%~dp0web_dashboard\run_server.py"
     goto :end
 )
 
