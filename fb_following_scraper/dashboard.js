@@ -2483,28 +2483,271 @@
       }
     });
 
+    // Web Audio API Synthesizer Chime for Step 2 completion
+    function playCompletionChime() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        const now = ctx.currentTime;
+        osc.frequency.setValueAtTime(587.33, now); // D5
+        osc.frequency.setValueAtTime(880, now + 0.15); // A5
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        osc.start(now);
+        osc.stop(now + 0.6);
+      } catch (_) {}
+    }
+
+    // Helper functions for Deep Website & Profile inspection
+    const US_STATE_CODES_SET = new Set([
+      'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+      'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+      'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+      'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+      'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+    ]);
+
+    const JUNK_OWNER_STRINGS_SET = new Set([
+      'skip to content', 'skip to main content', 'skip to navigation', 'skip content',
+      'navigation', 'toggle navigation', 'main menu', 'primary menu', 'menu', 'search',
+      'close menu', 'open menu', 'home', 'about', 'about us', 'contact', 'contact us',
+      'our story', 'our dogs', 'our puppies', 'available puppies', 'upcoming litters',
+      'reviews', 'testimonials', 'customer reviews', 'blog', 'news', 'gallery',
+      'all rights reserved', 'privacy policy', 'terms of service', 'terms and conditions',
+      'cookie policy', 'cart', 'checkout', 'my account', 'login', 'register',
+      'facebook user', 'breeder owner', 'kennel owner', 'manager', 'owner / manager',
+      'leave a reply', 'recent posts', 'archives', 'categories', 'welcome', 'header', 'footer'
+    ]);
+
+    function isValidOwnerCandidate(name) {
+      if (!name || typeof name !== 'string') return false;
+      const s = name.trim();
+      const low = s.toLowerCase();
+      if (s.length < 2 || s.length > 35) return false;
+      if (JUNK_OWNER_STRINGS_SET.has(low)) return false;
+      for (const bad of JUNK_OWNER_STRINGS_SET) {
+        if (low === bad || low.startsWith(bad + ' ') || low.endsWith(' ' + bad)) return false;
+      }
+      if (/skip\s+to|navigation|content|menu|search|cookie|privacy|policy|terms|rights\s+reserved|cart|checkout|kennel|puppy|puppies|farm|bulldog|frenchie|corgi|doodle|cavapoo|yorkie|retriever|shepherd|password|username/i.test(low)) {
+        return false;
+      }
+      if (!/[A-ZÀ-Ỹ]/.test(s)) return false;
+      if (/[@\/\\{}[\]<>=+*_$#]/.test(s)) return false;
+      return true;
+    }
+
+    function decodeCfEmail(cfHex) {
+      try {
+        const k = parseInt(cfHex.slice(0, 2), 16);
+        let email = '';
+        for (let i = 2; i < cfHex.length; i += 2) {
+          email += String.fromCharCode(parseInt(cfHex.slice(i, i + 2), 16) ^ k);
+        }
+        return email;
+      } catch (_) {
+        return '';
+      }
+    }
+
+    async function handleDeepWebsiteScrape(targetUrl) {
+      const result = {
+        ok: true,
+        owner: '',
+        phone: '',
+        email: '',
+        address: '',
+        city: '',
+        state: '',
+        zip: '',
+        country: 'United States'
+      };
+
+      if (!targetUrl || !targetUrl.startsWith('http')) return result;
+
+      try {
+        const parsedBase = new URL(targetUrl);
+        const host = parsedBase.hostname.toLowerCase();
+        if (host.endsWith('.vn')) result.country = 'Vietnam';
+        else if (host.endsWith('.uk') || host.endsWith('.co.uk')) result.country = 'United Kingdom';
+        else if (host.endsWith('.au')) result.country = 'Australia';
+        else if (host.endsWith('.ca')) result.country = 'Canada';
+
+        const res = await fetch(targetUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          },
+          signal: AbortSignal.timeout(5000)
+        });
+        if (!res.ok) return result;
+        const homeHtml = await res.text();
+
+        // 1. Kiểm tra Good Dog pattern
+        if (/gooddog\.com/i.test(targetUrl)) {
+          const mFull = homeHtml.match(/breederFullName:\s*['"]([^'"]+)['"]/i);
+          const mFirst = homeHtml.match(/breederFirstName:\s*['"]([^'"]+)['"]/i);
+          const mHeader = homeHtml.match(/<h[1-6][^>]*>([A-Z][a-z]+(?:\s+[A-Z]\.?)?)<\/h[1-6]>\s*<p[^>]*>Breeder of/i);
+          const mLoc = homeHtml.match(/located in ([A-Za-z\s.-]+),\s*([A-Z]{2})\b/i);
+          if (mFull && mFull[1]) result.owner = mFull[1].trim();
+          else if (mHeader && mHeader[1]) result.owner = mHeader[1].trim();
+          else if (mFirst && mFirst[1]) result.owner = mFirst[1].trim();
+          if (mLoc) {
+            result.city = mLoc[1].trim();
+            result.state = mLoc[2].trim().toUpperCase();
+          }
+          return result;
+        }
+
+        // 2. Tìm link subpages (About, Contact, Team)
+        const urlsToVisit = [targetUrl];
+        const linkMatches = homeHtml.matchAll(/href=["']([^"'#\s>]+)["']/gi);
+        for (const lm of linkMatches) {
+          try {
+            const href = lm[1];
+            const hLow = href.toLowerCase();
+            if (/about|aboutus|contact|contactus|team|our-story|our-puppies/i.test(hLow)) {
+              const fullSub = new URL(href, targetUrl).toString();
+              if (new URL(fullSub).hostname.toLowerCase() === host && !urlsToVisit.includes(fullSub)) {
+                urlsToVisit.push(fullSub);
+                if (urlsToVisit.length >= 3) break;
+              }
+            }
+          } catch (_) {}
+        }
+
+        for (const pageUrl of urlsToVisit) {
+          try {
+            let pageHtml = (pageUrl === targetUrl) ? homeHtml : '';
+            if (!pageHtml) {
+              const rSub = await fetch(pageUrl, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+                signal: AbortSignal.timeout(3500)
+              });
+              if (rSub.ok) pageHtml = await rSub.text();
+            }
+            if (!pageHtml) continue;
+
+            // CF Email
+            const cfMatches = pageHtml.matchAll(/data-cfemail=["']([a-f0-9]+)["']/gi);
+            for (const cf of cfMatches) {
+              const dec = decodeCfEmail(cf[1]);
+              if (dec && dec.includes('@') && !result.email) result.email = dec.toLowerCase().trim();
+            }
+
+            // Mailto
+            if (!result.email) {
+              const mm = pageHtml.match(/href=["']mailto:([^"?']+)["']/i);
+              if (mm && mm[1].includes('@') && !mm[1].includes('example')) result.email = mm[1].trim().toLowerCase();
+            }
+
+            // Tel
+            if (!result.phone) {
+              const tm = pageHtml.match(/href=["']tel:([^"']+)["']/i);
+              if (tm) {
+                const digits = tm[1].replace(/\D/g, '');
+                if (digits.length === 10) result.phone = `+1 (${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+                else if (digits.length >= 9) result.phone = `+${digits}`;
+              }
+            }
+
+            // JSON-LD Person
+            if (!result.owner) {
+              const jsonLdMatches = pageHtml.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+              for (const jm of jsonLdMatches) {
+                try {
+                  const ld = JSON.parse(jm[1]);
+                  function findPerson(o) {
+                    if (!o || typeof o !== 'object') return null;
+                    if (o['@type'] === 'Person' && o.name) return String(o.name).trim();
+                    for (const k of ['founder', 'owner', 'author']) {
+                      if (o[k] && typeof o[k] === 'object' && o[k].name) return String(o[k].name).trim();
+                      if (typeof o[k] === 'string') return o[k].trim();
+                    }
+                    for (const val of Object.values(o)) {
+                      const resP = findPerson(val);
+                      if (resP) return resP;
+                    }
+                    return null;
+                  }
+                  const p = findPerson(ld);
+                  if (p && isValidOwnerCandidate(p)) {
+                    result.owner = p;
+                    break;
+                  }
+                } catch (_) {}
+              }
+            }
+
+            const cleanText = pageHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+
+            // Regex Owner
+            if (!result.owner) {
+              const mRev = cleanText.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+|\s*&\s*[A-Z][a-z]+)?),\s*(?:Owner\s*&\s*Breeder|Owner|Breeder|Founder|Director)\b/);
+              if (mRev && isValidOwnerCandidate(mRev[1])) result.owner = mRev[1].trim();
+            }
+
+            if (!result.owner) {
+              const mHi = cleanText.match(/(?:Hi,?\s+I'm|Hello,?\s+I'm|Meet|Founded by|Owned by|Breeder is)\s+([A-Z][a-z]+(?:\s+[A-Z]\.?|\s+[A-Z][a-z]+)?)/i);
+              if (mHi && isValidOwnerCandidate(mHi[1])) result.owner = mHi[1].trim();
+            }
+
+            // Location US
+            const mUs = cleanText.match(/\b([A-Z][a-zA-Z\s.-]{2,20}),\s*([A-Z]{2})\b(?:\s*(\d{5}))?/);
+            if (mUs && US_STATE_CODES_SET.has(mUs[2].toUpperCase())) {
+              if (!result.city) result.city = mUs[1].replace(/^(?:About|Contact|Visit)\s+/i, '').trim();
+              if (!result.state) result.state = mUs[2].toUpperCase();
+              if (!result.zip && mUs[3]) result.zip = mUs[3];
+            }
+          } catch (_) {}
+        }
+      } catch (_) {}
+
+      return result;
+    }
+
+    // Unified remote event handler for Step 2
     function handleStep2RemoteEvent(msg) {
+      if (!msg) return;
+
       if (msg.action === 'STEP2_LOG' && msg.log) {
         appendTerminalLogStep2(msg.log);
       } else if (msg.action === 'STEP2_PROGRESS') {
         if (msg.percent !== undefined) {
-          document.getElementById('bulkProgressFill').style.width = `${msg.percent}%`;
-          document.getElementById('lblScanPercent').textContent = `${msg.percent}%`;
+          const fill = document.getElementById('bulkProgressFill');
+          if (fill) fill.style.width = `${msg.percent}%`;
+          const pct = document.getElementById('lblScanPercent');
+          if (pct) pct.textContent = `${msg.percent}%`;
+        }
+        if (msg.current !== undefined) {
+          const scraped = document.getElementById('lblScrapedCountStep2');
+          if (scraped) scraped.textContent = msg.current;
+        }
+        if (msg.total !== undefined) {
+          const totalQ = document.getElementById('lblTotalQueueStep2');
+          if (totalQ) totalQ.textContent = msg.total;
         }
         if (msg.status) {
-          document.getElementById('lblScanStatus').textContent = msg.status;
+          const status = document.getElementById('lblScanStatus');
+          if (status) status.textContent = msg.status;
         }
       } else if (msg.action === 'STEP2_LEAD_DONE' && msg.lead) {
         const lead = msg.lead;
         const newLead = {
           stt: lead.lead_id || `LEAD-US-${crmLeads.length + 1}`,
-          owner: lead.owner_name || 'Dog Breeder',
+          owner: lead.owner_name || lead.owner || 'Dog Breeder',
           name: lead.name || 'Dog Breeder',
           cat: lead.category || 'Dog Breeder / Commercial Kennel (B2B)',
-          amz_cat: lead.amazon_channel || 'Amazon link not found',
-          fb_id: lead.profile_id || '',
+          amz_cat: lead.amazon_channel || lead.amz_cat || 'Amazon link not found',
+          fb_id: lead.profile_id || lead.fb_id || '',
           url: lead.url || '',
-          avatar_url: lead.avatar_url || '',
+          avatar_url: lead.avatar_url || lead.avatar || '',
           website: lead.website || '',
           phone: lead.phone || '',
           email: lead.email || '',
@@ -2513,7 +2756,7 @@
           country: lead.country || 'United States',
           latest_post: {
             publish_time: lead.publish_time || '',
-            publish_human: lead.publish_time || '',
+            publish_human: lead.publish_human || lead.publish_time || '',
             relative_time: lead.relative_time || '',
             activity_status: lead.activity_status || '✓ TÍCH CỰC'
           },
@@ -2522,10 +2765,10 @@
           relative_time: lead.relative_time || '',
           relativeTime: lead.relative_time || '',
           activity_status: lead.activity_status || '✓ TÍCH CỰC',
-          product_fit: lead.recommended_product || 'Puppy Starter Kit V3 (Thảm Cỏ Cún + Khay Potty)',
-          score: lead.lead_score || 65,
-          rank_tier: lead.tier || 'Tier B',
-          sales_action: 'Chào giải pháp thảm cỏ cún'
+          product_fit: lead.recommended_product || lead.product_fit || 'Puppy Starter Kit V3 (Thảm Cỏ Cún + Khay Potty)',
+          score: lead.lead_score || lead.score || 65,
+          rank_tier: lead.tier || lead.rank_tier || 'Tier B',
+          sales_action: lead.sales_action || 'Chào giải pháp thảm cỏ cún'
         };
 
         // UI RAG Deduplication: Kiểm tra đối soát theo FB_ID và URL để chống trùng lặp
@@ -2552,12 +2795,50 @@
         document.getElementById('bulkLeadFbid').textContent = `ID: ${newLead.fb_id || '---'}`;
         if (newLead.avatar_url) document.getElementById('bulkLeadAvatar').src = newLead.avatar_url;
       } else if (msg.action === 'STEP2_ALL_DONE') {
-        isExtScanning = false;
-        isExtRemoteScanning = false;
-        document.getElementById('btnStartExtensionScan').style.background = 'linear-gradient(135deg, #0284c7, #0369a1)';
-        document.getElementById('txtExtScanBtn').textContent = I18N_APP[currentLang].txtExtScanBtn;
-        showToast('🎉 Quét Chrome Extension hoàn tất thành công!');
+        isDirectScrapingRunning = false;
+        isDirectScrapingPaused = false;
+        const btnStart = document.getElementById('btnStartDirectScrape');
+        const btnPause = document.getElementById('btnPauseDirectScrape');
+        const btnResume = document.getElementById('btnResumeDirectScrape');
+        if (btnStart) btnStart.style.display = 'inline-flex';
+        if (btnPause) btnPause.style.display = 'none';
+        if (btnResume) btnResume.style.display = 'none';
+
+        const txtBulk = document.getElementById('txtBulkLinks');
+        const fromInp = document.getElementById('fromLineStep2');
+        const toInp = document.getElementById('toLineStep2');
+        if (txtBulk) txtBulk.disabled = false;
+        if (fromInp) fromInp.disabled = false;
+        if (toInp) toInp.disabled = false;
+
+        const fill = document.getElementById('bulkProgressFill');
+        if (fill) fill.style.width = '100%';
+        const pct = document.getElementById('lblScanPercent');
+        if (pct) pct.textContent = '100%';
+
+        const totalDone = msg.total || crmLeads.length;
+        const doneMsg = currentLang === 'zh'
+          ? `🎉 [完成] 已成功完成全部 ${totalDone} 份档案的精准提取与 CRM 归档！`
+          : `🎉 HOÀN TẤT BƯỚC 2: Đã bóc tách thành công toàn bộ ${totalDone} hồ sơ!`;
+        document.getElementById('lblScanStatus').textContent = doneMsg;
+
+        playCompletionChime();
+        showToast(doneMsg);
+        setTimeout(() => {
+          alert(`🎉 [HOÀN TẤT BƯỚC 2: CÀO BÓC TÁCH FACEBOOK & WEBSITE]\n\nĐã hoàn thành bóc tách toàn bộ ${totalDone} hồ sơ!\n- Dữ liệu 30 trường Meta CRM đã được cập nhật trực tiếp vào bảng bên dưới.\n- Thông tin chủ trại, website, số điện thoại và thời gian bài đăng (publish_time) đã được làm giàu đầy đủ.`);
+        }, 150);
       }
+    }
+
+    // Đăng ký nhận thông điệp từ Chrome Extension Service Worker
+    if (window.chrome && chrome.runtime && chrome.runtime.onMessage) {
+      chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message && message.action && message.action.startsWith('STEP2_')) {
+          handleStep2RemoteEvent(message);
+        }
+        if (sendResponse) sendResponse({ received: true });
+        return true;
+      });
     }
 
     // =========================================================================
@@ -2648,8 +2929,10 @@
       document.getElementById('lblScanStatus').textContent = statusMsg;
       document.getElementById('lblTotalQueueStep2').textContent = urls.length;
 
-      // Delegate to extension background if available via chrome.runtime or postMessage
-      if (window.chrome && chrome.runtime && chrome.runtime.sendMessage) {
+      // Thực thi trực tiếp trên Dashboard nếu có quyền chrome.tabs, đảm bảo giao diện & terminal render tức thì 0ms
+      if (window.chrome && chrome.tabs && chrome.tabs.create) {
+        runDirectProfileScrapingLoop(urls, startIdx, endIdx);
+      } else if (window.chrome && chrome.runtime && chrome.runtime.sendMessage) {
         chrome.runtime.sendMessage({
           action: 'START_STEP2_DIRECT_SCAN',
           links: urls,
@@ -2699,6 +2982,12 @@
         : `Đã tạm dừng ở dòng ${directScrapeCurrentIdx + 1}. Bấm "Tiếp tục cào" để cào tiếp.`;
       document.getElementById('lblScanStatus').textContent = pausedMsg;
       showToast(pausedMsg);
+
+      appendTerminalLogStep2({
+        stage: 'TẠM DỪNG',
+        text: `⏸ Đã tạm dừng cào bóc tách tại dòng ${directScrapeCurrentIdx + 1}. Trạng thái đã được lưu an toàn.`,
+        level: 'err'
+      });
 
       if (window.chrome && chrome.runtime && chrome.runtime.sendMessage) {
         chrome.runtime.sendMessage({ action: 'PAUSE_STEP2_DIRECT_SCAN' }).catch(() => {});
@@ -2761,7 +3050,7 @@
 
         appendTerminalLogStep2({
           stage: '1. FACEBOOK',
-          text: `[Dòng ${i+1}/${urls.length}] Đang mở profile (${rawUrl}) ➔ Bóc tách Giới thiệu & Bài viết...`,
+          text: `[Dòng ${i+1}/${urls.length}] Đang mở profile (${rawUrl}) ➔ Bóc tách Giới thiệu, Bio & Bài viết...`,
           level: 'info'
         });
 
@@ -2771,7 +3060,7 @@
           await waitForTabLoaded(tabId, 12000);
         } catch (_) {}
 
-        // 2. Smooth scrolls
+        // 2. Smooth scrolls to trigger FB dynamic chunks
         try {
           await chrome.scripting.executeScript({
             target: { tabId: tabId },
@@ -2810,19 +3099,34 @@
           };
         }
 
+        // Báo cáo chi tiết kết quả Facebook
+        const fbLoc = [fbData.intro.city, fbData.intro.state].filter(Boolean).join(', ') || 'Hoa Kỳ';
+        appendTerminalLogStep2({
+          stage: '2. KẾT QUẢ FB',
+          text: `👤 Tên: ${fbData.name} | FB_ID: ${fbData.profile_id || '---'} | SĐT: ${fbData.intro.phone || 'Chưa có'} | Vị trí: ${fbLoc}`,
+          level: 'info'
+        });
+
         // 4. Deep website inspection if website exists
         let webOwner = '';
         const rawWeb = (fbData.intro && fbData.intro.website) ? fbData.intro.website.trim() : '';
         if (rawWeb && rawWeb.startsWith('http') && !/facebook\.com|fb\.com|instagram\.com/i.test(rawWeb)) {
           appendTerminalLogStep2({
-            stage: '2. WEBSITE',
+            stage: '3. DUYỆT WEBSITE',
             text: `🌐 Phát hiện Website: ${rawWeb} ➔ Đang duyệt tìm tên chủ trại (Lisa Z.), SĐT & Email...`,
             level: 'web'
           });
           try {
             const webRes = await handleDeepWebsiteScrape(rawWeb);
             if (webRes && webRes.ok) {
-              if (webRes.owner) webOwner = webRes.owner;
+              if (webRes.owner) {
+                webOwner = webRes.owner;
+                appendTerminalLogStep2({
+                  stage: '3. CHỦ TRẠI WEB',
+                  text: `🎯 Đã tìm thấy chủ trại từ website: ${webOwner}`,
+                  level: 'success'
+                });
+              }
               if (webRes.phone && !fbData.intro.phone) fbData.intro.phone = webRes.phone;
               if (webRes.email && !fbData.intro.email) fbData.intro.email = webRes.email;
               if (webRes.city && !fbData.intro.city) fbData.intro.city = webRes.city;
@@ -2837,7 +3141,14 @@
         const ownerInfo = extractBreederNameFallback(fbData.name, fbData.intro.bio, rawUrl);
         const finalOwnerName = webOwner || ownerInfo || 'Dog Breeder';
 
-        // 6. Lead scoring
+        // 6. Log Bài đăng gần nhất chuẩn xác
+        appendTerminalLogStep2({
+          stage: '4. BÀI ĐĂNG GẦN NHẤT',
+          text: `⏱️ Ngày đăng: ${fbData.latest_post.publish_human} (${fbData.latest_post.relative_time}) • ${fbData.latest_post.activity_status}`,
+          level: 'ai'
+        });
+
+        // 7. Lead scoring
         let score = 55;
         if (finalOwnerName && finalOwnerName !== 'Dog Breeder') score += 15;
         if (fbData.intro.phone) score += 10;
@@ -2887,7 +3198,7 @@
           sales_action: fbData.has_amazon ? 'Khai thác ngách phụ kiện/cỏ trên Amazon' : 'Telesale: Gửi catalogue cỏ nhân tạo & khay potty 3 lớp'
         };
 
-        // UI RAG Deduplication
+        // UI RAG Deduplication: Kiểm tra đối soát theo FB_ID và URL để chống trùng lặp
         const existingIdx = crmLeads.findIndex(l => (newLead.fb_id && l.fb_id && l.fb_id === newLead.fb_id) || (newLead.url && l.url && l.url === newLead.url));
         if (existingIdx !== -1) {
           crmLeads[existingIdx] = { ...crmLeads[existingIdx], ...newLead, stt: crmLeads[existingIdx].stt };
@@ -2895,18 +3206,25 @@
           crmLeads.unshift(newLead);
         }
 
+        // TỰ ĐỘNG CẬP NHẬT GIAO DIỆN VÀ BẢNG CRM NGAY LẬP TỨC CHO TỪNG HỒ SƠ
         renderCrmTable(crmLeads);
         updateCrmKpis(crmLeads);
 
-        // Update card preview
+        // Cập nhật card avatar preview
         document.getElementById('bulkLeadName').textContent = newLead.name;
         document.getElementById('bulkLeadOwner').textContent = `${currentLang === 'zh' ? '主理人' : 'Chủ trại'}: ${newLead.owner}`;
         document.getElementById('bulkLeadFbid').textContent = `ID: ${newLead.fb_id || '---'}`;
         if (newLead.avatar_url) document.getElementById('bulkLeadAvatar').src = newLead.avatar_url;
 
         appendTerminalLogStep2({
-          stage: 'HOÀN TẤT HỒ SƠ',
-          text: `🎉 [${leadId}] ${newLead.name} | Chủ: ${newLead.owner} | SĐT: ${newLead.phone || '---'} | Web: ${newLead.website ? '✅' : '❌'} | Amazon: ${newLead.has_amazon ? '🛒' : '❌'} | Ngày đăng: ${newLead.publish_human} | Điểm: ${score}đ`,
+          stage: '5. KÊNH AMAZON',
+          text: `🛒 Amazon: ${newLead.has_amazon ? (newLead.amazon_url || 'Có gian hàng') : 'Không có'} ➔ Gói SP: ${newLead.product_fit}`,
+          level: 'ai'
+        });
+
+        appendTerminalLogStep2({
+          stage: '6. HOÀN TẤT HỒ SƠ',
+          text: `🎉 [${leadId}] ${newLead.name} | Chủ: ${newLead.owner} | SĐT: ${newLead.phone || '---'} | Web: ${newLead.website ? '✅' : '❌'} | Amazon: ${newLead.has_amazon ? '🛒' : '❌'} | Ngày đăng: ${newLead.publish_human} | Điểm: ${score}đ ➔ ĐÃ TỰ CẬP NHẬT VÀO CRM!`,
           level: 'success'
         });
 
@@ -2933,17 +3251,39 @@
         if (fromInp) fromInp.disabled = false;
         if (toInp) toInp.disabled = false;
 
+        document.getElementById('bulkProgressFill').style.width = '100%';
+        document.getElementById('lblScanPercent').textContent = '100%';
+        document.getElementById('lblScrapedCountStep2').textContent = totalRange;
+
         const doneMsg = currentLang === 'zh'
           ? `🎉 已完成从第 ${startIdx + 1} 行至第 ${endIdx + 1} 行的采集 (共 ${totalRange} 份档案)！`
-          : `🎉 Đã hoàn tất bóc tách từ dòng ${startIdx + 1} đến ${endIdx + 1} (Tổng: ${totalRange} hồ sơ)!`;
+          : `🎉 HOÀN TẤT BƯỚC 2: Đã bóc tách thành công toàn bộ ${totalRange} hồ sơ!`;
         document.getElementById('lblScanStatus').textContent = doneMsg;
+
+        appendTerminalLogStep2({
+          stage: 'HỆ THỐNG',
+          text: `🎉 TOÀN BỘ QUÁ TRÌNH BÓC TÁCH BƯỚC 2 ĐÃ HOÀN TẤT THÀNH CÔNG! Đã cập nhật đầy đủ 30 trường Meta CRM cho ${totalRange} hồ sơ.`,
+          level: 'success'
+        });
+
+        playCompletionChime();
         showToast(doneMsg);
+        setTimeout(() => {
+          alert(`🎉 [HOÀN TẤT BƯỚC 2: CÀO BÓC TÁCH FACEBOOK & WEBSITE]\n\nĐã bóc tách thành công toàn bộ ${totalRange} hồ sơ!\n- Toàn bộ 30 trường Meta CRM đã được cập nhật trực tiếp vào bảng bên dưới.\n- Thông tin chủ trại, website, số điện thoại và thời gian bài đăng (publish_time) đã được làm giàu đầy đủ.`);
+        }, 150);
       }
     }
 
     // Client fallback enricher when extension API not directly injected
     async function runClientSideDirectEnrich(urls, startIdx, endIdx) {
       const totalRange = endIdx - startIdx + 1;
+
+      appendTerminalLogStep2({
+        stage: 'KHỞI ĐỘNG',
+        text: `🚀 Kích hoạt bộ làm giàu dữ liệu từ dòng ${startIdx + 1} đến ${endIdx + 1} (Tổng: ${totalRange} hồ sơ)...`,
+        level: 'info'
+      });
+
       for (let i = startIdx; i <= endIdx; i++) {
         if (isDirectScrapingPaused) break;
         directScrapeCurrentIdx = i;
@@ -2954,7 +3294,9 @@
         document.getElementById('bulkProgressFill').style.width = `${pct}%`;
         document.getElementById('lblScanPercent').textContent = `${pct}%`;
         document.getElementById('lblScrapedCountStep2').textContent = processedCount;
+        document.getElementById('lblTotalQueueStep2').textContent = urls.length;
         document.getElementById('lblCurrentTaskStep2').textContent = rawUrl.slice(0, 25);
+        document.getElementById('lblScanStatus').textContent = `[${i+1}/${urls.length}] Đang xử lý: ${rawUrl.slice(0, 32)}...`;
 
         const slugMatch = rawUrl.match(/facebook\.com\/(?:people\/[^/]+\/)?([a-zA-Z0-9._-]+)/i);
         const rawSlug = slugMatch ? slugMatch[1] : `Breeder_${i+1}`;
@@ -3020,7 +3362,7 @@
 
         appendTerminalLogStep2({
           stage: 'HOÀN TẤT HỒ SƠ',
-          text: `🎉 [${leadRecord.stt}] ${cleanName} | Chủ: ${ownerName} | Ngày đăng: ${pubHuman} (${relTime}) | Điểm: ${leadRecord.score}đ`,
+          text: `🎉 [${leadRecord.stt}] ${cleanName} | Chủ: ${ownerName} | Ngày đăng: ${pubHuman} (${relTime}) | Điểm: ${leadRecord.score}đ ➔ ĐÃ CẬP NHẬT VÀO CRM!`,
           level: 'success'
         });
 
@@ -3038,7 +3380,25 @@
         document.getElementById('txtBulkLinks').disabled = false;
         document.getElementById('fromLineStep2').disabled = false;
         document.getElementById('toLineStep2').disabled = false;
-        showToast(currentLang === 'zh' ? '🎉 采集完成！' : '🎉 Bóc tách hoàn tất!');
+
+        document.getElementById('bulkProgressFill').style.width = '100%';
+        document.getElementById('lblScanPercent').textContent = '100%';
+        document.getElementById('lblScrapedCountStep2').textContent = totalRange;
+
+        const doneMsg = currentLang === 'zh' ? '🎉 采集完成！' : `🎉 HOÀN TẤT BƯỚC 2: Đã bóc tách thành công ${totalRange} hồ sơ!`;
+        document.getElementById('lblScanStatus').textContent = doneMsg;
+
+        appendTerminalLogStep2({
+          stage: 'HỆ THỐNG',
+          text: `🎉 HOÀN TẤT BƯỚC 2: ĐÃ XỬ LÝ TOÀN BỘ ${totalRange} HỒ SƠ!`,
+          level: 'success'
+        });
+
+        playCompletionChime();
+        showToast(doneMsg);
+        setTimeout(() => {
+          alert(`🎉 [HOÀN TẤT BƯỚC 2: CÀO BÓC TÁCH FACEBOOK & WEBSITE]\n\nĐã bóc tách thành công toàn bộ ${totalRange} hồ sơ!\n- Toàn bộ 30 trường Meta CRM đã được cập nhật trực tiếp vào bảng bên dưới.`);
+        }, 150);
       }
     }
 

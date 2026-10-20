@@ -52,16 +52,19 @@ function waitForTabLoaded(tabId, timeoutMs = 15000) {
 // Send message to Dashboard tab & runtime broadcast
 async function sendToDashboard(action, data) {
   const payload = { action, ...data };
-  if (currentDashboardTabId) {
-    try {
-      await chrome.tabs.sendMessage(currentDashboardTabId, payload);
-    } catch (e) {
-      // Tab might have reloaded or closed
+  try {
+    const tabs = await chrome.tabs.query({});
+    for (const t of tabs) {
+      if (t.url && (t.url.includes('dashboard.html') || t.url.includes('8000') || t.url.includes('localhost'))) {
+        try {
+          await chrome.tabs.sendMessage(t.id, payload);
+        } catch (_) {}
+      }
     }
-  }
+  } catch (_) {}
   try {
     chrome.runtime.sendMessage(payload).catch(() => {});
-  } catch (e) {}
+  } catch (_) {}
 }
 
 // Helper emit log with live server terminal broadcasting
