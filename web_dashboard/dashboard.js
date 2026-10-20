@@ -450,6 +450,18 @@
       if (typeof updateFunnelBadges === 'function') {
         updateFunnelBadges();
       }
+
+      // Re-translate all existing terminal logs in real-time
+      document.querySelectorAll('#terminalBody > div').forEach(row => {
+        if (row._logEntry) {
+          renderTerminalLogRow(row, row._logEntry, lang);
+        }
+      });
+      document.querySelectorAll('#terminalBodyStep2 > div').forEach(row => {
+        if (row._logEntry) {
+          renderTerminalLogStep2Row(row, row._logEntry, lang);
+        }
+      });
     }
 
     // =========================================================================
@@ -565,6 +577,54 @@
 
       let newText = String(text || '');
       const REPLACEMENTS = [
+        // Step 1: AI Vision & Keyword Multi-Stage Gatekeeper
+        ['🚀 Kích hoạt lọc AI Multi-Stage Gatekeeper (Ngưỡng Strict =', '🚀 启动 AI Multi-Stage Gatekeeper 严格筛选 (严格阈值 ='],
+        ['Hệ thống Multi-Stage Gatekeeper sẵn sàng. Bấm nút lọc để streaming log thời gian thực...', 'Multi-Stage Gatekeeper 智能审核系统已就绪。点击按钮开始流式处理实时日志...'],
+        ['Logo/Biển hiệu trại chó & Từ khóa xác thực:', '犬舍门头招牌/Logo & 关键词双重认证:'],
+        ['(không có mặt người)', '(无人脸)'],
+        ['Ảnh đại diện là mặt người (', '头像为人脸 ('],
+        ['Phát hiện khuôn mặt người (', '检测到真人面部 ('],
+        ['không đủ chứng cứ nuôi/bán chó', '缺乏明确犬类繁育/售卖证据'],
+        ['Avatar Ground Truth', '头像真人真实特征 (Avatar Ground Truth)'],
+        ['B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder:', 'NLP自然语言 & 主理人肖像双重认证B2B繁育者/犬舍 (繁育词:'],
+        ['B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại', 'NLP自然语言 & 主理人肖像双重认证B2B繁育者/犬舍'],
+        ['B2B Breeder / Chủ trại cún xác thực qua NLP (P=0.95)', 'NLP认证B2B繁育者/犬舍 (P=0.95)'],
+        ['Khách hàng nuôi cún xác thực qua NLP & Tên (Từ khóa:', 'NLP自然语言 & 名字精准认证养犬客户 (关键词:'],
+        ['Khách hàng nuôi cún xác thực qua NLP & Tên', 'NLP自然语言 & 名字精准认证养犬客户'],
+        ['Chó xác thực qua Từ khóa & AI (Từ khóa:', '关键词 & AI视觉双重认证犬类 (关键词:'],
+        ['Chó xác thực qua Từ khóa & AI', '关键词 & AI视觉双重认证犬类'],
+        ['Xác thực qua từ khóa giống chó cưng & AI (P=0.88)', '符合繁育者与犬种关键词 (P=0.88)'],
+        ['Không đủ chứng cứ chó cưng (Avatar/Bio phi thú cưng)', '无犬类证据 (人脸/风景/非宠物)'],
+        ['Không đủ chứng cứ chó (', '缺乏明确犬类证据 ('],
+        ['không có từ khóa cún cưng', '无爱犬相关关键词'],
+        ['Ảnh đại diện đơn điệu / Nền đơn sắc chiếm', '纯色背景/单调头像占比'],
+        ['Ảnh đại diện mặc định / Trống (Default Silhouette)', 'Facebook默认灰色剪影头像 (Default Silhouette)'],
+        ['Từ khóa loại trừ phi thú cưng:', '已命中非宠物行业排除关键词:'],
+        ['Từ khóa:', '关键词:'],
+        ['HOÀN TẤT THẨM ĐỊNH!', '审核完毕！'],
+        ['hồ sơ đạt chuẩn cún cưng.', '份档案符合目标犬类标准。'],
+        ['Đồng bộ máy chủ: Đã phát hiện và nạp', '服务器同步：已发现并加载'],
+        ['hồ sơ mới từ', '份新档案，来源于'],
+        ['mặt)', '张人脸)'],
+        ['mặt,', '张人脸,'],
+        ['mặt ', '张人脸 '],
+        ['✓ [TỰ ĐỘNG BẮT SỰ KIỆN] Nhận ngay', '✓ [自动捕获事件] 立即接收'],
+        ['hồ sơ vừa quét từ Extension', '份刚刚从插件扫描的档案'],
+        ['✓ [TỰ ĐỘNG NẠP TỪ EXTENSION] Nhận', '✓ [插件自动载入] 接收'],
+        ['hồ sơ từ Extension Storage', '份档案来源于插件本地缓存'],
+        ['[*] Đang tự động nạp hồ sơ người dùng vừa quét từ Extension', '[*] 正在自动载入刚刚从插件扫描的用户档案'],
+        ['✓ [TỰ ĐỘNG NẠP THÀNH CÔNG] Đã nhận', '✓ [自动载入成功] 已接收'],
+        ['hồ sơ người dùng từ', '份用户档案，来源于'],
+        ['✓ [DỌN RÁC THÀNH CÔNG] Đã lọc sạch', '✓ [清理垃圾完成] 已过滤清除'],
+        ['hồ sơ không thuộc danh sách Đang theo dõi.', '份不属于关注列表的无效数据。'],
+        ['✓ [KẾT NỐI THÀNH CÔNG] Đã kết nối với máy chủ Python:', '✓ [连接成功] 已成功连接Python后端服务器:'],
+        ['❌ Chưa tìm thấy máy chủ', '❌ 无法连接到'],
+        ['Vui lòng kiểm tra lại IP hoặc mở file CHAY_GIAO_DIEN_WEB.bat', '请检查IP地址或在服务器上打开 CHAY_GIAO_DIEN_WEB.bat'],
+        ['Đang phân loại qua ONNX với Ngưỡng Nghiêm Ngặt =', '正在通过ONNX模型进行严格筛选，阈值 ='],
+        ['Đang thẩm định:', '正在审核:'],
+        ['Đang phân loại:', '正在分类:'],
+
+        # Step 2: Headless Bulk Enricher & Multi-Stage Funnel
         ['BẮT ĐẦU CÀO BÓC TÁCH TRỰC TIẾP TỪ DÒNG', '开始实时深度抓取：从第'],
         ['ĐẾN', '行到第'],
         ['HỒ SƠ', '档案'],
@@ -745,6 +805,30 @@
       return currentAvatar || '';
     }
 
+    function renderTerminalLogRow(row, entry, lang) {
+      const timeStr = (entry && entry.timestamp) || new Date().toLocaleTimeString();
+      if (typeof entry === 'string') {
+        const textOut = lang === 'zh' ? translateLogToZh('LOG', entry).text : entry;
+        row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${escapeHtml(textOut)}`;
+      } else {
+        const idxStr = entry.index ? `[${entry.index}/${entry.total}]` : '';
+        const nameStr = entry.name ? `<strong>${escapeHtml(entry.name)}</strong>` : '';
+        const idStr = entry.fb_id ? `<span style="color:#38bdf8;">(#${entry.fb_id})</span>` : '';
+        const rawReason = entry.reason || entry.message || '';
+        const reasonStr = escapeHtml(lang === 'zh' ? translateLogToZh('LOG', rawReason).text : rawReason);
+        
+        if (entry.status === 'APPROVED') {
+          const approvedTag = lang === 'zh' ? '✓ [已批准犬类档案]' : '✓ [PHÊ DUYỆT CHÓ]';
+          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${idxStr} <span style="color:#10b981; font-weight:700;">${approvedTag}</span> ${nameStr} ${idStr} ➔ <span style="color:#34d399;">${reasonStr}</span>`;
+        } else if (entry.status === 'REJECTED') {
+          const rejectedTag = lang === 'zh' ? '❌ [已剔除非目标]' : '❌ [LOẠI BỎ]';
+          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${idxStr} <span style="color:#f43f5e; font-weight:700;">${rejectedTag}</span> ${nameStr} ${idStr} ➔ <span style="color:#fbbf24;">${reasonStr}</span>`;
+        } else {
+          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:#38bdf8;">[*]</span> ${reasonStr}`;
+        }
+      }
+    }
+
     function appendTerminalLog(entry) {
       const body = document.getElementById('terminalBody');
       if (!body) return;
@@ -752,58 +836,31 @@
       const row = document.createElement('div');
       row.style.margin = '3px 0';
       row.style.wordBreak = 'break-word';
+      row._logEntry = entry;
+      row._logType = 'step1';
 
-      const timeStr = (entry && entry.timestamp) || new Date().toLocaleTimeString();
+      renderTerminalLogRow(row, entry, currentLang);
 
-      if (typeof entry === 'string') {
-        const textOut = currentLang === 'zh' ? translateLogToZh('LOG', entry).text : entry;
-        row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${escapeHtml(textOut)}`;
-      } else {
+      if (entry && typeof entry === 'object' && (entry.status === 'APPROVED' || entry.status === 'REJECTED')) {
         const idxStr = entry.index ? `[${entry.index}/${entry.total}]` : '';
-        const nameStr = entry.name ? `<strong>${escapeHtml(entry.name)}</strong>` : '';
-        const idStr = entry.fb_id ? `<span style="color:#38bdf8;">(#${entry.fb_id})</span>` : '';
         const rawReason = entry.reason || entry.message || '';
-        const reasonStr = escapeHtml(currentLang === 'zh' ? translateLogToZh('LOG', rawReason).text : rawReason);
-        
-        if (entry.status === 'APPROVED') {
-          const approvedTag = currentLang === 'zh' ? '✓ [已批准犬类档案]' : '✓ [PHÊ DUYỆT CHÓ]';
-          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${idxStr} <span style="color:#10b981; font-weight:700;">${approvedTag}</span> ${nameStr} ${idStr} ➔ <span style="color:#34d399;">${reasonStr}</span>`;
-          
-          fetch(`${API_BASE}/api/step1/log`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              log: {
-                stage: currentLang === 'zh' ? '已批准犬类' : 'PHÊ DUYỆT CHÓ',
-                text: `${idxStr} ${entry.name} (#${entry.fb_id}) -> ${rawReason}`,
-                level: 'approved',
-                timestamp: timeStr,
-                lang: currentLang
-              },
-              lang: currentLang
-            })
-          }).catch(() => {});
-        } else if (entry.status === 'REJECTED') {
-          const rejectedTag = currentLang === 'zh' ? '❌ [已剔除非目标]' : '❌ [LOẠI BỎ]';
-          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${idxStr} <span style="color:#f43f5e; font-weight:700;">${rejectedTag}</span> ${nameStr} ${idStr} ➔ <span style="color:#fbbf24;">${reasonStr}</span>`;
+        const timeStr = entry.timestamp || new Date().toLocaleTimeString();
+        const isApproved = entry.status === 'APPROVED';
 
-          fetch(`${API_BASE}/api/step1/log`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              log: {
-                stage: currentLang === 'zh' ? '已剔除非目标' : 'LOẠI BỎ',
-                text: `${idxStr} ${entry.name} (#${entry.fb_id}) -> ${rawReason}`,
-                level: 'rejected',
-                timestamp: timeStr,
-                lang: currentLang
-              },
+        fetch(`${API_BASE}/api/step1/log`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            log: {
+              stage: isApproved ? (currentLang === 'zh' ? '已批准犬类' : 'PHÊ DUYỆT CHÓ') : (currentLang === 'zh' ? '已剔除非目标' : 'LOẠI BỎ'),
+              text: `${idxStr} ${entry.name || ''} (#${entry.fb_id || ''}) -> ${rawReason}`,
+              level: isApproved ? 'approved' : 'rejected',
+              timestamp: timeStr,
               lang: currentLang
-            })
-          }).catch(() => {});
-        } else {
-          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:#38bdf8;">[*]</span> ${reasonStr}`;
-        }
+            },
+            lang: currentLang
+          })
+        }).catch(() => {});
       }
 
       body.appendChild(row);
@@ -816,18 +873,10 @@
 
     const seenTerminalLogIdsStep2 = new Set();
 
-    function appendTerminalLogStep2(entry) {
-      const body = document.getElementById('terminalBodyStep2');
-      if (!body) return;
-
-      const row = document.createElement('div');
-      row.style.margin = '3px 0';
-      row.style.wordBreak = 'break-word';
-
+    function renderTerminalLogStep2Row(row, entry, lang) {
       const timeStr = (entry && entry.timestamp) || new Date().toLocaleTimeString();
-
       if (typeof entry === 'string') {
-        const textOut = currentLang === 'zh' ? translateLogToZh('LOG', entry).text : entry;
+        const textOut = lang === 'zh' ? translateLogToZh('LOG', entry).text : entry;
         row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${escapeHtml(textOut)}`;
       } else {
         let rawStage = entry.stage || 'TIẾN TRÌNH';
@@ -836,7 +885,7 @@
 
         let stage = rawStage;
         let text = rawText;
-        if (currentLang === 'zh') {
+        if (lang === 'zh') {
           const trans = translateLogToZh(rawStage, rawText);
           stage = trans.stage;
           text = trans.text;
@@ -850,6 +899,34 @@
         else if (level === 'err') color = '#f87171'; // Red
 
         row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:${color}; font-weight:700;">[${escapeHtml(stage)}]</span> <span>${escapeHtml(text)}</span>`;
+      }
+    }
+
+    function appendTerminalLogStep2(entry) {
+      const body = document.getElementById('terminalBodyStep2');
+      if (!body) return;
+
+      const row = document.createElement('div');
+      row.style.margin = '3px 0';
+      row.style.wordBreak = 'break-word';
+      row._logEntry = entry;
+      row._logType = 'step2';
+
+      renderTerminalLogStep2Row(row, entry, currentLang);
+
+      if (entry && typeof entry === 'object' && entry.text) {
+        let rawStage = entry.stage || 'TIẾN TRÌNH';
+        let rawText = entry.text || '';
+        const level = entry.level || 'info';
+        const timeStr = entry.timestamp || new Date().toLocaleTimeString();
+
+        let stage = rawStage;
+        let text = rawText;
+        if (currentLang === 'zh') {
+          const trans = translateLogToZh(rawStage, rawText);
+          stage = trans.stage;
+          text = trans.text;
+        }
 
         // Đồng bộ trực tiếp ra terminal cmd/powershell của máy chủ python
         fetch(`${API_BASE}/api/step2/log`, {

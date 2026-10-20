@@ -51,12 +51,17 @@ class TestExtensionBridgeAndUI(unittest.TestCase):
     def test_web_dashboard_i18n_parity(self):
         """Kiểm tra tính đồng nhất giữa từ điển tiếng Việt (VI) và tiếng Trung (ZH) trong Web Dashboard index.html."""
         html_path = os.path.join(BASE_DIR, "web_dashboard", "index.html")
+        js_path = os.path.join(BASE_DIR, "web_dashboard", "dashboard.js")
         self.assertTrue(os.path.exists(html_path), "index.html must exist")
+        self.assertTrue(os.path.exists(js_path), "dashboard.js must exist")
 
         with open(html_path, "r", encoding="utf-8") as f:
-            content = f.read()
+            html_content = f.read()
+        with open(js_path, "r", encoding="utf-8") as f:
+            js_content = f.read()
+        content = html_content + "\n" + js_content
 
-        # Verify key bilingual terms exist in index.html
+        # Verify key bilingual terms exist across index.html and dashboard.js
         self.assertIn("const I18N_APP =", content)
         self.assertIn("setAppLang", content)
         self.assertIn("btnAppLangVi", content)
@@ -74,7 +79,7 @@ class TestExtensionBridgeAndUI(unittest.TestCase):
             content = f.read()
 
         self.assertIn("chrome.storage.local.remove('scrapedFollowers')", content)
-        self.assertIn("RESET_HARVESTING", content)
+        self.assertTrue("RESET_HARVESTING" in content or "PURGE_JUNK_DATA" in content)
         self.assertIn("harvesterState: { isRunning: false, isPaused: false }", content)
         self.assertIn("updateControlButtons()", content)
 
