@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pet Lead AI - Profile Enricher</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 380px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+    h1 { font-size: 15px; font-weight: 700; color: #fff; }
+    p { font-size: 11px; color: var(--text-muted); }
+
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      transition: background 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #334155; color: #fff; }
+
+    .field-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 11px;
+    }
+    .field-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .field-row:last-child { border-bottom: none; }
+    .field-lbl { color: var(--text-muted); }
+    .field-val { font-weight: 600; color: #fff; max-width: 200px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="icon">🔍</div>
+    <div>
+      <h1>Profile Data Enricher</h1>
+      <p>Pet Lead AI • Bước 2 (Giới thiệu & Liên hệ)</p>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" id="btnScrapeCurrent">
+    <span>▶</span> Bóc tách thông tin trang này
+  </button>
+  <button class="btn btn-secondary" id="btnExportStep2">
+    <span>📥</span> Xuất dữ liệu đã làm giàu (JSON)
+  </button>
+
+  <div class="field-box" id="resultBox">
+    <div class="field-row">
+      <span class="field-lbl">Tên trang:</span>
+      <span class="field-val" id="valName">---</span>
+    </div>
+    <div class="field-row">
+      <span class="field-lbl">Tên chủ trại (Owner):</span>
+      <span class="field-val" id="valOwner">---</span>
+    </div>
+    <div class="field-row">
+      <span class="field-lbl">Website:</span>
+      <span class="field-val" id="valWeb">---</span>
+    </div>
+    <div class="field-row">
+      <span class="field-lbl">Điện thoại:</span>
+      <span class="field-val" id="valPhone">---</span>
+    </div>
+    <div class="field-row">
+      <span class="field-lbl">Email:</span>
+      <span class="field-val" id="valEmail">---</span>
+    </div>
+    <div class="field-row">
+      <span class="field-lbl">Địa chỉ:</span>
+      <span class="field-val" id="valAddr">---</span>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

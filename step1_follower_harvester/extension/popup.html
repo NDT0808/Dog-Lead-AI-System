@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pet Lead AI - Follower Harvester</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #ef4444;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 400px;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #6366f1, #10b981);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+    .title-box h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .title-box p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .lang-switch {
+      display: flex;
+      background: #334155;
+      padding: 2px;
+      border-radius: 8px;
+    }
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .lang-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+    .stat-val {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .stat-lbl {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-success { background: var(--emerald); color: #fff; }
+    .btn-danger { background: var(--rose); color: #fff; }
+    .btn-secondary { background: #334155; color: #fff; }
+    .btn-secondary:hover { background: #475569; }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Status badge */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 11px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--amber);
+      display: inline-block;
+      margin-right: 6px;
+    }
+    .status-dot.active { background: var(--emerald); animation: pulse 1.5s infinite; }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    /* Recent leads preview */
+    .preview-header {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .preview-list {
+      max-height: 120px;
+      overflow-y: auto;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 6px;
+    }
+    .preview-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 11px;
+    }
+    .preview-item:last-child { border-bottom: none; }
+    .preview-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #475569;
+      object-fit: cover;
+    }
+    .preview-info {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .preview-name { font-weight: 600; color: #fff; }
+    .preview-id { font-size: 9px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <div class="logo-icon">🐾</div>
+      <div class="title-box">
+        <h1 id="txtTitle">Follower Harvester</h1>
+        <p id="txtSub">Pet Lead AI • Step 1</p>
+      </div>
+    </div>
+    <div class="lang-switch">
+      <button class="lang-btn active" id="btnLangVi">VI</button>
+      <button class="lang-btn" id="btnLangZh">ZH</button>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div>
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Sẵn sàng quét danh sách Facebook</span>
+    </div>
+    <span id="txtPageType" style="color:var(--text-muted)">FB Followers</span>
+  </div>
+
+  <!-- Non-Facebook Warning Card -->
+  <div id="nonFbWarning" style="display:none; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 11.5px;">
+    <div style="display:flex; align-items:center; gap:8px; font-weight:700; color:#fbbf24; margin-bottom:4px;">
+      <span>⚠️</span> <span id="txtNotOnFbTitle">Bạn đang không ở trang Facebook!</span>
+    </div>
+    <p id="txtNotOnFbDesc" style="color:#cbd5e1; font-size:11px; margin-bottom:8px;">Vui lòng mở trang cá nhân / Fanpage Facebook có danh sách Người theo dõi để bắt đầu quét.</p>
+    <div style="display:flex; gap:6px;">
+      <button class="btn btn-primary" id="btnOpenFacebook" style="padding:7px 10px; font-size:11px; flex:1;">
+        <span>🌐</span> <span id="txtBtnOpenFb">Mở Facebook</span>
+      </button>
+      <button class="btn btn-secondary" id="btnOpenWebDashboard" style="padding:7px 10px; font-size:11px; flex:1;">
+        <span>🖥️</span> <span id="txtBtnOpenDashboard">Mở Web Dashboard</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-val" id="countScraped">0</div>
+      <div class="stat-lbl" id="lblScraped">ĐÃ QUÉT</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="countAvatars">0</div>
+      <div class="stat-lbl" id="lblAvatars">CÓ AVATAR</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="countNumericId">0</div>
+      <div class="stat-lbl" id="lblNumericId">FB_ID SỐ</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-primary" id="btnStart">
+      <span>▶</span> <span id="txtBtnStart">Bắt đầu quét trang hiện tại</span>
+    </button>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="btnPause" disabled>
+        <span>⏸</span> <span id="txtBtnPause">Tạm dừng</span>
+      </button>
+      <button class="btn btn-danger" id="btnStop" disabled>
+        <span>⏹</span> <span id="txtBtnStop">Dừng & Lưu</span>
+      </button>
+    </div>
+    <button class="btn btn-success" id="btnExportJson">
+      <span>📥</span> <span id="txtBtnExport">Xuất dữ liệu cho Python Pipeline (JSON)</span>
+    </button>
+    <button class="btn" id="btnOpenAiDashboard" style="background: linear-gradient(135deg, #6366f1, #10b981); color:#fff; font-weight:750; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); margin-top:2px;">
+      <span>🚀</span> <span id="txtBtnOpenAiDashboard">Mở UI Lọc AI Thị Giác & Gallery</span>
+    </button>
+  </div>
+
+  <div class="preview-header">
+    <span id="txtPreviewTitle">Danh sách vừa quét gần đây</span>
+    <span id="btnClearData" style="cursor:pointer;color:var(--rose)">Xóa tệp tạm</span>
+  </div>
+  <div class="preview-list" id="previewContainer">
+    <div style="text-align:center;padding:12px;color:var(--text-muted);font-size:10px;" id="emptyMsg">
+      Chưa có dữ liệu. Mở trang Follower Facebook và bấm Bắt đầu quét.
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

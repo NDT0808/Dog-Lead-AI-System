@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "FB Following Scraper - Pet Lead AI",
+  "version": "3.0.0",
+  "description": "Thu thập người theo dõi / đang theo dõi từ Facebook Profile & Fanpage chuẩn xác, trích xuất FB_ID số, Avatar HD gốc, liên kết trực tiếp sang Web Dashboard Lọc AI.",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "scripting",
+    "storage",
+    "unlimitedStorage",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://facebook.com/*",
+    "https://www.facebook.com/*",
+    "https://*.facebook.com/*",
+    "https://*.fbcdn.net/*",
+    "https://*.fna.fbcdn.net/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Pet Lead AI - Follower Harvester"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://facebook.com/*",
+        "https://www.facebook.com/*",
+        "https://*.facebook.com/*",
+        "http://127.0.0.1:8000/*",
+        "http://localhost:8000/*",
+        "http://127.0.0.1/*",
+        "http://localhost/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "dashboard.html",
+        "dashboard.js",
+        "assets/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "externally_connectable": {
+    "matches": [
+      "http://127.0.0.1:8000/*",
+      "http://localhost:8000/*",
+      "http://127.0.0.1/*",
+      "http://localhost/*"
+    ]
+  }
+}

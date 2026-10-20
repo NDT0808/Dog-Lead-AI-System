@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Pet Lead AI - Profile Data Enricher",
+  "version": "1.0.0",
+  "description": "Làm giàu hồ sơ người dùng Facebook: Cào thông tin Giới thiệu (About), Thông tin liên hệ, SĐT, Email, Website, Tên chủ trại cho Step 2.",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "scripting",
+    "storage",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://facebook.com/*",
+    "https://www.facebook.com/*",
+    "https://*.facebook.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Pet Lead AI - Profile Data Enricher"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://facebook.com/*",
+        "https://www.facebook.com/*",
+        "https://*.facebook.com/*"
+      ],
+      "js": ["content_fb_about.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
