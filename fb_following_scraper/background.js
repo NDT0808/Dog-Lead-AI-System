@@ -434,34 +434,6 @@ function extractOwnerRepresentative(leadName, email, html, webOwnerName) {
 // Injected DOM Extractor for Facebook Profile (Runs inside FB tab)
 // Kết hợp toàn diện bóc tách từ fb_profile_funnel_scraper + GIỮ NGUYÊN 100% CÔNG THỨC PUBLISH TIME CHUẨN XÁC
 function domExtractFacebookProfile(stt = 1) {
-  const US_STATE_CODES = new Set([
-    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
-  ]);
-
-  function cleanPhone(raw) {
-    if (!raw) return '';
-    const digits = String(raw).replace(/\D/g, '');
-    if (digits.length === 10 && /^[2-9]/.test(digits)) {
-      return `+1 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-    }
-    if (digits.length === 11 && digits.startsWith('1')) {
-      return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
-    }
-    if (digits.length >= 9 && digits.length <= 15) {
-      return `+${digits}`;
-    }
-    return '';
-  }
-
-  function cleanAddressText(raw) {
-    if (!raw || typeof raw !== 'string') return '';
-    return raw.replace(/^(?:Down\s+South\s+Pups|About|Contact|Visit|Address|Location)\s*[:\-–]?\s*/i, '').trim();
-  }
-
   // 1. Tạo floating inspector banner trên đầu tab
   let banner = document.getElementById('fb-funnel-inspector-banner');
   if (!banner) {
@@ -522,15 +494,8 @@ function domExtractFacebookProfile(stt = 1) {
     }
   }
   if (!detectedName) {
-    const h1 = document.querySelector('div[role="main"] h1, h1[dir="auto"], h1');
+    const h1 = document.querySelector('div[role="main"] h1, h1');
     if (h1 && h1.innerText && !isGarbage(h1.innerText)) detectedName = h1.innerText.trim();
-  }
-  if (!detectedName) {
-    const ogTitle = document.querySelector('meta[property="og:title"]')?.content || '';
-    if (ogTitle) {
-      const clean = ogTitle.replace(/^\(\d+\)\s*/, '').split('|')[0].split('-')[0].trim();
-      if (!isGarbage(clean)) detectedName = clean;
-    }
   }
   if (!detectedName && document.title) {
     const clean = document.title.replace(/^\(\d+\)\s*/, '').split('|')[0].split('-')[0].trim();
@@ -545,44 +510,19 @@ function domExtractFacebookProfile(stt = 1) {
     res.profile_id = mId[1];
   }
   if (!res.profile_id) {
-    const alAndroid = document.querySelector('meta[property="al:android:url"]')?.content || '';
-    if (alAndroid) {
-      const mAl = alAndroid.match(/fb:\/\/(?:profile|page)\/\?id=(\d+)/) || alAndroid.match(/fb:\/\/(?:profile|page)\/(\d+)/);
-      if (mAl && mAl[1] && mAl[1] !== '100060157728939') res.profile_id = mAl[1];
-    }
-  }
-  if (!res.profile_id) {
     const html = document.documentElement ? document.documentElement.innerHTML : '';
-    const mUid = html.match(/"entity_id":"?(\d{8,})"?/) || html.match(/"target_id":"?(\d{8,})"?/) || html.match(/"userID":"?(\d{8,})"?/) || html.match(/"profileID":"?(\d{8,})"?/) || html.match(/profile_id[":=]+(\d{8,})/) || html.match(/delegate_page_id[":=]+(\d{8,})/);
+    const mUid = html.match(/"userID":"?(\d{8,})"?/) || html.match(/"profileID":"?(\d{8,})"?/) || html.match(/profile_id[":=]+(\d{8,})/);
     if (mUid && mUid[1] && mUid[1] !== '100060157728939') {
       res.profile_id = mUid[1];
     }
   }
 
-  // 3. Avatar HD (Đa tầng: og:image meta -> Relay JSON Cache -> DOM main avatar)
-  let foundAvatar = '';
-  const ogImg = document.querySelector('meta[property="og:image"]')?.content || '';
-  if (ogImg && !ogImg.includes('blank_profile') && !ogImg.includes('rsrc.php') && (ogImg.startsWith('http') || ogImg.startsWith('//'))) {
-    foundAvatar = ogImg.startsWith('//') ? ('https:' + ogImg) : ogImg;
-    foundAvatar = foundAvatar.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
+  // 3. Avatar HD
+  const avImg = document.querySelector('svg image, img[src*="fbcdn.net"], img[src*="scontent"]');
+  if (avImg) {
+    const src = avImg.getAttribute('xlink:href') || avImg.getAttribute('src') || '';
+    if (src && !src.includes('rsrc.php')) res.avatar_url = src;
   }
-  if (!foundAvatar) {
-    const mainAv = document.querySelector('div[role="main"] image[preserveAspectRatio*="xMidYMid"], div[role="main"] svg image, div[role="main"] img[src*="fbcdn.net"][src*="t39.30808-1"], div[role="main"] img[alt*="profile picture" i], div[role="main"] img[alt*="avatar" i], div[role="main"] img[alt*="ảnh đại diện" i], svg image, img[src*="fbcdn.net"]');
-    if (mainAv) {
-      const src = mainAv.getAttribute('xlink:href') || mainAv.getAttribute('href') || mainAv.src || mainAv.getAttribute('src') || '';
-      if (src && !src.startsWith('data:') && !src.includes('blank_profile') && !src.includes('rsrc.php')) {
-        foundAvatar = src.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
-      }
-    }
-  }
-  if (!foundAvatar) {
-    const html = document.documentElement ? document.documentElement.innerHTML : '';
-    const mPic = html.match(/"profile_picture":\s*\{\s*"uri":\s*"([^"]+)"/) || html.match(/"profile_pic_large":\s*"([^"]+)"/) || html.match(/"profilePicLarge":\s*\{[^}]*"uri":\s*"([^"]+)"/);
-    if (mPic && mPic[1]) {
-      foundAvatar = mPic[1].replace(/\\\//g, '/').replace(/\\u00253A/g, ':').replace(/\\u00252F/g, '/');
-    }
-  }
-  if (foundAvatar) res.avatar_url = foundAvatar;
 
   // 4. SỐ ĐIỆN THOẠI - Quét Live DOM TreeWalker + tel: + wa.me/
   const telLink = document.querySelector('a[href^="tel:"]');
@@ -833,9 +773,9 @@ async function executeStep2BrowserScan(links, options = {}) {
 
     emitLog('1. FACEBOOK', `[Dòng ${i+1}/${total}] Đang mở profile (${initialName || rawUrl}) ➔ Bóc tách Giới thiệu & Bài viết...`, 'info');
 
-    // 1. Điều hướng worker tab tới Profile Facebook (active: false chạy ngầm, không cướp giao diện dashboard)
+    // 1. Điều hướng worker tab tới Profile Facebook (active: true để Comet React nạp DOM đầy đủ)
     try {
-      await chrome.tabs.update(currentWorkerTabId, { url: rawUrl, active: false });
+      await chrome.tabs.update(currentWorkerTabId, { url: rawUrl, active: true });
       await waitForTabLoaded(currentWorkerTabId, 12000);
     } catch (e) {}
 
@@ -927,17 +867,6 @@ async function executeStep2BrowserScan(links, options = {}) {
     const leadNum = String(i + 1).padStart(5, '0');
     const leadId = `LEAD-US-${leadNum}`;
 
-    let finalAvatar = fbData.avatar_url || initialAvatar || '';
-    if (!finalAvatar) {
-      try {
-        const st = await chrome.storage.local.get(['scrapedFollowers', 'verifiedLeads']);
-        const pool = (st.verifiedLeads || []).concat(st.scrapedFollowers || []);
-        const fId = fbData.profile_id || initialFbId;
-        const m = pool.find(x => (fId && x.fb_id && x.fb_id === fId) || (x.url && x.url === rawUrl) || (x.name && x.name === fbData.name));
-        if (m && (m.avatar_url || m.avatar)) finalAvatar = m.avatar_url || m.avatar;
-      } catch (_) {}
-    }
-
     const leadRecord = {
       lead_id: leadId,
       stt: leadId,
@@ -966,7 +895,8 @@ async function executeStep2BrowserScan(links, options = {}) {
       lead_score: score,
       score: score,
       tier: tier,
-      avatar_url: finalAvatar,
+      rank_tier: tier,
+      avatar_url: fbData.avatar_url || initialAvatar,
       publish_time: fbData.latest_post.publish_time,
       publish_human: fbData.latest_post.publish_human,
       relative_time: fbData.latest_post.relative_time,
