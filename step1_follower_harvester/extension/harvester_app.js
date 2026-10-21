@@ -155,10 +155,17 @@ function updateI18nUI() {
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Tải ngôn ngữ đã lưu
   try {
-    const st = await chrome.storage.local.get(['lang', 'scrapedFollowers']);
+    const st = await chrome.storage.local.get(['lang', 'scrapedFollowers', 'harvesterState']);
     if (st.lang) currentLang = st.lang;
     if (st.scrapedFollowers && Array.isArray(st.scrapedFollowers)) {
       harvestedRecords = st.scrapedFollowers;
+    }
+    if (st.harvesterState && st.harvesterState.isRunning) {
+      isHarvesting = true;
+      isPaused = st.harvesterState.isPaused || false;
+      document.getElementById('btnStartHarvest').disabled = true;
+      document.getElementById('btnPauseHarvest').disabled = false;
+      document.getElementById('btnStopHarvest').disabled = false;
     }
   } catch (e) {
     const saved = localStorage.getItem('pet_lead_tool1_lang');
@@ -372,10 +379,24 @@ function setupRealtimeListeners() {
   // 3. Chrome storage onChange
   try {
     chrome.storage.onChanged.addListener((changes, area) => {
-      if (area === 'local' && changes.scrapedFollowers) {
-        harvestedRecords = changes.scrapedFollowers.newValue || [];
-        updateKPIs();
-        renderTable();
+      if (area === 'local') {
+        if (changes.scrapedFollowers) {
+          harvestedRecords = changes.scrapedFollowers.newValue || [];
+          updateKPIs();
+          renderTable();
+        }
+        if (changes.harvesterState) {
+          const hs = changes.harvesterState.newValue;
+          if (hs) {
+            isHarvesting = hs.isRunning || false;
+            isPaused = hs.isPaused || false;
+            document.getElementById('btnStartHarvest').disabled = isHarvesting;
+            document.getElementById('btnPauseHarvest').disabled = !isHarvesting;
+            document.getElementById('btnStopHarvest').disabled = !isHarvesting;
+            document.getElementById('txtBtnPause').textContent = isPaused ? I18N[currentLang].btnResume : I18N[currentLang].btnPause;
+            document.getElementById('txtExtStatus').textContent = isHarvesting ? (isPaused ? I18N[currentLang].extPaused : I18N[currentLang].extRunning) : I18N[currentLang].extReady;
+          }
+        }
       }
     });
   } catch (e) {}
@@ -634,40 +655,85 @@ async function executeNextInQueue() {
   }
 }
 
-// Tạm dừng
-function togglePauseHarvest() {
+// Tạm dừng / Tiếp tục
+async function togglePauseHarvest() {
   isPaused = !isPaused;
-  document.getElementById('txtBtnPause').textContent = isPaused ? I18N[currentLang].btnResume : I18N[currentLang].btnPause;
-  document.getElementById('txtExtStatus').textContent = isPaused ? I18N[currentLang].extPaused : I18N[currentLang].extRunning;
+  const t = I18N[currentLang];
+  document.getElementById('txtBtnPause').textContent = isPaused ? t.btnResume : t.btnPause;
+  document.getElementById('txtExtStatus').textContent = isPaused ? t.extPaused : t.extRunning;
 
   if (isPaused) {
     if (queueTimer) clearTimeout(queueTimer);
-  } else {
+  }
+
+  // Gửi lệnh PAUSE hoặc RESUME tới TOÀN BỘ tab Facebook
+  const action = isPaused ? 'PAUSE_HARVESTING' : 'RESUME_HARVESTING';
+  try {
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (tab.url && tab.url.includes('facebook.com')) {
+        chrome.tabs.sendMessage(tab.id, { action }).catch(() => {});
+      }
+    }
+    chrome.runtime.sendMessage({ action }).catch(() => {});
+    chrome.storage.local.set({ harvesterState: { isRunning: true, isPaused } });
+  } catch (e) {}
+
+  if (!isPaused) {
     executeNextInQueue();
   }
 }
 
-// Dừng hoàn toàn
-function stopQueueHarvest() {
+// Dừng hoàn toàn và lưu dữ liệu
+async function stopQueueHarvest() {
   isHarvesting = false;
   isPaused = false;
   if (queueTimer) clearTimeout(queueTimer);
 
-  // Đóng các tab đang chạy
+  // 1. Gửi lệnh STOP_HARVESTING lập tức tới TẤT CẢ các tab Facebook đang mở
+  try {
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (tab.url && tab.url.includes('facebook.com')) {
+        chrome.tabs.sendMessage(tab.id, { action: 'STOP_HARVESTING' }).catch(() => {});
+      }
+    }
+  } catch (e) {}
+
+  // 2. Broadcast qua runtime và lưu trạng thái ngắt
+  try {
+    chrome.runtime.sendMessage({ action: 'STOP_HARVESTING' }).catch(() => {});
+    chrome.storage.local.set({ harvesterState: { isRunning: false, isPaused: false } });
+  } catch (e) {}
+
+  // 3. Đóng các tab Facebook do Tool 1 tự tạo để giải phóng RAM
   activeTabIds.forEach(tid => {
     try { chrome.tabs.remove(tid); } catch (e) {}
   });
   activeTabIds = [];
 
+  // 4. Cập nhật giao diện nút bấm
   document.getElementById('btnStartHarvest').disabled = false;
   document.getElementById('btnPauseHarvest').disabled = true;
   document.getElementById('btnStopHarvest').disabled = true;
+  document.getElementById('txtBtnPause').textContent = I18N[currentLang].btnPause;
   document.getElementById('txtExtStatus').textContent = I18N[currentLang].extReady;
 
   if (currentQueueIndex >= 0 && currentQueueIndex < queueList.length) {
     queueList[currentQueueIndex].status = 'done';
   }
   renderQueue();
+
+  // 5. Lưu lại dữ liệu chắc chắn vào storage
+  try {
+    chrome.storage.local.set({ scrapedFollowers: harvestedRecords });
+  } catch (e) {
+    localStorage.setItem('pet_lead_tool1_data', JSON.stringify(harvestedRecords));
+  }
+
+  showToast(currentLang === 'vi' 
+    ? `✓ Đã dừng cào! Toàn bộ ${harvestedRecords.length} hồ sơ đã được lưu an toàn.` 
+    : `✓ 已停止采集！全部 ${harvestedRecords.length} 条数据已安全保存。`);
 }
 
 // Xuất file JSON chuẩn cho Tool 2 (AI Vision & Dog Classifier)
