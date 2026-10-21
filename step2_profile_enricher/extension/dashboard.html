@@ -29,9 +29,12 @@
         <button type="button" id="langZh" class="lang-btn">🇨🇳 中文</button>
       </div>
 
+      <!-- Input file ẩn để nạp trực tiếp file JSON từ Bước 1 -->
+      <input type="file" id="fileInputStep1" accept=".json" style="display:none;">
+
       <!-- Nút hành động nhanh (Song ngữ Việt - Trung) -->
-      <button type="button" id="btnTopImportStep1" class="btn-secondary" title="Nạp nhanh các link đã quét từ Step 1 (Followers/Following) / 导入第1步潜客">
-        <span>📥</span> <span id="txtBtnImportStep1">Nạp Lead Bước 1 / 导入第1步</span>
+      <button type="button" id="btnTopImportStep1" class="btn-secondary" title="Nạp trực tiếp file JSON từ Bước 1 nhận diện chó (step1_verified_dogs...) / 导入第1步狗识别JSON文件">
+        <span>📥</span> <span id="txtBtnImportStep1">Nạp JSON Bước 1 / 导入第1步JSON</span>
       </button>
 
       <button type="button" id="btnTopExportPriority8" class="btn-emerald" title="Xuất file Excel 37 cột chuẩn Priority Data 8 / 导出37列Excel">
@@ -60,6 +63,10 @@
       </div>
 
       <div class="quick-bar">
+        <button type="button" id="btnImportJsonStep1" class="btn-secondary" title="Nạp trực tiếp file JSON từ Bước 1 (step1_verified_dogs...) / 导入第1步狗识别JSON文件">
+          <span>📁</span> <span id="txtBtnImportJsonStep1">Nạp File JSON / 导入JSON</span>
+        </button>
+
         <button type="button" id="btnQuickPaste" class="btn-secondary" title="Dán nhanh danh sách link từ Clipboard / 从剪贴板粘贴">
           <span>📋</span> <span id="txtBtnQuickPaste">Dán từ Clipboard / 粘贴</span>
         </button>

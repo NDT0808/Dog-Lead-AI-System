@@ -308,62 +308,23 @@
   // =========================================================================
   function resolveAvatarFallback(fbId, url, currentAvatar, ownerName, leadName) {
     const cleanId = fbId ? String(fbId).trim() : '';
-    const cleanUrl = url ? String(url).trim().toLowerCase() : '';
-    const cleanOwner = ownerName ? String(ownerName).trim().toLowerCase() : '';
-    const cleanName = leadName ? String(leadName).trim().toLowerCase() : '';
 
-    // 1. Nếu currentAvatar là ảnh Facebook CDN thật và KHÔNG phải silhouette rác
+    // 1. Nếu hồ sơ đã có avatar riêng hợp lệ (http/data và không phải silhouette mặc định)
     if (currentAvatar && (currentAvatar.startsWith('http') || currentAvatar.startsWith('data:'))) {
       if (!isBadSilhouetteAvatar(currentAvatar)) {
         return currentAvatar;
       }
     }
 
-    // 2. Kiểm tra trong STEP1_AVATAR_LOOKUP trước bằng ID, Owner, Name hoặc URL slug
+    // 2. Tra cứu CHÍNH XÁC theo fb_id trong STEP1_AVATAR_LOOKUP (chỉ so khớp đúng ID số, không so chuỗi mờ)
     if (cleanId && STEP1_AVATAR_LOOKUP[cleanId] && !isBadSilhouetteAvatar(STEP1_AVATAR_LOOKUP[cleanId])) {
       return STEP1_AVATAR_LOOKUP[cleanId];
     }
-    if (cleanOwner && STEP1_AVATAR_LOOKUP[cleanOwner] && !isBadSilhouetteAvatar(STEP1_AVATAR_LOOKUP[cleanOwner])) {
-      return STEP1_AVATAR_LOOKUP[cleanOwner];
-    }
-    if (cleanName && STEP1_AVATAR_LOOKUP[cleanName] && !isBadSilhouetteAvatar(STEP1_AVATAR_LOOKUP[cleanName])) {
-      return STEP1_AVATAR_LOOKUP[cleanName];
-    }
 
-    if (cleanUrl) {
-      for (const [key, val] of Object.entries(STEP1_AVATAR_LOOKUP)) {
-        if (cleanUrl.includes(key) && !isBadSilhouetteAvatar(val)) return val;
-      }
-    }
-
-    // 3. Tìm trong DOG_GALLERY_DATA nếu có sẵn trên window
-    if (typeof window !== 'undefined' && Array.isArray(window.DOG_GALLERY_DATA)) {
-      const gMatch = window.DOG_GALLERY_DATA.find(x =>
-        ((cleanId && x.fb_id && String(x.fb_id).trim() === cleanId) ||
-         (cleanName && x.name && x.name.toLowerCase().includes(cleanName))) &&
-        !isBadSilhouetteAvatar(x.avatar_url || x.avatar)
-      );
-      if (gMatch && (gMatch.avatar_url || gMatch.avatar)) {
-        return gMatch.avatar_url || gMatch.avatar;
-      }
-    }
-
-    // 4. Tìm trong danh sách dữ liệu hồ sơ đã quét
-    if (cleanId || cleanUrl) {
-      const match = allLeads.find(x =>
-        ((cleanId && x.fb_id && String(x.fb_id).trim() === cleanId) ||
-         (cleanUrl && x.url && String(x.url).trim().toLowerCase() === cleanUrl)) &&
-        !isBadSilhouetteAvatar(x.avatar_url || x.avatar)
-      );
-      if (match && (match.avatar_url || match.avatar)) {
-        return match.avatar_url || match.avatar;
-      }
-    }
-
-    // 5. Fallback chữ cái sắc nét phong cách SaaS cao cấp bằng Data URI SVG
-    const displayName = (ownerName && ownerName !== 'Facebook User' && ownerName !== '---')
-      ? ownerName
-      : (leadName || 'DB');
+    // 3. Fallback: Tuyệt đối KHÔNG mượn avatar của hồ sơ khác để tránh trùng lặp!
+    // Tự động tạo ảnh SVG Initials gradient độc nhất cho riêng khách này theo tên:
+    const cleanOwnerTitle = (ownerName && !ownerName.includes('Breeder Owner') && !ownerName.includes('Chủ trại') && ownerName !== 'Facebook User' && ownerName !== '---') ? ownerName : '';
+    const displayName = cleanOwnerTitle || leadName || 'DB';
     return generateInitialsSvgDataUri(displayName);
   }
 
@@ -534,14 +495,14 @@
           </a>
         </td>
         <td style="min-width:140px; max-width:200px;">
-          <div class="crm-editable-cell" onclick="openEditLeadModal('${leadKey}', 'editOwner')" title="Nhấn cây viết để sửa Tên chủ trại / 点击修改店主" style="color:#0f172a; font-size:12.5px; font-weight:750; word-break:break-word;">
-            ${escapeHtml(item.owner || '---')} <span class="edit-pen" title="Chỉnh sửa Tên chủ trại / 点击修改店主">✏️</span>
+          <div style="color:#0f172a; font-size:12.5px; font-weight:750; word-break:break-word;">
+            ${escapeHtml(item.owner || '---')}
           </div>
           <div style="font-size:10px; color:#64748b; margin-top:2px;">${escapeHtml(confLabel)}</div>
         </td>
         <td style="min-width:150px; max-width:210px;">
-          <div class="crm-editable-cell" onclick="openEditLeadModal('${leadKey}', 'editName')" title="Nhấn cây viết để sửa Tên trại / 点击修改企业名称" style="font-weight:600; color:#1e293b; font-size:12px; word-break:break-word;">
-            ${escapeHtml(item.name || '---')} <span class="edit-pen" title="Chỉnh sửa Tên trại / 点击修改企业名称">✏️</span>
+          <div style="font-weight:600; color:#1e293b; font-size:12px; word-break:break-word;">
+            ${escapeHtml(item.name || '---')}
           </div>
         </td>
         <td>
@@ -550,25 +511,20 @@
           </span>
         </td>
         <td style="white-space:nowrap;">
-          ${phone ? `<div class="crm-editable-cell" onclick="openEditLeadModal('${leadKey}', 'editPhone')" title="Nhấn cây viết để sửa SĐT" style="color:#0284c7; font-weight:700; font-family:var(--font-mono); font-size:11.5px;">📞 ${escapeHtml(phone)} <span class="edit-pen" title="Sửa SĐT">✏️</span></div>` : `<div class="crm-editable-cell" onclick="openEditLeadModal('${leadKey}', 'editPhone')" title="Thêm SĐT" style="color:#64748b; font-size:11px;">+ SĐT / 添加电话 <span class="edit-pen">✏️</span></div>`}
-          ${email ? `<div class="crm-editable-cell" onclick="openEditLeadModal('${leadKey}', 'editEmail')" title="Nhấn cây viết để sửa Email" style="color:#059669; font-size:11px; margin-top:2px; font-family:var(--font-mono); font-weight:600;">✉️ ${escapeHtml(email)} <span class="edit-pen" title="Sửa Email">✏️</span></div>` : ''}
+          ${phone ? `<div style="color:#0284c7; font-weight:700; font-family:var(--font-mono); font-size:11.5px;">📞 ${escapeHtml(phone)}</div>` : `<div style="color:#94a3b8; font-size:11px;">Chưa có SĐT / 暂无</div>`}
+          ${email ? `<div style="color:#059669; font-size:11px; margin-top:2px; font-family:var(--font-mono); font-weight:600;">✉️ ${escapeHtml(email)}</div>` : ''}
         </td>
         <td>
           ${website ? `
-            <div style="display:inline-flex; align-items:center; gap:4px;">
-              <a href="${website}" target="_blank" rel="noopener noreferrer" style="color:#0284c7; text-decoration:none; font-weight:650; font-size:12px;" title="${escapeHtml(website)}">🌐 ${escapeHtml(website.replace(/^https?:\/\//, '').split('/')[0])}</a>
-              <span class="edit-pen" onclick="openEditLeadModal('${leadKey}', 'editWebsite')" title="Chỉnh sửa Website / 编辑网址">✏️</span>
-            </div>` : `<span class="crm-editable-cell" onclick="openEditLeadModal('${leadKey}', 'editWebsite')" title="Thêm Website" style="color:#64748b; font-size:11px;">+ Web / 官网 <span class="edit-pen">✏️</span></span>`}
+            <a href="${website}" target="_blank" rel="noopener noreferrer" style="color:#0284c7; text-decoration:none; font-weight:650; font-size:12px;" title="${escapeHtml(website)}">🌐 ${escapeHtml(website.replace(/^https?:\/\//, '').split('/')[0])}</a>
+          ` : `<span style="color:#94a3b8; font-size:11px;">Chưa có web / 暂无</span>`}
         </td>
         <td>
-          <div style="display:inline-flex; align-items:center; gap:4px;">
-            ${amzBadge}
-            <span class="edit-pen" onclick="openEditLeadModal('${leadKey}', 'editAmazonUrl')" title="Chỉnh sửa link Amazon / 编辑亚马逊">✏️</span>
-          </div>
+          ${amzBadge}
         </td>
         <td>
-          <div class="crm-editable-cell" onclick="openEditLeadModal('${leadKey}', 'editCity')" title="Nhấn cây viết để sửa Vị trí / 点击修改位置" style="color:#334155; font-size:12px; font-weight:600;">
-            ${escapeHtml(location)} <span class="edit-pen" title="Chỉnh sửa Vị trí / 编辑位置">✏️</span>
+          <div style="color:#334155; font-size:12px; font-weight:600;">
+            ${escapeHtml(location)}
           </div>
         </td>
         <td>
@@ -1014,46 +970,177 @@
   $('btnTopExportJson')?.addEventListener('click', exportJsonLeadUs);
 
   // =========================================================================
-  // NẠP LEAD TỪ BƯỚC 1 (FOLLOWERS / HARVESTER)
+  // NẠP LEAD TỪ BƯỚC 1 (FILE JSON NHẬN DIỆN CHÓ / STORAGE)
   // =========================================================================
-  function importStep1Leads() {
-    if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) return;
-
-    chrome.storage.local.get(['verifiedLeads', 'scrapedFollowers', 'rawFollowers', 'DOG_GALLERY_DATA'], (res) => {
-      const pool = [
-        ...(res.verifiedLeads || []),
-        ...(res.scrapedFollowers || []),
-        ...(res.rawFollowers || []),
-        ...(res.DOG_GALLERY_DATA || [])
-      ];
-
-      const urls = [];
-      const seen = new Set();
-
-      pool.forEach(item => {
-        if (!item) return;
-        const u = item.url || (item.fb_id ? `https://www.facebook.com/profile.php?id=${item.fb_id}` : '');
-        if (u && !seen.has(u)) {
-          seen.add(u);
-          urls.push(u);
-        }
-      });
-
-      if (urls.length === 0) {
-        alert(t().noStep1Leads);
-        return;
-      }
-
-      const existing = ($('urlListText')?.value || '').trim();
-      $('urlListText').value = existing ? `${existing}\n${urls.join('\n')}` : urls.join('\n');
-      updateLinkCountBadge();
-
-      alert(t().importedSuccess(urls.length));
-      appendTerminalLog(`📥 Đã nạp ${urls.length} link profile từ dữ liệu Bước 1!`, 'success');
-    });
+  function triggerImportJsonFile() {
+    $('fileInputStep1')?.click();
   }
 
-  $('btnTopImportStep1')?.addEventListener('click', importStep1Leads);
+  function handleStep1JsonFileInput(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    appendTerminalLog(`📁 Đang đọc tệp JSON: "${file.name}"...`, 'info');
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        const text = evt.target.result;
+        const parsed = JSON.parse(text);
+        let items = [];
+
+        if (Array.isArray(parsed)) {
+          items = parsed;
+        } else if (parsed && typeof parsed === 'object') {
+          if (Array.isArray(parsed.verifiedLeads)) items = parsed.verifiedLeads;
+          else if (Array.isArray(parsed.data)) items = parsed.data;
+          else if (Array.isArray(parsed.leads)) items = parsed.leads;
+          else if (Array.isArray(parsed.followers)) items = parsed.followers;
+        }
+
+        if (!items || items.length === 0) {
+          alert('Tệp JSON không chứa mảng dữ liệu khách hàng hợp lệ!');
+          return;
+        }
+
+        // Chuyển đổi dữ liệu từ Step 1 (step1_verified_dogs...) sang chuẩn CRM
+        const importedLeads = [];
+        const urlsToFunnel = [];
+        const currentCount = allLeads.length;
+
+        items.forEach((item, i) => {
+          if (!item) return;
+          const fbId = String(item.fb_id || item.fbid || item.id || '').trim();
+          let url = item.url ? String(item.url).trim() : '';
+          if (!url && fbId) {
+            url = `https://www.facebook.com/profile.php?id=${fbId}`;
+          }
+
+          const rawName = item.name ? String(item.name).trim() : 'Facebook User';
+          const rawOwner = item.owner ? String(item.owner).trim() : (rawName !== 'Facebook User' ? rawName : 'Chủ trại');
+          let avatar = item.avatar_url || item.avatar || item.image || item.photo || '';
+          if (isBadSilhouetteAvatar(avatar)) {
+            avatar = '';
+          }
+
+          // Cập nhật ngay vào bảng tra cứu STEP1_AVATAR_LOOKUP
+          if (fbId && avatar) {
+            STEP1_AVATAR_LOOKUP[fbId] = avatar;
+          }
+
+          // Phân tích vị trí từ subtitle nếu có (e.g. "Kountze, Texas")
+          let city = item.city || '';
+          let state = item.state || '';
+          if (!city && item.subtitle && item.subtitle.includes(',')) {
+            const parts = item.subtitle.split(',');
+            city = parts[0].trim();
+            state = parts[1].trim();
+          }
+
+          const score = typeof item.confidence === 'number'
+            ? Math.round(item.confidence * 100)
+            : (item.score || 85);
+          const tier = score >= 85 ? 'Tier S' : (score >= 60 ? 'Tier A' : 'Tier B');
+
+          const leadNum = currentCount + i + 1;
+          const stt = item.stt || item.lead_id || `LEAD-US-${String(leadNum).padStart(6, '0')}`;
+
+          const crmLead = {
+            stt: stt,
+            lead_id: stt,
+            name: rawName,
+            owner: rawOwner,
+            owner_confidence: item.detection_method ? 'Tier 1 - AI Dog Verified' : (item.owner_confidence || 'Tier 2 - AI Scored'),
+            fb_id: fbId,
+            url: url,
+            avatar_url: avatar,
+            avatar: avatar,
+            image: avatar,
+            img: avatar,
+            photo: avatar,
+            logo: avatar,
+            phone: item.phone || '',
+            email: item.email || '',
+            website: item.website || '',
+            amazon_url: item.amazon_url || item.amz_link || '',
+            has_amazon: !!(item.amazon_url || item.amz_link || item.has_amazon),
+            city: city,
+            state: state,
+            zip: item.zip || '',
+            country: item.country || 'United States',
+            publish_time: item.publish_time || item.publishTime || 'Chờ cào timeline',
+            relative_time: item.relative_time || item.relativeTime || 'Mới nạp Bước 1',
+            activity_status: item.activity_status || '✓ ĐÃ LỌC AI (Bước 1)',
+            cat: item.cat || (item.detection_method && item.detection_method.includes('Breeder') ? 'Dog Breeder' : 'Pet Business'),
+            product_fit: item.product_fit || 'Puppy Starter Kit V2/V3 (Thảm Cỏ + Khay Potty)',
+            score: score,
+            rank_tier: tier,
+            sales_action: item.sales_action || 'Telesale: Liên hệ chào hàng bộ kit Take-Home cho cún con'
+          };
+
+          importedLeads.push(crmLead);
+          if (url && !urlsToFunnel.includes(url)) {
+            urlsToFunnel.push(url);
+          }
+        });
+
+        if (importedLeads.length === 0) {
+          alert('Không trích xuất được hồ sơ nào từ tệp JSON!');
+          return;
+        }
+
+        // Hợp nhất vào allLeads (lọc trùng lặp theo fb_id hoặc url)
+        const existingKeys = new Set(allLeads.map(x => x.fb_id || x.url).filter(Boolean));
+        let addedCount = 0;
+        importedLeads.forEach(lead => {
+          const k = lead.fb_id || lead.url;
+          if (k && existingKeys.has(k)) {
+            const idx = allLeads.findIndex(x => (x.fb_id && x.fb_id === lead.fb_id) || (x.url && x.url === lead.url));
+            if (idx !== -1) {
+              if (lead.avatar_url && (!allLeads[idx].avatar_url || isBadSilhouetteAvatar(allLeads[idx].avatar_url))) {
+                allLeads[idx].avatar_url = lead.avatar_url;
+                allLeads[idx].avatar = lead.avatar_url;
+              }
+              if (lead.fb_id && !allLeads[idx].fb_id) allLeads[idx].fb_id = lead.fb_id;
+            }
+          } else {
+            allLeads.unshift(lead);
+            if (k) existingKeys.add(k);
+            addedCount++;
+          }
+        });
+
+        // Tự động điền link vào khung Phễu để sẵn sàng cào tiếp
+        if (urlsToFunnel.length > 0) {
+          const curText = $('urlListText')?.value.trim() || '';
+          const existingUrlSet = new Set(curText.split(/\r?\n/).map(u => u.trim()).filter(Boolean));
+          urlsToFunnel.forEach(u => existingUrlSet.add(u));
+          $('urlListText').value = Array.from(existingUrlSet).join('\n');
+          updateLinkCountBadge();
+        }
+
+        saveLeadsToStorage();
+        renderCrmTable();
+
+        const successMsg = currentLang === 'zh'
+          ? `✅ 成功从JSON文件导入 ${importedLeads.length} 个狗识别潜客档案 (新增: ${addedCount})！已同步Avatar与FB ID！`
+          : `✅ Đã nạp thành công ${importedLeads.length} hồ sơ nhận diện chó từ tệp JSON (Mới thêm: ${addedCount})!\nĐã đồng bộ đầy đủ Avatar HD & Facebook ID!`;
+
+        alert(successMsg);
+        appendTerminalLog(`📥 [Nạp JSON] Đã nạp ${importedLeads.length} hồ sơ từ "${file.name}" với đầy đủ Avatar HD và FB_ID!`, 'success');
+      } catch (err) {
+        console.error('Lỗi phân tích JSON:', err);
+        alert('Lỗi khi đọc file JSON: ' + err.message);
+      } finally {
+        e.target.value = '';
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  $('btnTopImportStep1')?.addEventListener('click', triggerImportJsonFile);
+  $('btnImportJsonStep1')?.addEventListener('click', triggerImportJsonFile);
+  $('fileInputStep1')?.addEventListener('change', handleStep1JsonFileInput);
 
   // =========================================================================
   // DÁN LINK & ĐẾM LINK
