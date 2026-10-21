@@ -181,7 +181,11 @@
         <option value="TIER_B">Tier B (Tiêu chuẩn / 标准潜客)</option>
       </select>
 
-      <div style="font-size:12px; font-weight:700; color:var(--text-muted); white-space:nowrap;">
+      <button type="button" id="btnFilterAddNewLead" class="btn-primary" style="padding:6px 14px; font-size:12px; font-weight:700; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; cursor:pointer;" title="Thêm hồ sơ khách hàng mới vào CRM / 新增潜客档案">
+        <span>➕</span> <span id="txtBtnFilterAddNew">Thêm hồ sơ / 新增潜客</span>
+      </button>
+
+      <div style="font-size:12px; font-weight:700; color:var(--text-muted); white-space:nowrap; margin-left:auto;">
         <span id="txtShowingCount">Hiển thị / 显示:</span> <strong style="color:#0284c7;" id="filteredCount">0</strong> / <span id="totalRowCount">0</span>
       </div>
     </div>

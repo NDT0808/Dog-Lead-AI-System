@@ -264,6 +264,46 @@
   }
 
   // =========================================================================
+  // HELPER AN TOÀN & XỬ LÝ CLICK AVATAR
+  // =========================================================================
+  function escapeJs(str) {
+    if (!str) return '';
+    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  }
+
+  function isBadSilhouetteAvatar(url) {
+    if (!url || typeof url !== 'string') return true;
+    const lower = url.toLowerCase();
+    return lower.includes('unavatar.io') ||
+           lower.includes('blank_profile') ||
+           lower.includes('rsrc.php') ||
+           lower.includes('graph.facebook.com') ||
+           lower.includes('t1.30497-1') ||
+           lower.includes('453178253_471506465671661') ||
+           lower.includes('default_avatar') ||
+           lower.includes('default_profile');
+  }
+
+  function handleAvatarClick(event, url) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    if (!url || url === '#' || url === 'about:blank') {
+      alert(currentLang === 'zh' ? '该客户暂无有效的Facebook主页链接！' : 'Hồ sơ này chưa có đường link Facebook hợp lệ!');
+      return false;
+    }
+    // Mở tab Facebook trực quan ngay lập tức
+    if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
+      chrome.tabs.create({ url: url, active: true });
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+    return false;
+  }
+  window.handleAvatarClick = handleAvatarClick;
+
+  // =========================================================================
   // AVATAR RESOLVER & FALLBACK LOGIC
   // =========================================================================
   function resolveAvatarFallback(fbId, url, currentAvatar, ownerName, leadName) {
@@ -272,47 +312,51 @@
     const cleanOwner = ownerName ? String(ownerName).trim().toLowerCase() : '';
     const cleanName = leadName ? String(leadName).trim().toLowerCase() : '';
 
-    // 1. Kiểm tra trong STEP1_AVATAR_LOOKUP trước bằng ID, Owner, Name hoặc URL slug
-    if (cleanId && STEP1_AVATAR_LOOKUP[cleanId]) return STEP1_AVATAR_LOOKUP[cleanId];
-    if (cleanOwner && STEP1_AVATAR_LOOKUP[cleanOwner]) return STEP1_AVATAR_LOOKUP[cleanOwner];
-    if (cleanName && STEP1_AVATAR_LOOKUP[cleanName]) return STEP1_AVATAR_LOOKUP[cleanName];
-
-    if (cleanUrl) {
-      for (const [key, val] of Object.entries(STEP1_AVATAR_LOOKUP)) {
-        if (cleanUrl.includes(key)) return val;
+    // 1. Nếu currentAvatar là ảnh Facebook CDN thật và KHÔNG phải silhouette rác
+    if (currentAvatar && (currentAvatar.startsWith('http') || currentAvatar.startsWith('data:'))) {
+      if (!isBadSilhouetteAvatar(currentAvatar)) {
+        return currentAvatar;
       }
     }
 
-    // 2. Nếu currentAvatar là ảnh Facebook CDN thật (loại bỏ bóng xám silhouette & graph API rác)
-    if (currentAvatar && (currentAvatar.startsWith('http') || currentAvatar.startsWith('data:'))) {
-      const isBadSilhouette = currentAvatar.includes('unavatar.io') ||
-                              currentAvatar.includes('blank_profile') ||
-                              currentAvatar.includes('rsrc.php') ||
-                              currentAvatar.includes('graph.facebook.com');
-      if (!isBadSilhouette) {
-        return currentAvatar;
+    // 2. Kiểm tra trong STEP1_AVATAR_LOOKUP trước bằng ID, Owner, Name hoặc URL slug
+    if (cleanId && STEP1_AVATAR_LOOKUP[cleanId] && !isBadSilhouetteAvatar(STEP1_AVATAR_LOOKUP[cleanId])) {
+      return STEP1_AVATAR_LOOKUP[cleanId];
+    }
+    if (cleanOwner && STEP1_AVATAR_LOOKUP[cleanOwner] && !isBadSilhouetteAvatar(STEP1_AVATAR_LOOKUP[cleanOwner])) {
+      return STEP1_AVATAR_LOOKUP[cleanOwner];
+    }
+    if (cleanName && STEP1_AVATAR_LOOKUP[cleanName] && !isBadSilhouetteAvatar(STEP1_AVATAR_LOOKUP[cleanName])) {
+      return STEP1_AVATAR_LOOKUP[cleanName];
+    }
+
+    if (cleanUrl) {
+      for (const [key, val] of Object.entries(STEP1_AVATAR_LOOKUP)) {
+        if (cleanUrl.includes(key) && !isBadSilhouetteAvatar(val)) return val;
       }
     }
 
     // 3. Tìm trong DOG_GALLERY_DATA nếu có sẵn trên window
     if (typeof window !== 'undefined' && Array.isArray(window.DOG_GALLERY_DATA)) {
       const gMatch = window.DOG_GALLERY_DATA.find(x =>
-        (cleanId && x.fb_id && String(x.fb_id).trim() === cleanId) ||
-        (cleanName && x.name && x.name.toLowerCase().includes(cleanName))
+        ((cleanId && x.fb_id && String(x.fb_id).trim() === cleanId) ||
+         (cleanName && x.name && x.name.toLowerCase().includes(cleanName))) &&
+        !isBadSilhouetteAvatar(x.avatar_url || x.avatar)
       );
-      if (gMatch && gMatch.avatar_url && !gMatch.avatar_url.includes('blank_profile')) {
-        return gMatch.avatar_url;
+      if (gMatch && (gMatch.avatar_url || gMatch.avatar)) {
+        return gMatch.avatar_url || gMatch.avatar;
       }
     }
 
     // 4. Tìm trong danh sách dữ liệu hồ sơ đã quét
     if (cleanId || cleanUrl) {
       const match = allLeads.find(x =>
-        (cleanId && x.fb_id && String(x.fb_id).trim() === cleanId && x.avatar_url && !x.avatar_url.includes('unavatar.io') && !x.avatar_url.includes('blank_profile') && !x.avatar_url.includes('graph.facebook.com')) ||
-        (cleanUrl && x.url && String(x.url).trim().toLowerCase() === cleanUrl && x.avatar_url && !x.avatar_url.includes('unavatar.io') && !x.avatar_url.includes('blank_profile') && !x.avatar_url.includes('graph.facebook.com'))
+        ((cleanId && x.fb_id && String(x.fb_id).trim() === cleanId) ||
+         (cleanUrl && x.url && String(x.url).trim().toLowerCase() === cleanUrl)) &&
+        !isBadSilhouetteAvatar(x.avatar_url || x.avatar)
       );
-      if (match && match.avatar_url) {
-        return match.avatar_url;
+      if (match && (match.avatar_url || match.avatar)) {
+        return match.avatar_url || match.avatar;
       }
     }
 
@@ -478,13 +522,15 @@
       if (tier.includes('Tier S')) tierClass = 'tier-s';
       else if (tier.includes('Tier A')) tierClass = 'tier-a';
 
+      const defaultSvgUri = generateInitialsSvgDataUri(item.owner || item.name || 'DB');
+
       tr.innerHTML = `
         <td>
           <span class="badge-stt">${escapeHtml(rawStt)}</span>
         </td>
         <td style="text-align:center; vertical-align:middle;">
-          <a href="${profileUrl}" target="_blank" rel="noopener noreferrer" class="circle-avatar-box" title="👉 Nhấn để mở trang Facebook / 点击打开Facebook主页 (${escapeHtml(item.name || item.owner)})">
-            <img class="circle-avatar-img" src="${avatarUrl}" referrerpolicy="no-referrer" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='${defaultUi}'" />
+          <a href="${profileUrl}" target="_blank" rel="noopener noreferrer" class="circle-avatar-box" title="👉 Nhấn để mở ngay trang cá nhân Facebook / 点击打开Facebook主页 (${escapeHtml(item.name || item.owner)})" onclick="return handleAvatarClick(event, '${escapeJs(profileUrl)}');">
+            <img class="circle-avatar-img" src="${avatarUrl}" referrerpolicy="no-referrer" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='${escapeJs(defaultSvgUri)}'" />
           </a>
         </td>
         <td style="min-width:140px; max-width:200px;">
@@ -550,14 +596,14 @@
             <button type="button" class="tbl-btn edit" onclick="openEditLeadModal('${leadKey}')" title="Sửa hồ sơ / 编辑档案">
               <span>✏️ Sửa / 编辑</span>
             </button>
-            <a href="${profileUrl}" target="_blank" rel="noopener noreferrer" class="tbl-btn" title="Mở Facebook / 打开主页">
+            <button type="button" class="tbl-btn danger" onclick="deleteLead('${leadKey}')" title="Xóa hồ sơ khỏi CRM / 从CRM删除档案">
+              <span>🗑️ Xóa / 删除</span>
+            </button>
+            <a href="${profileUrl}" target="_blank" rel="noopener noreferrer" class="tbl-btn" title="Mở Facebook / 打开主页" onclick="return handleAvatarClick(event, '${escapeJs(profileUrl)}');">
               <span>🔗 FB / 主页</span>
             </a>
             <button type="button" class="tbl-btn" onclick="copyText('${fbId}')" title="Sao chép ID / 复制ID">
               <span>📋 ID / 复制</span>
-            </button>
-            <button type="button" class="tbl-btn danger" onclick="deleteLead('${leadKey}')" title="Xóa / 删除">
-              <span>🗑️</span>
             </button>
           </div>
         </td>
@@ -597,7 +643,7 @@
   }
 
   // =========================================================================
-  // MODAL EDIT LEAD CONTROLLER
+  // MODAL EDIT & ADD LEAD CONTROLLER (CRUD HOÀN CHỈNH)
   // =========================================================================
   function openEditLeadModal(key, focusField) {
     const lead = allLeads.find((x, i) =>
@@ -608,6 +654,12 @@
     );
 
     if (!lead) return;
+
+    if ($('txtModalTitle')) {
+      $('txtModalTitle').textContent = currentLang === 'zh'
+        ? `✏️ 编辑潜客档案: ${lead.name || lead.owner || key}`
+        : `✏️ Chỉnh Sửa Hồ Sơ CRM: ${lead.name || lead.owner || key}`;
+    }
 
     $('editLeadKey').value = key;
     $('editOwner').value = lead.owner || '';
@@ -642,6 +694,45 @@
   }
   window.openEditLeadModal = openEditLeadModal;
 
+  // Thêm hồ sơ mới trực tiếp
+  function openAddLeadModal() {
+    $('editLeadKey').value = '__NEW__';
+
+    if ($('txtModalTitle')) {
+      $('txtModalTitle').textContent = currentLang === 'zh'
+        ? '➕ 新增潜客档案 (添加到CRM)'
+        : '➕ Thêm Hồ Sơ Khách Hàng CRM Mới';
+    }
+
+    const nextIdx = allLeads.length + 1;
+    $('editOwner').value = '';
+    $('editConfidence').value = 'Manual Verified';
+    $('editName').value = '';
+    $('editFbId').value = '';
+    $('editUrl').value = '';
+    $('editAvatarUrl').value = '';
+    $('editPhone').value = '';
+    $('editEmail').value = '';
+    $('editWebsite').value = '';
+    $('editAmazonUrl').value = '';
+    $('editCity').value = '';
+    $('editState').value = '';
+    $('editZip').value = '';
+    $('editCountry').value = 'United States';
+    $('editTier').value = 'Tier S';
+    $('editScore').value = 85;
+    $('editProductFit').value = 'Puppy Starter Kit V2/V3 (Thảm Cỏ Huấn Luyện + Khay Potty)';
+    $('editSalesAction').value = 'Telesale: Liên hệ giới thiệu thảm cỏ nhân tạo huấn luyện và khay potty';
+
+    $('modalEditLead').style.display = 'flex';
+    setTimeout(() => {
+      try {
+        $('editOwner').focus();
+      } catch (_) {}
+    }, 80);
+  }
+  window.openAddLeadModal = openAddLeadModal;
+
   function closeEditLeadModal() {
     $('modalEditLead').style.display = 'none';
   }
@@ -649,27 +740,57 @@
   $('btnModalClose')?.addEventListener('click', closeEditLeadModal);
   $('btnModalCancel')?.addEventListener('click', closeEditLeadModal);
 
+  // Lưu chỉnh sửa hoặc Thêm hồ sơ mới
   $('formEditLead')?.addEventListener('submit', (e) => {
     e.preventDefault();
     const key = $('editLeadKey').value;
-    const idx = allLeads.findIndex((x, i) =>
-      (x.stt && x.stt === key) ||
-      (x.lead_id && x.lead_id === key) ||
-      (x.fb_id && x.fb_id === key) ||
-      String(i) === String(key)
-    );
+    const isNew = key === '__NEW__';
 
-    if (idx === -1) return;
+    let leadRecord = null;
+    let idx = -1;
+
+    if (!isNew) {
+      idx = allLeads.findIndex((x, i) =>
+        (x.stt && x.stt === key) ||
+        (x.lead_id && x.lead_id === key) ||
+        (x.fb_id && x.fb_id === key) ||
+        String(i) === String(key)
+      );
+      if (idx !== -1) {
+        leadRecord = allLeads[idx];
+      }
+    }
+
+    const rawOwner = $('editOwner').value.trim();
+    const rawName = $('editName').value.trim();
+    const rawFbId = $('editFbId').value.trim();
+    const rawUrl = $('editUrl').value.trim();
+    let rawAvatar = $('editAvatarUrl').value.trim();
+
+    if (!rawAvatar || isBadSilhouetteAvatar(rawAvatar)) {
+      rawAvatar = resolveAvatarFallback(rawFbId, rawUrl, rawAvatar, rawOwner, rawName);
+    }
+
+    const nextNum = allLeads.length + 1;
+    const sttVal = (!isNew && leadRecord)
+      ? (leadRecord.stt || leadRecord.lead_id || `LEAD-US-${String(nextNum).padStart(6, '0')}`)
+      : `LEAD-US-${String(nextNum).padStart(6, '0')}`;
 
     const updated = {
-      ...allLeads[idx],
-      owner: $('editOwner').value.trim(),
+      ...(leadRecord || {}),
+      stt: sttVal,
+      lead_id: sttVal,
+      owner: rawOwner || rawName || 'Chủ trại',
       owner_confidence: $('editConfidence').value,
-      name: $('editName').value.trim(),
-      fb_id: $('editFbId').value.trim(),
-      url: $('editUrl').value.trim(),
-      avatar_url: $('editAvatarUrl').value.trim(),
-      avatar: $('editAvatarUrl').value.trim(),
+      name: rawName || rawOwner || 'Trại giống',
+      fb_id: rawFbId,
+      url: rawUrl,
+      avatar_url: rawAvatar,
+      avatar: rawAvatar,
+      image: rawAvatar,
+      img: rawAvatar,
+      photo: rawAvatar,
+      logo: rawAvatar,
       phone: $('editPhone').value.trim(),
       email: $('editEmail').value.trim(),
       website: $('editWebsite').value.trim(),
@@ -678,14 +799,25 @@
       city: $('editCity').value.trim(),
       state: $('editState').value.trim(),
       zip: $('editZip').value.trim(),
-      country: $('editCountry').value.trim(),
+      country: $('editCountry').value.trim() || 'United States',
       rank_tier: $('editTier').value,
       score: parseInt($('editScore').value, 10) || 75,
-      product_fit: $('editProductFit').value.trim(),
-      sales_action: $('editSalesAction').value.trim()
+      product_fit: $('editProductFit').value.trim() || 'Puppy Starter Kit V2/V3',
+      sales_action: $('editSalesAction').value.trim() || 'Telesale: Liên hệ tư vấn sản phẩm',
+      publish_time: (leadRecord && leadRecord.publish_time) ? leadRecord.publish_time : new Date().toLocaleDateString('vi-VN'),
+      relative_time: (leadRecord && leadRecord.relative_time) ? leadRecord.relative_time : 'Hôm nay',
+      activity_status: (leadRecord && leadRecord.activity_status) ? leadRecord.activity_status : '✓ TÍCH CỰC'
     };
 
-    allLeads[idx] = updated;
+    if (isNew) {
+      allLeads.unshift(updated);
+      appendTerminalLog(`➕ Đã thêm thành công hồ sơ mới: ${updated.name} (Chủ: ${updated.owner})`, 'success');
+    } else {
+      if (idx !== -1) {
+        allLeads[idx] = updated;
+      }
+      appendTerminalLog(`💾 Đã cập nhật trực tiếp hồ sơ: ${updated.name} (Chủ: ${updated.owner})`, 'success');
+    }
 
     // Lưu vào background & chrome.storage.local
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
@@ -698,15 +830,25 @@
     saveLeadsToStorage();
     renderCrmTable();
     closeEditLeadModal();
-
-    appendTerminalLog(`💾 Đã cập nhật trực tiếp hồ sơ: ${updated.name} (Chủ: ${updated.owner})`, 'success');
   });
 
   // =========================================================================
   // XÓA LEAD
   // =========================================================================
   function deleteLead(key) {
-    if (!confirm(t().confirmDel)) return;
+    const targetLead = allLeads.find((x, i) =>
+      (x.stt && x.stt === key) ||
+      (x.lead_id && x.lead_id === key) ||
+      (x.fb_id && x.fb_id === key) ||
+      String(i) === String(key)
+    );
+
+    const displayName = targetLead ? (targetLead.name || targetLead.owner || targetLead.stt) : key;
+    const confirmMsg = currentLang === 'zh'
+      ? `确定要从CRM列表中删除客户 [${displayName}] 吗？此操作无法撤销。`
+      : `Bạn có chắc chắn muốn xóa hồ sơ khách hàng [${displayName}] khỏi bảng CRM? Thao tác này không thể hoàn tác.`;
+
+    if (!confirm(confirmMsg)) return;
 
     allLeads = allLeads.filter((x, i) =>
       x.stt !== key && x.lead_id !== key && x.fb_id !== key && String(i) !== String(key)
@@ -718,47 +860,13 @@
 
     saveLeadsToStorage();
     renderCrmTable();
-    appendTerminalLog(`🗑 Đã xóa hồ sơ khỏi CRM: ${key}`, 'warning');
+    appendTerminalLog(`🗑 Đã xóa hồ sơ khỏi CRM: ${displayName} (${key})`, 'warning');
   }
   window.deleteLead = deleteLead;
 
-  // =========================================================================
-  // THÊM LEAD MỚI THỦ CÔNG
-  // =========================================================================
-  $('btnAddNewLead')?.addEventListener('click', () => {
-    const newIdx = allLeads.length + 1;
-    const leadId = `LEAD-US-${String(newIdx).padStart(6, '0')}`;
-    const newLead = {
-      stt: leadId,
-      lead_id: leadId,
-      name: 'New Kennel / Breeder',
-      owner: 'Breeder Owner',
-      owner_confidence: 'Manual Verified',
-      fb_id: '',
-      url: '',
-      phone: '',
-      email: '',
-      website: '',
-      amazon_url: '',
-      has_amazon: false,
-      city: '',
-      state: '',
-      zip: '',
-      country: 'United States',
-      publish_time: new Date().toLocaleDateString('vi-VN'),
-      relative_time: 'Hôm nay',
-      activity_status: '✓ TÍCH CỰC',
-      score: 85,
-      rank_tier: 'Tier S',
-      product_fit: 'Puppy Starter Kit V2/V3',
-      sales_action: 'Telesale: Liên hệ giới thiệu thảm cỏ nhân tạo huấn luyện'
-    };
-
-    allLeads.unshift(newLead);
-    saveLeadsToStorage();
-    renderCrmTable();
-    openEditLeadModal(leadId);
-  });
+  // Gán sự kiện cho các nút Thêm hồ sơ
+  $('btnAddNewLead')?.addEventListener('click', openAddLeadModal);
+  $('btnFilterAddNewLead')?.addEventListener('click', openAddLeadModal);
 
   // =========================================================================
   // XUẤT EXCEL 37 CỘT (PRIORITY DATA 8) DÙNG EXCELJS TRỰC TIẾP

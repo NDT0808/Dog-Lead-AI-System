@@ -1073,7 +1073,7 @@ function exportJsonLeadUs() {
 
     const name = row.name || 'Facebook User';
     let avatarUrl = row.avatar || row.avatar_url || '';
-    if (!avatarUrl || avatarUrl.includes('unavatar.io') || avatarUrl.includes('blank_profile')) {
+    if (!avatarUrl || avatarUrl.includes('unavatar.io') || avatarUrl.includes('blank_profile') || avatarUrl.includes('t1.30497-1') || avatarUrl.includes('453178253_471506465671661') || avatarUrl.includes('rsrc.php')) {
       const fallbackName = encodeURIComponent(row.owner || name);
       avatarUrl = `https://ui-avatars.com/api/?name=${fallbackName}&background=0284c7&color=fff&size=128&bold=true`;
     }
@@ -1174,7 +1174,7 @@ function finishProfileItem(item) {
   let resolvedAvatar = '';
 
   // 1. Kiểm tra nếu avatar từ DOM hợp lệ và không phải rác
-  if (item.avatar_url && !item.avatar_url.includes('unavatar.io') && !item.avatar_url.includes('blank_profile') && !item.avatar_url.includes('graph.facebook.com') && !item.avatar_url.includes('rsrc.php')) {
+  if (item.avatar_url && !item.avatar_url.includes('unavatar.io') && !item.avatar_url.includes('blank_profile') && !item.avatar_url.includes('graph.facebook.com') && !item.avatar_url.includes('rsrc.php') && !item.avatar_url.includes('t1.30497-1') && !item.avatar_url.includes('453178253_471506465671661')) {
     resolvedAvatar = item.avatar_url;
   }
 

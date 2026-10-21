@@ -203,36 +203,10 @@ function extractFacebookID() {
 }
 
 /**
- * Trích xuất Avatar Profile/Fanpage Facebook thật từ DOM
+ * Trích xuất Avatar Profile/Fanpage Facebook thật từ DOM (Chuyển tiếp đến hàm extractProfileAvatar hoàn chỉnh)
  */
-function extractProfileAvatar() {
-    try {
-        let ogImg = document.querySelector('meta[property="og:image"]');
-        if (ogImg && ogImg.content && !ogImg.content.includes('rsrc.php') && !ogImg.content.includes('blank_profile')) {
-            return ogImg.content;
-        }
-        let svgImgs = Array.from(document.querySelectorAll('svg image, image'));
-        for (let img of svgImgs) {
-            let href = img.getAttribute('xlink:href') || img.getAttribute('href') || '';
-            if (href && href.includes('fbcdn.net') && !href.includes('rsrc.php') && !href.includes('blank_profile')) {
-                return href;
-            }
-        }
-        let imgs = Array.from(document.querySelectorAll('img[src*="fbcdn.net"]'));
-        for (let img of imgs) {
-            let src = img.src || '';
-            let alt = (img.alt || '').toLowerCase();
-            if (src && !src.includes('rsrc.php') && !src.includes('blank_profile')) {
-                if (alt.includes('avatar') || alt.includes('ảnh đại diện') || alt.includes('profile') || alt.includes('头像') || img.width > 60) {
-                    return src;
-                }
-            }
-        }
-    } catch (e) {
-        console.warn('[FB Scraper] Lỗi khi trích xuất avatar:', e);
-    }
-    return '';
-}
+// Được định nghĩa chi tiết tại hàm extractProfileAvatar bên dưới
+
 
 /**
  * Trích xuất chuỗi thời gian từ một đoạn text hoặc thuộc tính aria-label (Đa ngôn ngữ VI, EN, ZH)
@@ -1531,49 +1505,87 @@ function extractOwnerRepresentative(leadName, email, html, webOwnerName) {
 }
 
 /**
- * Trích xuất Avatar HD thực tế từ thẻ meta og:image, DOM element hoặc Relay GraphQL
+ * Kiểm tra xem một URL avatar có phải silhouette mặc định hoặc ảnh rác của Facebook không
+ */
+function isDefaultSilhouetteAvatar(url) {
+    if (!url || typeof url !== 'string') return true;
+    const lower = url.toLowerCase();
+    return lower.includes('t1.30497-1') ||
+           lower.includes('453178253_471506465671661') ||
+           lower.includes('blank_profile') ||
+           lower.includes('rsrc.php') ||
+           lower.includes('default_avatar') ||
+           lower.includes('default_profile') ||
+           lower.includes('unavatar.io') ||
+           lower.includes('graph.facebook.com');
+}
+
+/**
+ * Trích xuất Avatar HD thực tế từ DOM profile header, Relay GraphQL hoặc meta tags
+ * Tuyệt đối không bao giờ trả về silhouette xám mặc định t1.30497-1
  */
 function extractProfileAvatar() {
     let found = '';
 
-    // 1. Thử thẻ meta og:image (Facebook thường gắn ảnh đại diện chuẩn của Page/Profile)
+    // 1. Thử quét trực tiếp DOM SVG <image> hoặc <img> trong vùng header / profile banner
     try {
-        const ogImg = document.querySelector('meta[property="og:image"]')?.content || '';
-        if (ogImg && !ogImg.includes('blank_profile') && !ogImg.includes('rsrc.php')) {
-            found = ogImg.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
+        const svgImgs = Array.from(document.querySelectorAll('svg image, image, a[href*="/photo"] image, div[role="main"] image, div[role="banner"] image'));
+        for (const img of svgImgs) {
+            const href = img.getAttribute('xlink:href') || img.getAttribute('href') || '';
+            if (href && href.startsWith('http') && href.includes('fbcdn.net') && !isDefaultSilhouetteAvatar(href)) {
+                found = href.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
+                break;
+            }
         }
     } catch (_) {}
 
-    // 2. Thử DOM SVG / Image element trong banner profile
+    // 2. Thử các thẻ <img> trong profile header có kích thước lớn hoặc chứa keyword avatar
     if (!found) {
         try {
-            const avImg = document.querySelector('svg image, image[preserveAspectRatio*="xMidYMid"], image[xlink\\:href], image[href], img[alt*="ảnh đại diện" i], img[alt*="profile picture" i], img[alt*="头像" i], img[alt*="头贴" i], img[alt*="avatar" i], img[src*="fbcdn.net"][src*="t39.30808-1"]');
-            if (avImg) {
-                const src = avImg.getAttribute('xlink:href') || avImg.getAttribute('href') || avImg.getAttribute('src') || '';
-                if (src && !src.startsWith('data:') && !src.includes('blank_profile') && !src.includes('rsrc.php')) {
-                    found = src.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
+            const headerImgs = Array.from(document.querySelectorAll('div[role="main"] img, div[role="banner"] img, a[href*="/photo"] img, header img'));
+            for (const img of headerImgs) {
+                const src = img.currentSrc || img.src || '';
+                const alt = (img.alt || img.getAttribute('aria-label') || '').toLowerCase();
+                if (src && src.startsWith('http') && src.includes('fbcdn.net') && !isDefaultSilhouetteAvatar(src)) {
+                    if (src.includes('t39.30808-1') || src.includes('t39.30808-6') || src.includes('t1.6435-9') || src.includes('t1.18169-1') ||
+                        alt.includes('avatar') || alt.includes('ảnh đại diện') || alt.includes('profile') || alt.includes('头像') || alt.includes('头贴') ||
+                        (img.width >= 60 && img.height >= 60)) {
+                        found = src.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
+                        break;
+                    }
                 }
             }
         } catch (_) {}
     }
 
-    // 3. Quét trong các thẻ script chứa Relay GraphQL profile_picture
+    // 3. Quét trong các thẻ <script> chứa Relay GraphQL profile_picture / profilePhoto
     if (!found) {
         try {
             const scripts = Array.from(document.querySelectorAll('script:not([src])'));
             for (const sc of scripts) {
                 const txt = sc.textContent || '';
-                if (!txt.includes('profile_picture') && !txt.includes('profile_photo')) continue;
+                if (!txt.includes('profile_picture') && !txt.includes('profilePhoto') && !txt.includes('profile_photo') && !txt.includes('t39.30808-1')) continue;
                 const m = txt.match(/"profile_picture"\s*:\s*\{\s*"uri"\s*:\s*"([^"]+)"/i) ||
+                          txt.match(/"profilePhoto"\s*:\s*\{[^}]*"uri"\s*:\s*"([^"]+)"/i) ||
                           txt.match(/"profile_photo"\s*:\s*\{\s*"uri"\s*:\s*"([^"]+)"/i) ||
                           txt.match(/"(https:\/\/[^"]*fbcdn\.net\/[^"]*t39\.30808-1[^"]*)"/i);
                 if (m && m[1]) {
                     let uri = m[1].replace(/\\u00253A/gi, ':').replace(/\\u00252F/gi, '/').replace(/\\u002526/gi, '&').replace(/\\\//g, '/');
-                    if (!uri.includes('blank_profile') && !uri.includes('rsrc.php')) {
+                    if (!isDefaultSilhouetteAvatar(uri)) {
                         found = uri.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
                         break;
                     }
                 }
+            }
+        } catch (_) {}
+    }
+
+    // 4. Fallback: Thẻ meta og:image (chỉ nhận nếu KHÔNG phải silhouette mặc định)
+    if (!found) {
+        try {
+            const ogImg = document.querySelector('meta[property="og:image"]')?.content || '';
+            if (ogImg && !isDefaultSilhouetteAvatar(ogImg)) {
+                found = ogImg.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
             }
         } catch (_) {}
     }

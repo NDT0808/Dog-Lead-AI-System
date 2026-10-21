@@ -683,7 +683,7 @@ body {
   border: 2px solid #0284c7;
   box-shadow: 0 0 8px rgba(2, 132, 199, 0.25);
   overflow: hidden;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s, border-color 0.2s;
   background: #e0f2fe;
   display: inline-block;
   vertical-align: middle;
@@ -691,9 +691,30 @@ body {
 }
 
 .circle-avatar-box:hover {
-  transform: scale(1.15);
-  border-color: #0369a1;
-  box-shadow: 0 0 14px rgba(2, 132, 199, 0.45);
+  transform: scale(1.18);
+  border-color: #1877f2;
+  box-shadow: 0 0 16px rgba(24, 119, 242, 0.55);
+}
+
+.circle-avatar-box::after {
+  content: 'FB';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  background: rgba(24, 119, 242, 0.88);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 800;
+  text-align: center;
+  padding: 1px 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.circle-avatar-box:hover::after {
+  opacity: 1;
 }
 
 .circle-avatar-img {
@@ -720,10 +741,23 @@ body {
 }
 
 .edit-pen {
-  font-size: 10px;
+  font-size: 11px;
   color: #0284c7;
-  opacity: 0.65;
+  opacity: 0.75;
   margin-left: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.edit-pen:hover {
+  opacity: 1;
+  transform: scale(1.3);
+  background: rgba(2, 132, 199, 0.18);
 }
 
 .crm-editable-cell:hover .edit-pen {
@@ -845,12 +879,15 @@ body {
 }
 
 .tbl-btn.danger {
+  background: #fff1f2;
+  border-color: #fecdd3;
   color: #e11d48;
 }
 
 .tbl-btn.danger:hover {
-  background: #ffe4e6;
-  border-color: #fda4af;
+  background: #e11d48;
+  color: #ffffff;
+  border-color: #be123c;
 }
 
 /* Modal Dialog */

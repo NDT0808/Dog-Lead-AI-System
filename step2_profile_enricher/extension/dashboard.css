@@ -879,12 +879,15 @@ body {
 }
 
 .tbl-btn.danger {
+  background: #fff1f2;
+  border-color: #fecdd3;
   color: #e11d48;
 }
 
 .tbl-btn.danger:hover {
-  background: #ffe4e6;
-  border-color: #fda4af;
+  background: #e11d48;
+  color: #ffffff;
+  border-color: #be123c;
 }
 
 /* Modal Dialog */
