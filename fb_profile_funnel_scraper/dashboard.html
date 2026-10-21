@@ -321,6 +321,21 @@
 
         <div class="form-row">
           <div class="form-group">
+            <label class="form-label" id="lblEditPublishTime">Ngày Đăng Bài Gần Nhất (Publish Time):</label>
+            <input type="text" id="editPublishTime" class="form-input" placeholder="Ví dụ: 15/09/2026 12:00:00 (1 tháng trước)">
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="lblEditActivityStatus">Trạng Thái Hoạt Động (Activity Status):</label>
+            <select id="editActivityStatus" class="form-select">
+              <option value="✓ TÍCH CỰC (Trại đang hoạt động)">✓ TÍCH CỰC (≤ 60 ngày)</option>
+              <option value="⚠️ ÍT HOẠT ĐỘNG (> 60 ngày)">⚠️ ÍT HOẠT ĐỘNG (> 60 ngày)</option>
+              <option value="Chưa bóc tách">Chưa bóc tách</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
             <label class="form-label" id="lblEditTier">Xếp Hạng (Tier):</label>
             <select id="editTier" class="form-select">
               <option value="Tier S">Tier S (Ưu tiên đặc biệt)</option>

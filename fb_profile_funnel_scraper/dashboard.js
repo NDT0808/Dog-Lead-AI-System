@@ -546,16 +546,16 @@ const STEP1_AVATAR_LOOKUP = {
         </td>
         <td style="text-align:center;">
           <div class="tbl-actions">
-            <button type="button" class="tbl-btn edit" onclick="openEditLeadModal('${leadKey}')" title="Sửa hồ sơ / 编辑档案">
+            <button type="button" class="tbl-btn edit" data-key="${escapeHtml(leadKey)}" onclick="openEditLeadModal('${escapeJs(leadKey)}'); return false;" title="Sửa hồ sơ / 编辑档案">
               <span>✏️ Sửa / 编辑</span>
             </button>
-            <button type="button" class="tbl-btn danger" onclick="deleteLead('${leadKey}')" title="Xóa hồ sơ khỏi CRM / 从CRM删除档案">
+            <button type="button" class="tbl-btn danger" data-key="${escapeHtml(leadKey)}" onclick="deleteLead('${escapeJs(leadKey)}'); return false;" title="Xóa hồ sơ khỏi CRM / 从CRM删除档案">
               <span>🗑️ Xóa / 删除</span>
             </button>
-            <a href="${profileUrl}" target="_blank" rel="noopener noreferrer" class="tbl-btn" title="Mở Facebook / 打开主页" onclick="return handleAvatarClick(event, '${escapeJs(profileUrl)}');">
+            <a href="${profileUrl}" data-profile-url="${escapeHtml(profileUrl)}" target="_blank" rel="noopener noreferrer" class="tbl-btn" title="Mở Facebook / 打开主页" onclick="return handleAvatarClick(event, '${escapeJs(profileUrl)}');">
               <span>🔗 FB / 主页</span>
             </a>
-            <button type="button" class="tbl-btn" onclick="copyText('${fbId}')" title="Sao chép ID / 复制ID">
+            <button type="button" class="tbl-btn" data-copy="${escapeHtml(fbId)}" onclick="copyText('${escapeJs(fbId)}'); return false;" title="Sao chép ID / 复制ID">
               <span>📋 ID / 复制</span>
             </button>
           </div>
@@ -633,6 +633,8 @@ const STEP1_AVATAR_LOOKUP = {
     $('editScore').value = lead.score || 85;
     $('editProductFit').value = lead.product_fit || '';
     $('editSalesAction').value = lead.sales_action || '';
+    if ($('editPublishTime')) $('editPublishTime').value = lead.publish_time || lead.publishTime || '';
+    if ($('editActivityStatus')) $('editActivityStatus').value = lead.activity_status || '✓ TÍCH CỰC (Trại đang hoạt động)';
 
     $('modalEditLead').style.display = 'flex';
 
@@ -676,6 +678,8 @@ const STEP1_AVATAR_LOOKUP = {
     $('editScore').value = 85;
     $('editProductFit').value = 'Puppy Starter Kit V2/V3 (Thảm Cỏ Huấn Luyện + Khay Potty)';
     $('editSalesAction').value = 'Telesale: Liên hệ giới thiệu thảm cỏ nhân tạo huấn luyện và khay potty';
+    if ($('editPublishTime')) $('editPublishTime').value = new Date().toLocaleDateString('vi-VN');
+    if ($('editActivityStatus')) $('editActivityStatus').value = '✓ TÍCH CỰC (Trại đang hoạt động)';
 
     $('modalEditLead').style.display = 'flex';
     setTimeout(() => {
@@ -757,9 +761,9 @@ const STEP1_AVATAR_LOOKUP = {
       score: parseInt($('editScore').value, 10) || 75,
       product_fit: $('editProductFit').value.trim() || 'Puppy Starter Kit V2/V3',
       sales_action: $('editSalesAction').value.trim() || 'Telesale: Liên hệ tư vấn sản phẩm',
-      publish_time: (leadRecord && leadRecord.publish_time) ? leadRecord.publish_time : new Date().toLocaleDateString('vi-VN'),
-      relative_time: (leadRecord && leadRecord.relative_time) ? leadRecord.relative_time : 'Hôm nay',
-      activity_status: (leadRecord && leadRecord.activity_status) ? leadRecord.activity_status : '✓ TÍCH CỰC'
+      publish_time: ($('editPublishTime') && $('editPublishTime').value.trim()) ? $('editPublishTime').value.trim() : ((leadRecord && leadRecord.publish_time) ? leadRecord.publish_time : new Date().toLocaleDateString('vi-VN')),
+      relative_time: (leadRecord && leadRecord.relative_time) ? leadRecord.relative_time : 'Tích cực',
+      activity_status: ($('editActivityStatus') && $('editActivityStatus').value) ? $('editActivityStatus').value : ((leadRecord && leadRecord.activity_status) ? leadRecord.activity_status : '✓ TÍCH CỰC')
     };
 
     if (isNew) {
@@ -1773,5 +1777,54 @@ const STEP1_AVATAR_LOOKUP = {
   $('filterTier')?.addEventListener('change', renderCrmTable);
 
   // Initialize
+  
+  // Event Delegation trên #crmTableBody bắt trọn 100% click (Manifest V3 CSP compliance)
+  const crmTbody = $('crmTableBody');
+  if (crmTbody) {
+    crmTbody.addEventListener('click', (e) => {
+      const editBtn = e.target.closest('.tbl-btn.edit');
+      if (editBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = editBtn.getAttribute('data-key');
+        openEditLeadModal(key);
+        return;
+      }
+      const delBtn = e.target.closest('.tbl-btn.danger');
+      if (delBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = delBtn.getAttribute('data-key');
+        deleteLead(key);
+        return;
+      }
+      const copyBtn = e.target.closest('[data-copy]');
+      if (copyBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        copyText(copyBtn.getAttribute('data-copy'));
+        return;
+      }
+      const avatarBox = e.target.closest('.circle-avatar-box, [data-profile-url]');
+      if (avatarBox) {
+        const pUrl = avatarBox.getAttribute('data-profile-url') || avatarBox.getAttribute('href');
+        if (pUrl && pUrl !== '#') {
+          e.preventDefault();
+          e.stopPropagation();
+          handleAvatarClick(e, pUrl);
+          return;
+        }
+      }
+    });
+  }
+
+  // Phơi bày hàm ra window để inline onclick và sub-scripts đều gọi được
+  window.openEditLeadModal = openEditLeadModal;
+  window.openAddLeadModal = openAddLeadModal;
+  window.closeEditLeadModal = closeEditLeadModal;
+  window.deleteLead = deleteLead;
+  window.copyText = copyText;
+  window.handleAvatarClick = handleAvatarClick;
+
   loadInitialData();
 })();

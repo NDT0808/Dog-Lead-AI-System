@@ -310,7 +310,7 @@ function parseRelativeTimeToTimestamp(relStr) {
         return Math.floor(d.getTime() / 1000);
     }
 
-    // 5. Việt: 14 tháng 10 lúc 14:30 hoặc 19 thg 10 hoặc 15 tháng 8, 2025
+    // 5. Việt: 14 tháng 10 lúc 14:30 hoặc 19 thg 10 hoặc 15 tháng 8, 2025 hoặc 15 tháng 9
     let viDateM = sLower.match(/(\d{1,2})\s+(?:tháng|thg)\s+(\d{1,2})(?:,?\s*(\d{4}))?(?:\s+lúc\s+(\d{1,2}):(\d{2}))?/i);
     if (viDateM) {
         let day = parseInt(viDateM[1], 10);
@@ -318,6 +318,10 @@ function parseRelativeTimeToTimestamp(relStr) {
         let year = viDateM[3] ? parseInt(viDateM[3], 10) : now.getFullYear();
         let hour = viDateM[4] ? parseInt(viDateM[4], 10) : 12;
         let min = viDateM[5] ? parseInt(viDateM[5], 10) : 0;
+        // Nếu không ghi năm và tháng trong bài viết lớn hơn tháng hiện tại, lùi 1 năm
+        if (!viDateM[3] && month > now.getMonth()) {
+            year -= 1;
+        }
         let d = new Date(year, month, day, hour, min, 0);
         return Math.floor(d.getTime() / 1000);
     }
@@ -411,7 +415,12 @@ function formatRelativeTime(ts) {
  */
 function isNotificationOrCommentGarbage(txt) {
     if (!txt || typeof txt !== 'string') return true;
-    const t = txt.toLowerCase();
+    const t = txt.toLowerCase().trim();
+    if (t.length < 1) return true;
+    // Bỏ qua các nhãn hệ thống hoặc nút bấm
+    if (/^(?:thích|like|bình luận|comment|chia sẻ|share|gửi|send|xem thêm|see more|xem bản dịch|see translation|phù hợp nhất|most relevant|tất cả bình luận|all comments|trả lời|reply|tác giả|author)$/i.test(t)) {
+        return true;
+    }
     return (
         t.includes('đã nhắc đến bạn') ||
         t.includes('đã bình luận') ||
@@ -424,8 +433,7 @@ function isNotificationOrCommentGarbage(txt) {
         t.includes('chưa đọc') ||
         t.includes('unread') ||
         t.includes('thông báo') ||
-        t.includes('notifications') ||
-        t.includes('bình luận')
+        t.includes('notifications')
     );
 }
 
@@ -444,8 +452,13 @@ function isNotificationOrGarbageElement(el) {
 function extractTimeFromArticleElement(article) {
     if (!article || isNotificationOrGarbageElement(article)) return null;
 
-    // 1. Kiểm tra thuộc tính data-utime (Facebook mobile / touch / một số desktop build)
-    const utimeEls = article.querySelectorAll('[data-utime]');
+    // Helper: Loại trừ triệt để mọi phần tử nằm trong khu vực bình luận (Comment / Sub-comments)
+    const isInCommentSection = (node) => {
+        return !!node.closest('ul, div[role="article"] div[role="article"], div[aria-label*="Bình luận" i], div[aria-label*="Comment" i], div[data-visualcompletion*="ignore-dynamic"], div[data-pagelet*="Comment"]');
+    };
+
+    // 1. Kiểm tra thuộc tính data-utime trong Header bài viết
+    const utimeEls = Array.from(article.querySelectorAll('[data-utime]')).filter(el => !isInCommentSection(el));
     for (const el of utimeEls) {
         if (isNotificationOrGarbageElement(el)) continue;
         const u = parseInt(el.getAttribute('data-utime'), 10);
@@ -458,11 +471,12 @@ function extractTimeFromArticleElement(article) {
         }
     }
 
-    // 2. Kiểm tra các thẻ link timestamp đặc trưng của Facebook trong phần header bài viết
+    // 2. Tìm chính xác thẻ liên kết thời gian bài viết (Post Header Timestamp Link)
+    // Trên Facebook, link này nằm cạnh icon quả địa cầu (🌐) hoặc bạn bè (👥) ngay dưới tên tác giả
     const candidateLinks = Array.from(article.querySelectorAll(
         'a[href*="/posts/"], a[href*="permalink.php"], a[href*="story_fbid="], ' +
-        'a[href*="/videos/"], a[href*="/photo"], a[href*="/reel/"], a[role="link"]'
-    )).filter(a => !isNotificationOrGarbageElement(a));
+        'a[href*="/videos/"], a[href*="/photos/"], a[href*="/photo"], a[href*="/reel/"], a[role="link"]'
+    )).filter(a => !isInCommentSection(a) && !isNotificationOrGarbageElement(a));
 
     for (const a of candidateLinks) {
         // 2.1 Kiểm tra aria-label trên thẻ a
@@ -472,7 +486,7 @@ function extractTimeFromArticleElement(article) {
             if (timeStr) {
                 const ts = parseRelativeTimeToTimestamp(timeStr);
                 if (ts && ts > 1577836800) {
-                    return { relativeTime: formatRelativeTime(ts), timestamp: ts, publishTime: formatTimestampToDate(ts) };
+                    return { relativeTime: formatRelativeTime(ts), timestamp: ts, publishTime: formatTimestampToDate(ts), rawStr: timeStr };
                 }
             }
         }
@@ -484,23 +498,28 @@ function extractTimeFromArticleElement(article) {
             if (timeStr) {
                 const ts = parseRelativeTimeToTimestamp(timeStr);
                 if (ts && ts > 1577836800) {
-                    return { relativeTime: formatRelativeTime(ts), timestamp: ts, publishTime: formatTimestampToDate(ts) };
+                    return { relativeTime: formatRelativeTime(ts), timestamp: ts, publishTime: formatTimestampToDate(ts), rawStr: timeStr };
                 }
             }
         }
     }
 
-    // 3. Quét các thẻ abbr, span[dir="auto"], span trong vùng đầu của article (giới hạn 15 phần tử đầu bài viết)
-    const spans = Array.from(article.querySelectorAll('abbr, span[dir="auto"], span')).slice(0, 15);
-    for (const s of spans) {
-        if (isNotificationOrGarbageElement(s)) continue;
+    // 3. Quét các thẻ abbr, span[dir="auto"], span trong 220px đầu tiên của article (Header)
+    const artTop = article.getBoundingClientRect().top;
+    const headerSpans = Array.from(article.querySelectorAll('abbr, span[dir="auto"], span')).filter(s => {
+        if (isInCommentSection(s) || isNotificationOrGarbageElement(s)) return false;
+        const r = s.getBoundingClientRect();
+        return (r.top - artTop) < 220; // Giới hạn chỉ quét phần Header bài viết, TUYỆT ĐỐI không chạm phần comment
+    }).slice(0, 15);
+
+    for (const s of headerSpans) {
         const aria = s.getAttribute('aria-label');
         if (aria && !isNotificationOrCommentGarbage(aria)) {
             const timeStr = extractTimeFromText(aria);
             if (timeStr) {
                 const ts = parseRelativeTimeToTimestamp(timeStr);
                 if (ts && ts > 1577836800) {
-                    return { relativeTime: formatRelativeTime(ts), timestamp: ts, publishTime: formatTimestampToDate(ts) };
+                    return { relativeTime: formatRelativeTime(ts), timestamp: ts, publishTime: formatTimestampToDate(ts), rawStr: timeStr };
                 }
             }
         }
@@ -510,7 +529,7 @@ function extractTimeFromArticleElement(article) {
             if (timeStr) {
                 const ts = parseRelativeTimeToTimestamp(timeStr);
                 if (ts && ts > 1577836800) {
-                    return { relativeTime: formatRelativeTime(ts), timestamp: ts, publishTime: formatTimestampToDate(ts) };
+                    return { relativeTime: formatRelativeTime(ts), timestamp: ts, publishTime: formatTimestampToDate(ts), rawStr: timeStr };
                 }
             }
         }
@@ -639,12 +658,14 @@ function extractFacebookPublishTimeDetailed() {
 
     let chosenCandidate = null;
 
-    // Nếu DOM timeline đã có bài viết thực tế -> DÙNG NGAY, TUYỆT ĐỐI KHÔNG ĐỂ SCRIPT CHÈM LÊN!
+    // Nếu DOM timeline đã có bài viết thực tế -> LẤY CHÍNH XÁC BÀI ĐẦU TIÊN (DOM ORDER), TUYỆT ĐỐI KHÔNG SORT MAX LẪN COMMENT!
     if (domCandidates.length > 0) {
         const nonPinned = domCandidates.filter(c => !c.isPinned);
-        const targetPool = nonPinned.length > 0 ? nonPinned : domCandidates;
-        targetPool.sort((a, b) => b.timestamp - a.timestamp);
-        chosenCandidate = targetPool[0];
+        if (nonPinned.length > 0) {
+            chosenCandidate = nonPinned[0]; // Bài đăng không ghim đầu tiên trên timeline
+        } else {
+            chosenCandidate = domCandidates[0]; // Nếu chỉ có 1 bài ghim, dùng chính bài ghim!
+        }
     } else {
         // 3. FALLBACK DUY NHẤT: Khi timeline DOM chưa nạp kịp bài đăng nào, mới quét script tags
         let scriptCandidates = [];
@@ -1800,36 +1821,64 @@ function extractProfileAvatar() {
 async function inspectLatestPostMediaForPublishTime() {
     const minTs = 1577836800; // 01/01/2020
     const nowSec = Math.floor(Date.now() / 1000);
-    const maxTs = nowSec + 60;
+    const maxTs = nowSec + 86400 * 2;
 
     try {
-        // 1. Tìm các bài viết (article) trong timeline
+        // 1. Tìm các bài viết (article) trong timeline của trang cá nhân
         const articles = Array.from(document.querySelectorAll(
             'div[role="feed"] div[role="article"], div[data-pagelet^="ProfileTimeline"] div[role="article"], div[data-pagelet^="FeedUnit_"], div[role="article"]'
         )).filter(el => {
             if (el.closest('header, nav, [role="navigation"], [role="banner"], [aria-label*="Thông báo"], [aria-label*="Notification"]')) return false;
+            // Bỏ qua các bài viết con là bình luận
+            if (el.parentElement && el.parentElement.closest('div[role="article"]')) return false;
             const r = el.getBoundingClientRect();
             const docTop = r.top + window.scrollY;
             return el.offsetHeight > 80 && docTop > 100;
         });
 
-        // Tìm bài viết đầu tiên không bị ghim (pinned)
-        let targetArticle = null;
-        for (const art of articles.slice(0, 5)) {
-            const artText = (art.innerText || '').toLowerCase();
-            const isPinned = /(?:đã ghim|pinned post|pinned|置顶|置顶帖子|đáng chú ý|featured|highlights)/i.test(artText.slice(0, 200));
-            if (!isPinned) {
-                targetArticle = art;
-                break;
+        if (articles.length === 0) {
+            console.log('[FB Scraper] Chưa tìm thấy bài viết nào trên timeline.');
+            return null;
+        }
+
+        // Chọn bài viết mục tiêu:
+        // Nếu bài đầu tiên là bài ghim (Pinned Post), kiểm tra xem có bài thứ hai không ghim không
+        let targetArticle = articles[0];
+        if (articles.length > 1) {
+            const firstText = (articles[0].innerText || '').toLowerCase();
+            const isFirstPinned = /(?:đã ghim|pinned post|pinned|置顶|置顶帖子)/i.test(firstText.slice(0, 180));
+            if (isFirstPinned) {
+                // Kiểm tra ngày của bài ghim và bài thứ 2
+                const t0 = extractTimeFromArticleElement(articles[0]);
+                const t1 = extractTimeFromArticleElement(articles[1]);
+                if (t1 && t1.timestamp && (!t0 || t1.timestamp > t0.timestamp)) {
+                    targetArticle = articles[1];
+                }
             }
         }
-        if (!targetArticle && articles.length > 0) {
-            targetArticle = articles[0];
-        }
 
-        if (!targetArticle) return null;
+        console.log('[FB Scraper] 🎯 Đã định vị bài viết gần nhất -> Đang cuộn đến và tạo viền sáng trực quan...');
 
-        // 2. Tìm phần tử click được: Ảnh bài viết hoặc Video bài viết
+        // 2. HIỆU ỨNG TRỰC QUAN: Cuộn bài viết vào giữa màn hình và tạo viền phát sáng màu xanh
+        try {
+            targetArticle.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            targetArticle.style.outline = '4px solid #0284c7';
+            targetArticle.style.boxShadow = '0 0 30px rgba(2, 132, 199, 0.75)';
+            targetArticle.style.borderRadius = '12px';
+            targetArticle.style.transition = 'all 0.3s ease';
+        } catch (_) {}
+
+        const updateBanner = (txt, color = '#0284c7') => {
+            const el = document.getElementById('funnel-status-badge');
+            if (el) { el.innerText = txt; el.style.background = color; }
+        };
+        updateBanner('🎯 Đang tương tác & click vào bài viết gần nhất...', '#0284c7');
+
+        // Chờ 600ms để cuộn hoàn tất
+        await sleep(600);
+
+        // 3. TÌM PHẦN TỬ CLICK:
+        // Ưu tiên A: Ảnh bài viết hoặc Video bài viết
         let mediaLink = targetArticle.querySelector(
             'a[href*="/photo/"], a[href*="/photos/"], a[href*="photo.php"], a[href*="fbid="], ' +
             'a[href*="/videos/"], a[href*="/watch"], a[href*="/reel/"]'
@@ -1837,8 +1886,8 @@ async function inspectLatestPostMediaForPublishTime() {
 
         let clickableEl = mediaLink;
         if (!clickableEl) {
-            // Tìm ảnh trong bài viết có kích thước > 120px (để tránh icon like, avatar)
             const imgs = Array.from(targetArticle.querySelectorAll('img[src*="fbcdn"]')).filter(img => {
+                if (img.closest('ul, div[aria-label*="Bình luận" i], div[aria-label*="Comment" i]')) return false;
                 const rect = img.getBoundingClientRect();
                 return rect.width > 120 && rect.height > 120;
             });
@@ -1847,128 +1896,134 @@ async function inspectLatestPostMediaForPublishTime() {
             }
         }
 
+        // Ưu tiên B: NẾU BÀI VIẾT CHỈ CÓ CHỮ (không có ảnh/video như bài của Kayla Parrish):
+        // Tìm THẺ LINK THỜI GIAN CỦA BÀI VIẾT trong Header (chứa '15 tháng 9', icon quả địa cầu)
+        let timeAnchor = null;
         if (!clickableEl) {
-            const vid = targetArticle.querySelector('video, div[data-pagelet*="video"], div[aria-label*="video" i]');
-            if (vid) {
-                clickableEl = vid.closest('a') || vid.closest('div[role="button"]') || vid;
+            const headerAnchors = Array.from(targetArticle.querySelectorAll(
+                'a[role="link"][href*="/posts/"], a[role="link"][href*="permalink"], a[role="link"][href*="story"], a[role="link"]'
+            )).filter(a => {
+                if (a.closest('ul, div[aria-label*="Bình luận" i], div[aria-label*="Comment" i]')) return false;
+                const rect = a.getBoundingClientRect();
+                const artRect = targetArticle.getBoundingClientRect();
+                return (rect.top - artRect.top) < 220; // Nằm ở Header
+            });
+
+            for (const a of headerAnchors) {
+                const txt = (a.innerText || '').trim();
+                const aria = a.getAttribute('aria-label') || '';
+                if (extractTimeFromText(txt) || extractTimeFromText(aria)) {
+                    timeAnchor = a;
+                    break;
+                }
+            }
+            if (timeAnchor) {
+                clickableEl = timeAnchor;
             }
         }
 
-        if (!clickableEl) {
-            console.log('[FB Scraper] Không tìm thấy ảnh/video có thể click trong bài đăng gần nhất.');
-            return null;
-        }
+        // 4. BÓC TÁCH THỜI GIAN TRỰC TIẾP TỪ HEADER BÀI VIẾT TRƯỚC KHI CLICK
+        let directHeaderTime = extractTimeFromArticleElement(targetArticle);
 
-        console.log('[FB Scraper] 📸 Phát hiện phương tiện bài đăng gần nhất -> Đang cuộn đến và click mở xem chi tiết...');
-        
-        // Cuộn phương tiện vào giữa màn hình mượt mà
-        try {
-            clickableEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } catch (_) {}
-        await sleep(400);
-
-        // Click vào phương tiện
-        try {
-            clickableEl.click();
-        } catch (_) {}
-
-        // Chờ 1400ms để Facebook mở Theater Popup / Dialog
-        await sleep(1400);
-
-        // 3. Tìm vùng Dialog / MediaViewer / Theater
-        const dialog = document.querySelector('div[role="dialog"], div[data-pagelet="MediaViewer"], [aria-modal="true"]');
+        // 5. NẾU CÓ PHẦN TỬ CLICK: Hover và Click vào phần tử để kích hoạt Tooltip / Modal của Facebook
         let extractedFromMedia = null;
+        if (clickableEl) {
+            console.log('[FB Scraper] 🖱️ Đang hover và click vào bài viết (Ảnh/Video hoặc Link thời gian)...');
+            try {
+                // Kích hoạt hover tooltip của Facebook
+                clickableEl.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true }));
+                clickableEl.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true, cancelable: true }));
+                clickableEl.click();
+            } catch (_) {}
 
-        if (dialog) {
-            console.log('[FB Scraper] 🎯 Đã mở Theater/Dialog của bài đăng -> Đang trích xuất timestamp gốc...');
+            // Chờ 1200ms để Facebook hiển thị Tooltip hoặc mở Dialog/Theater
+            await sleep(1200);
 
-            // Quét các thẻ thời gian trong dialog
-            const timeLinks = Array.from(dialog.querySelectorAll('abbr, a[role="link"], span[dir="auto"], span[id], a[href*="/posts/"], a[href*="/photo"]'));
-            for (const el of timeLinks) {
-                const aria = el.getAttribute('aria-label') || '';
-                const txt = (el.innerText || '').trim();
-                
-                // Ưu tiên aria-label
-                if (aria && aria.length < 80 && !isNotificationOrCommentGarbage(aria)) {
-                    const timeStr = extractTimeFromText(aria);
+            // Kiểm tra Tooltip DOM vừa xuất hiện (Facebook thường render tooltip: "Thứ Hai, 15 tháng 9, 2026 lúc 12:30")
+            const tooltipEls = Array.from(document.querySelectorAll('div[role="tooltip"], div.__fb-dark-mode div[role="tooltip"], span[role="tooltip"]'));
+            for (const tt of tooltipEls) {
+                const ttText = (tt.innerText || '').trim();
+                if (ttText && !isNotificationOrCommentGarbage(ttText)) {
+                    const timeStr = extractTimeFromText(ttText);
                     if (timeStr) {
                         const ts = parseRelativeTimeToTimestamp(timeStr);
                         if (ts && ts >= minTs && ts <= maxTs) {
-                            extractedFromMedia = { timestamp: ts, source: 'media_dialog_aria' };
-                            break;
-                        }
-                    }
-                }
-
-                // Tiếp theo là innerText
-                if (txt && txt.length < 50 && !isNotificationOrCommentGarbage(txt)) {
-                    const timeStr = extractTimeFromText(txt);
-                    if (timeStr) {
-                        const ts = parseRelativeTimeToTimestamp(timeStr);
-                        if (ts && ts >= minTs && ts <= maxTs) {
-                            extractedFromMedia = { timestamp: ts, source: 'media_dialog_text' };
+                            extractedFromMedia = { timestamp: ts, source: 'tooltip' };
+                            console.log(`[FB Scraper] 🎯 Bóc tách thành công từ Facebook Tooltip: ${ttText} -> TS: ${ts}`);
                             break;
                         }
                     }
                 }
             }
 
-            // Quét các thẻ script trong DOM xem có creation_time của ảnh/video này không
-            if (!extractedFromMedia) {
-                try {
-                    const scripts = Array.from(document.querySelectorAll('script')).slice(-20);
-                    for (const s of scripts) {
-                        const t = s.textContent || '';
-                        const m = t.match(/["\\]*(?:creation_time|publish_time)["\\]*\s*:\s*(\d{9,11})/);
-                        if (m) {
-                            const ts = parseInt(m[1], 10);
-                            if (ts >= minTs && ts <= maxTs) {
-                                extractedFromMedia = { timestamp: ts, source: 'media_dialog_script' };
-                                break;
-                            }
+            // Kiểm tra Dialog / MediaViewer nếu có mở ra
+            const dialog = document.querySelector('div[role="dialog"], div[data-pagelet="MediaViewer"], [aria-modal="true"]');
+            if (dialog && !extractedFromMedia) {
+                const timeLinks = Array.from(dialog.querySelectorAll('abbr, a[role="link"], span[dir="auto"], span[id], a[href*="/posts/"], a[href*="/photo"]'));
+                for (const el of timeLinks) {
+                    const aria = el.getAttribute('aria-label') || '';
+                    const txt = (el.innerText || '').trim();
+                    const timeStr = extractTimeFromText(aria) || extractTimeFromText(txt);
+                    if (timeStr && !isNotificationOrCommentGarbage(timeStr)) {
+                        const ts = parseRelativeTimeToTimestamp(timeStr);
+                        if (ts && ts >= minTs && ts <= maxTs) {
+                            extractedFromMedia = { timestamp: ts, source: 'media_dialog' };
+                            break;
                         }
                     }
-                } catch (_) {}
+                }
             }
+
+            // Đóng Dialog / Tooltip an toàn
+            try {
+                clickableEl.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, cancelable: true }));
+                document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true }));
+                document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true }));
+                const closeBtn = document.querySelector(
+                    'div[role="dialog"] div[aria-label="Đóng" i], div[role="dialog"] div[aria-label="Close" i], ' +
+                    'div[data-pagelet="MediaViewer"] div[aria-label*="Close" i], div[data-pagelet="MediaViewer"] div[aria-label*="Đóng" i]'
+                );
+                if (closeBtn) {
+                    try { closeBtn.click(); } catch (_) {}
+                }
+            } catch (_) {}
+
+            await sleep(500);
         }
 
-        // 4. Đóng Theater / Dialog một cách an toàn
-        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true }));
-        document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true }));
-        
-        const closeBtn = document.querySelector(
-            'div[role="dialog"] div[aria-label="Đóng" i], div[role="dialog"] div[aria-label="Close" i], ' +
-            'div[data-pagelet="MediaViewer"] div[aria-label*="Close" i], div[data-pagelet="MediaViewer"] div[aria-label*="Đóng" i], ' +
-            '[aria-modal="true"] div[aria-label*="Đóng" i], [aria-modal="true"] div[aria-label*="Close" i]'
-        );
-        if (closeBtn) {
-            try { closeBtn.click(); } catch (_) {}
-        }
+        // Tự động xóa viền sáng sau khi tương tác xong
+        setTimeout(() => {
+            try {
+                targetArticle.style.outline = '';
+                targetArticle.style.boxShadow = '';
+            } catch (_) {}
+        }, 1500);
 
-        // Chờ 600ms để popup đóng hoàn toàn, trả lại viewport bình thường
-        await sleep(600);
+        // TỔNG HỢP KẾT QUẢ: Ưu tiên tooltip/media click, nếu không có thì dùng directHeaderTime
+        const finalTs = (extractedFromMedia && extractedFromMedia.timestamp)
+            ? extractedFromMedia.timestamp
+            : (directHeaderTime && directHeaderTime.timestamp ? directHeaderTime.timestamp : null);
 
-        if (extractedFromMedia && extractedFromMedia.timestamp) {
-            const targetTs = extractedFromMedia.timestamp;
-            const dt = new Date(targetTs * 1000);
+        if (finalTs && finalTs >= minTs && finalTs <= maxTs) {
+            const dt = new Date(finalTs * 1000);
             const pad = n => String(n).padStart(2, '0');
             const formattedDate = `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
-            const relText = formatRelativeTime(targetTs);
-            const diffDays = Math.floor(Math.max(0, nowSec - targetTs) / 86400);
+            const relText = formatRelativeTime(finalTs);
+            const diffDays = Math.floor(Math.max(0, nowSec - finalTs) / 86400);
             const actStatus = diffDays <= 60 ? '✓ TÍCH CỰC (Trại đang hoạt động)' : '⚠️ ÍT HOẠT ĐỘNG (> 60 ngày)';
 
-            console.log(`[FB Scraper] 🏆 Bóc tách thành công từ ảnh/video bài đăng gần nhất: ${formattedDate} (${relText})`);
+            console.log(`[FB Scraper] 🏆 Bóc tách thành công bài đăng gần nhất: ${formattedDate} (${relText}) - Trạng thái: ${actStatus}`);
             return {
-                timestamp: targetTs,
+                timestamp: finalTs,
                 publishTime: formattedDate,
                 relativeTime: relText,
                 activityStatus: actStatus,
                 isoTime: dt.toISOString(),
-                fromMediaClick: true
+                fromMediaClick: !!clickableEl
             };
         }
     } catch (err) {
-        console.warn('[FB Scraper] Lỗi khi inspect ảnh/video bài đăng:', err);
+        console.warn('[FB Scraper] Lỗi khi inspect bài đăng:', err);
     }
 
     return null;
