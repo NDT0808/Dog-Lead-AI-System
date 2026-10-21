@@ -95,8 +95,10 @@
                 <span id="bannerDesc" style="color:${isDark ? '#cbd5e1' : '#78350f'}; margin-left:8px;">Vui lòng mở file <strong>CHAY_GIAO_DIEN_WEB.bat</strong> trên máy chủ. Nếu chạy trên Server/VPS khác, hãy nhập URL/IP bên dưới.</span>
               </div>
             </div>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <button id="btnRetryServerConn" style="background:#f59e0b; color:#0f172a; font-weight:700; border:none; border-radius:8px; padding:7px 16px; cursor:pointer; font-size:12px; transition:all 0.2s;">🔄 Thử kết nối lại (Retry)</button>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <button id="btnUseOfflineMode" style="background:linear-gradient(135deg, #4f46e5, #7c3aed); color:#fff; font-weight:800; border:none; border-radius:8px; padding:7px 16px; cursor:pointer; font-size:12px; transition:all 0.2s;" title="Chạy hoàn toàn trên trình duyệt bằng mô hình AI và từ điển NLP cún, không cần server">⚡ TÁCH RIÊNG: CHẾ ĐỘ ĐỘC LẬP (OFFLINE)</button>
+              <a href="http://127.0.0.1:8000/index.html" target="_blank" style="background:#059669; color:#fff; font-weight:700; text-decoration:none; border-radius:8px; padding:7px 16px; font-size:12px; display:inline-flex; align-items:center; gap:5px;" title="Mở trang web chuẩn qua cổng 8000 kết nối Python">🌐 Mở http://localhost:8000</a>
+              <button id="btnRetryServerConn" style="background:#f59e0b; color:#0f172a; font-weight:700; border:none; border-radius:8px; padding:7px 14px; cursor:pointer; font-size:12px; transition:all 0.2s;">🔄 Thử lại</button>
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:${isDark ? 'rgba(0,0,0,0.25)' : 'rgba(254,243,199,0.7)'}; padding:8px 12px; border-radius:10px; border:1px solid ${isDark ? 'rgba(245,158,11,0.3)' : '#fde68a'};">
@@ -110,6 +112,20 @@
 
         const btnRetry = document.getElementById('btnRetryServerConn');
         if (btnRetry) btnRetry.addEventListener('click', retryServerConnection);
+
+        const btnOffline = document.getElementById('btnUseOfflineMode');
+        if (btnOffline) {
+          btnOffline.addEventListener('click', () => {
+            sessionStorage.setItem('pet_lead_dismiss_server_banner', 'true');
+            banner.style.display = 'none';
+            const statusEl = document.getElementById('lblSystemOnline');
+            if (statusEl) {
+              statusEl.textContent = currentLang === 'zh' ? '● 纯客户端AI模式 (ONNX Web)' : '● CHẾ ĐỘ TRỰC TIẾP (ONNX WEB)';
+              statusEl.style.color = '#38bdf8';
+            }
+            showToast(currentLang === 'zh' ? '已切换至纯浏览器端AI审核模式！' : 'Đã chuyển sang chế độ Lọc AI trực tiếp trên Extension!');
+          });
+        }
 
         const btnResetLocal = document.getElementById('btnResetLocalServerUrl');
         if (btnResetLocal) {
@@ -157,11 +173,17 @@
 
     async function checkServerConnection() {
       const banner = renderServerBanner();
+
+      if (sessionStorage.getItem('pet_lead_dismiss_server_banner') === 'true') {
+        if (banner) banner.style.display = 'none';
+      }
+
+      // 1. Thử fetch trực tiếp
       try {
-        const resp = await fetch(`${API_BASE}/api/system-status`, { signal: AbortSignal.timeout(2200) });
+        const resp = await fetch(`${API_BASE}/api/system-status`, { signal: AbortSignal.timeout(2000) });
         if (resp.ok) {
           isServerConnected = true;
-          banner.style.display = 'none';
+          if (banner) banner.style.display = 'none';
           const statusEl = document.getElementById('lblSystemOnline');
           if (statusEl) {
             statusEl.textContent = currentLang === 'zh' ? `● 系统在线 (${API_BASE})` : `● HỆ THỐNG TRỰC TUYẾN (${API_BASE})`;
@@ -170,17 +192,33 @@
           return true;
         }
       } catch (e) {
+        // 2. Fallback: Nếu fetch từ tab bị Chrome PNA chặn, nhờ background service worker ping hộ
         try {
-          const resp2 = await fetch(`${API_BASE}/api/step1-filter-status`, { signal: AbortSignal.timeout(1500) });
-          if (resp2.ok) {
-            isServerConnected = true;
-            banner.style.display = 'none';
-            return true;
+          if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+            const bgResp = await new Promise(res => {
+              chrome.runtime.sendMessage({ action: 'PING_SERVER', url: API_BASE }, resp => {
+                if (chrome.runtime.lastError) res(null);
+                else res(resp);
+              });
+            });
+            if (bgResp && bgResp.ok) {
+              isServerConnected = true;
+              if (banner) banner.style.display = 'none';
+              const statusEl = document.getElementById('lblSystemOnline');
+              if (statusEl) {
+                statusEl.textContent = currentLang === 'zh' ? `● 系统在线 (${API_BASE})` : `● HỆ THỐNG TRỰC TUYẾN (${API_BASE})`;
+                statusEl.style.color = 'var(--emerald)';
+              }
+              return true;
+            }
           }
-        } catch (e2) {}
+        } catch (_) {}
       }
+
       isServerConnected = false;
-      banner.style.display = 'flex';
+      if (sessionStorage.getItem('pet_lead_dismiss_server_banner') !== 'true') {
+        if (banner) banner.style.display = 'flex';
+      }
       const statusEl = document.getElementById('lblSystemOnline');
       if (statusEl) {
         statusEl.textContent = currentLang === 'zh' ? `● 未连接服务器 (${API_BASE})` : `● CHƯA KẾT NỐI (${API_BASE})`;
@@ -1681,8 +1719,24 @@
           rawAvatar = rawAvatar.replace(/([?&])ctp=[sp]\d+x\d+(&|$)/, '$1').replace(/\?&/, '?').replace(/[?&]$/, '');
         }
 
-        // Đảm bảo 100% hồ sơ có Numeric FB_ID
-        let finalFbId = item.fb_id || '';
+        // Đảm bảo 100% hồ sơ có Numeric FB_ID thực tế từ Facebook (Numeric FB_ID Ground Truth)
+        let finalFbId = (item.fb_id || '').toString().trim();
+        const isVanity = url && !/[?&]id=\d+/.test(url) && !/facebook\.com\/(?:people\/[^\/]+\/)?\d{10,}/.test(url);
+        if (!finalFbId || !/^\d{8,}$/.test(finalFbId) || finalFbId.length > 16 || isVanity) {
+          try {
+            const rId = await fetch(`${API_BASE}/api/resolve-id`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: url })
+            });
+            if (rId.ok) {
+              const dId = await rId.json();
+              if (dId && dId.fb_id && /^\d+$/.test(dId.fb_id)) {
+                finalFbId = dId.fb_id;
+              }
+            }
+          } catch (e) {}
+        }
         if (!finalFbId || !/^\d+$/.test(finalFbId)) {
           let hashInt = 0;
           const str = (url || name);

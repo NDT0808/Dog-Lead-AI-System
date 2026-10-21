@@ -180,7 +180,8 @@ const JUNK_OWNER_STRINGS = new Set([
   'all rights reserved', 'privacy policy', 'terms of service', 'terms and conditions',
   'cookie policy', 'cart', 'checkout', 'my account', 'login', 'register',
   'facebook user', 'breeder owner', 'kennel owner', 'manager', 'owner / manager',
-  'leave a reply', 'recent posts', 'archives', 'categories', 'welcome', 'header', 'footer'
+  'leave a reply', 'recent posts', 'archives', 'categories', 'welcome', 'header', 'footer',
+  'the parent', 'the parents', 'parent', 'parents', 'with b', 'with', 'the', 'and', 'or', 'about'
 ]);
 
 function isValidOwnerCandidate(name) {
@@ -192,12 +193,47 @@ function isValidOwnerCandidate(name) {
   for (const bad of JUNK_OWNER_STRINGS) {
     if (low === bad || low.startsWith(bad + ' ') || low.endsWith(' ' + bad)) return false;
   }
-  if (/skip\s+to|navigation|content|menu|search|cookie|privacy|policy|terms|rights\s+reserved|cart|checkout|kennel|puppy|puppies|farm|bulldog|frenchie|corgi|doodle|cavapoo|yorkie|retriever|shepherd|password|username/i.test(low)) {
+
+  // Kiểm tra từ đầu tiên có phải là mạo từ, giới từ, đại từ, danh từ chung rác không
+  const firstWord = low.split(/\s+/)[0];
+  const BAD_FIRST_WORDS = new Set([
+    'the', 'a', 'an', 'with', 'and', 'or', 'by', 'at', 'for', 'from', 'in', 'on', 'of', 'to',
+    'our', 'your', 'my', 'us', 'we', 'they', 'them', 'he', 'she', 'it', 'its', 'their',
+    'who', 'what', 'where', 'when', 'why', 'how', 'parent', 'parents', 'dam', 'sire',
+    'puppy', 'puppies', 'dog', 'dogs', 'meet', 'about', 'contact', 'welcome'
+  ]);
+  if (BAD_FIRST_WORDS.has(firstWord)) return false;
+
+  // Loại trừ các cụm từ kiểu "with B", "the Parent", "and More"
+  if (/^(?:the|with|and|by|at|for|from|in|on|of|to)\s+/i.test(low)) return false;
+  if (/^with\s+[a-z]\b/i.test(low)) return false;
+
+  if (/skip\s+to|navigation|content|menu|search|cookie|privacy|policy|terms|rights\s+reserved|cart|checkout|kennel|puppy|puppies|farm|bulldog|frenchie|corgi|doodle|cavapoo|yorkie|retriever|shepherd|password|username|parent|parents/i.test(low)) {
     return false;
   }
   if (!/[A-ZÀ-Ỹ]/.test(s)) return false;
   if (/[@\/\\{}[\]<>=+*_$#]/.test(s)) return false;
   return true;
+}
+
+const THIRD_PARTY_FORM_HOSTS = new Set([
+  'forms.monday.com', 'monday.com',
+  'jotform.com', 'form.jotform.com',
+  'forms.gle', 'docs.google.com',
+  'typeform.com',
+  'linktr.ee', 'campsite.bio', 'bio.site', 'beacons.ai', 'snipfeed.co', 'lnk.bio',
+  'calendly.com', 'acuityscheduling.com'
+]);
+
+function isThirdPartyFormService(u) {
+  if (!u) return false;
+  try {
+    const host = new URL(u).hostname.toLowerCase();
+    for (const h of THIRD_PARTY_FORM_HOSTS) {
+      if (host === h || host.endsWith('.' + h)) return true;
+    }
+  } catch (_) {}
+  return false;
 }
 
 async function handleDeepWebsiteScrape(targetUrl) {
@@ -1379,17 +1415,34 @@ function runScriptInTab(tabId, func, args = []) {
 
 // Hàm điều phối duyệt website trực quan đa trang: Trang chủ -> Trang con (/about, /contact)
 async function inspectWebsiteVisually(tabId, websiteUrl, leadName, leadEmail) {
-  console.log(`[Web Live Inspector] Bắt đầu quét trực quan website: ${websiteUrl} cho lead: ${leadName}`);
+  let entryUrl = websiteUrl;
+  let rootHomepage = '';
+  const isFormService = isThirdPartyFormService(websiteUrl);
 
-  // 1. Mở trang chủ và đợi nạp DOM xong hoàn toàn
-  const homeLoaded = await navigateTabAndWait(tabId, websiteUrl, 25000);
+  try {
+    const u = new URL(websiteUrl);
+    if (!u.hostname.includes('gooddog.com') && !isFormService) {
+      rootHomepage = u.origin + '/';
+      // Nếu link từ Facebook trỏ thẳng vào trang con (/contact, /form, /booking...),
+      // ưu tiên mở TRANG CHỦ trước để nạp thanh điều hướng menu & các trang con khác!
+      if (u.pathname && u.pathname !== '/' && u.pathname.length > 1) {
+        entryUrl = rootHomepage;
+        console.log(`[Web Live Inspector] Link ban đầu là trang con (${websiteUrl}) -> Tự động chuyển hướng vào Trang chủ (${entryUrl}) để khám phá menu đầy đủ.`);
+      }
+    }
+  } catch (_) {}
+
+  console.log(`[Web Live Inspector] Bắt đầu quét trực quan website: ${entryUrl} cho lead: ${leadName}`);
+
+  // 1. Mở trang chủ / trang vào chính và đợi nạp DOM xong hoàn toàn
+  const homeLoaded = await navigateTabAndWait(tabId, entryUrl, 25000);
   if (!homeLoaded) {
-    console.warn(`[Web Live Inspector] Không thể tải trang chủ: ${websiteUrl}`);
+    console.warn(`[Web Live Inspector] Không thể tải trang: ${entryUrl}`);
   }
 
   // 2. Chạy agent cuộn từ từ và trích xuất trên Trang chủ
   const homeResults = await runScriptInTab(tabId, scrollAndExtractPageAgent, [{
-    pageTitle: 'Trang chủ',
+    pageTitle: entryUrl === rootHomepage ? 'Trang chủ (Homepage)' : 'Trang chính',
     isHomePage: true
   }]);
 
@@ -1403,7 +1456,14 @@ async function inspectWebsiteVisually(tabId, websiteUrl, leadName, leadEmail) {
   let currentCountry = homeResults?.country || 'United States';
   let currentHasAmazon = homeResults?.has_amazon || false;
   let currentAmazonUrl = homeResults?.amazon_url || '';
-  let subLinks = homeResults?.subLinks || [];
+  let subLinks = isFormService ? [] : (homeResults?.subLinks || []);
+
+  // Nếu link ban đầu là trang con (/contact) và khác trang chủ, đảm bảo sẽ ghé thăm trang con này
+  if (websiteUrl && rootHomepage && websiteUrl !== rootHomepage && !isFormService) {
+    if (!subLinks.includes(websiteUrl)) {
+      subLinks.unshift(websiteUrl);
+    }
+  }
 
   // 3. NẾU CHƯA TÌM THẤY CHỦ TRẠI VÀ CÓ CÁC TRANG CON (/about, /contact, /meet, ...)
   // CHUYỂN HƯỚNG TAB TRÌNH DUYỆT THẬT SỰ SANG TRANG CON ĐỂ NGƯỜI DÙNG XEM TỪNG TRANG VÀ CUỘN
@@ -1544,7 +1604,8 @@ async function scrollAndExtractPageAgent(options) {
     'all rights reserved', 'privacy policy', 'terms of service', 'terms and conditions',
     'cookie policy', 'cart', 'checkout', 'my account', 'login', 'register',
     'facebook user', 'breeder owner', 'kennel owner', 'manager', 'owner / manager',
-    'leave a reply', 'recent posts', 'archives', 'categories', 'welcome', 'header', 'footer'
+    'leave a reply', 'recent posts', 'archives', 'categories', 'welcome', 'header', 'footer',
+    'the parent', 'the parents', 'parent', 'parents', 'with b', 'with', 'the', 'and', 'or', 'about'
   ]);
 
   const isValidOwnerCandidate = (name) => {
@@ -1556,7 +1617,18 @@ async function scrollAndExtractPageAgent(options) {
     for (const bad of JUNK_OWNER_STRINGS) {
       if (low === bad || low.startsWith(bad + ' ') || low.endsWith(' ' + bad)) return false;
     }
-    if (/skip\s+to|navigation|content|menu|search|cookie|privacy|policy|terms|rights\s+reserved|cart|checkout|kennel|puppy|puppies|farm|bulldog|frenchie|corgi|doodle|cavapoo|yorkie|retriever|shepherd|password|username/i.test(low)) {
+    const firstWord = low.split(/\s+/)[0];
+    const BAD_FIRST_WORDS = new Set([
+      'the', 'a', 'an', 'with', 'and', 'or', 'by', 'at', 'for', 'from', 'in', 'on', 'of', 'to',
+      'our', 'your', 'my', 'us', 'we', 'they', 'them', 'he', 'she', 'it', 'its', 'their',
+      'who', 'what', 'where', 'when', 'why', 'how', 'parent', 'parents', 'dam', 'sire',
+      'puppy', 'puppies', 'dog', 'dogs', 'meet', 'about', 'contact', 'welcome'
+    ]);
+    if (BAD_FIRST_WORDS.has(firstWord)) return false;
+    if (/^(?:the|with|and|by|at|for|from|in|on|of|to)\s+/i.test(low)) return false;
+    if (/^with\s+[a-z]\b/i.test(low)) return false;
+
+    if (/skip\s+to|navigation|content|menu|search|cookie|privacy|policy|terms|rights\s+reserved|cart|checkout|kennel|puppy|puppies|farm|bulldog|frenchie|corgi|doodle|cavapoo|yorkie|retriever|shepherd|password|username|parent|parents/i.test(low)) {
       return false;
     }
     if (!/[A-ZÀ-Ỹ]/.test(s)) return false;

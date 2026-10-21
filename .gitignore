@@ -45,9 +45,13 @@ Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
 
-# Temporary log & test files
+# Temporary log, media & test files
 *.log
+*.mp4
+*.webm
 scratch/
 test_tmp/
 video_frames/
 scratch_frames*
+data/raw/temp_*.json
+data/raw/extension_storage_*.json

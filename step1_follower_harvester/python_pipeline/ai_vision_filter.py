@@ -487,19 +487,23 @@ def process_follower_records(records, session, max_items=None, threshold=0.70,
         if 'rsrc.php' in avatar_url.lower():
             avatar_url = ''
 
-        # Đảm bảo 100% FB_ID là số
-        if not fb_id or not fb_id.isdigit():
+        # Đảm bảo 100% FB_ID là số chuẩn xác từ Facebook (Numeric FB_ID Ground Truth)
+        is_vanity = bool(url and not re.search(r'[?&]id=\d{8,}', url) and not re.search(r'facebook\.com/(?:people/[^/]+/)?\d{10,}', url))
+        need_resolve = (not fb_id) or (not fb_id.isdigit()) or (fb_id.startswith('10008') and len(fb_id) == 15) or (len(fb_id) > 16) or is_vanity
+        
+        if need_resolve:
             resolved = resolve_numeric_fbid(url)
-            if not resolved:
-                for p in photo_urls + [avatar_url]:
-                    if p:
+            if not resolved and photo_urls:
+                for p in photo_urls:
+                    if p and ('set=pb.' in p or 'set=a.' in p or 'fbid=' in p):
                         resolved = resolve_numeric_fbid(p)
-                        if resolved: break
+                        if resolved:
+                            break
             if resolved:
                 fb_id = resolved
                 item['fb_id'] = fb_id
-            else:
-                # Đảm bảo 100% hồ sơ sau Step 1 phải có FB_ID số định danh duy nhất
+            elif not fb_id or not fb_id.isdigit():
+                # Fallback định danh duy nhất chỉ khi mạng hoàn toàn mất kết nối
                 import hashlib
                 hash_int = int(hashlib.md5((url or name).encode('utf-8')).hexdigest()[:10], 16)
                 fb_id = f"10008{str(hash_int).zfill(10)[:10]}"

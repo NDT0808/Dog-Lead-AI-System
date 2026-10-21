@@ -630,12 +630,8 @@
 
     const cleanUrl = sanitizeProfileUrl(rawHref, numericId);
 
-    // Bổ sung ID số từ avatar hoặc hovercard nếu chưa có
+    // Bổ sung ID số từ hovercard hoặc các anchor liên kết trong thẻ
     let finalFbId = numericId || parseNumericFbId(cleanUrl, card);
-    if (!finalFbId && avatarUrl) {
-      const m = avatarUrl.match(/_(\d{8,25})_\d+_n\./) || avatarUrl.match(/\/(\d{8,25})_/);
-      if (m) finalFbId = m[1];
-    }
 
     // Nếu không có avatar thật nhưng có SVG placeholder (như chữ cái "S"), đặt fallback avatar
     if (!avatarUrl) {

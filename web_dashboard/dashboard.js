@@ -86,17 +86,24 @@
           ? 'background: linear-gradient(90deg, #1e293b, #0f172a); border-bottom: 2px solid #f59e0b; padding: 12px 24px; color: #f8fafc; display: none; flex-direction: column; gap: 10px; font-size: 13px; z-index: 9999; position: sticky; top: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.4);'
           : 'background: #fffbeb; border-bottom: 2px solid #f59e0b; padding: 12px 24px; color: #78350f; display: none; flex-direction: column; gap: 10px; font-size: 13px; z-index: 9999; position: sticky; top: 0; box-shadow: 0 4px 16px rgba(15,23,42,0.08);';
         banner.style.cssText = bgStyle;
+        const isFileProto = window.location.protocol === 'file:';
         banner.innerHTML = `
           <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
             <div style="display:flex; align-items:center; gap:12px;">
-              <span style="font-size:22px;">⚠️</span>
+              <span style="font-size:24px;">⚠️</span>
               <div>
-                <span id="bannerTitle" style="font-weight:700; color:${isDark ? '#fbbf24' : '#b45309'};">Máy chủ Python AI chưa được kết nối!</span>
-                <span id="bannerDesc" style="color:${isDark ? '#cbd5e1' : '#78350f'}; margin-left:8px;">Vui lòng mở file <strong>CHAY_GIAO_DIEN_WEB.bat</strong> trên máy chủ. Nếu chạy trên Server/VPS khác, hãy nhập URL/IP bên dưới.</span>
+                <span id="bannerTitle" style="font-weight:700; color:${isDark ? '#fbbf24' : '#b45309'}; font-size:13.5px;">Chưa kết nối Máy chủ Python Backend (Port 8000)</span>
+                <span id="bannerDesc" style="color:${isDark ? '#cbd5e1' : '#78350f'}; margin-left:8px; display:block; margin-top:3px; line-height:1.4;">
+                  ${isFileProto 
+                    ? '💡 <strong>Trình duyệt đang mở trực tiếp file:/// nên Chrome chặn kết nối nội bộ!</strong> <br/>👉 Cách 1 (Khuyên dùng): Bấm nút <strong>[🌐 Mở http://localhost:8000]</strong> để kết nối Python. <br/>👉 Cách 2 (Tách riêng): Bấm nút <strong>[⚡ TÁCH RIÊNG: CHẾ ĐỘ ĐỘC LẬP]</strong> để dùng ngay trên trình duyệt mà không cần server!'
+                    : 'Vui lòng mở file <strong>CHAY_GIAO_DIEN_WEB.bat</strong> để chạy máy chủ, hoặc bấm <strong>[⚡ TÁCH RIÊNG: CHẾ ĐỘ ĐỘC LẬP]</strong> để dùng trực tiếp.'}
+                </span>
               </div>
             </div>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <button id="btnRetryServerConn" style="background:#f59e0b; color:#0f172a; font-weight:700; border:none; border-radius:8px; padding:7px 16px; cursor:pointer; font-size:12px; transition:all 0.2s;">🔄 Thử kết nối lại (Retry)</button>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <button id="btnSwitchStandalone" style="background:linear-gradient(135deg, #4f46e5, #7c3aed); color:#fff; font-weight:800; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-size:12.5px; box-shadow:0 2px 8px rgba(79,70,229,0.3); transition:all 0.2s;" title="Chạy hoàn toàn trên trình duyệt bằng mô hình AI và từ điển NLP cún, không cần server">⚡ TÁCH RIÊNG: CHẾ ĐỘ ĐỘC LẬP (OFFLINE)</button>
+              <a href="http://127.0.0.1:8000/index.html" target="_blank" style="background:#059669; color:#fff; font-weight:700; text-decoration:none; border-radius:8px; padding:8px 16px; font-size:12px; display:inline-flex; align-items:center; gap:5px;" title="Mở trang web chuẩn qua cổng 8000 kết nối Python">🌐 Mở http://localhost:8000</a>
+              <button id="btnRetryServerConn" style="background:#f59e0b; color:#0f172a; font-weight:700; border:none; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:12px; transition:all 0.2s;">🔄 Thử lại</button>
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:${isDark ? 'rgba(0,0,0,0.25)' : 'rgba(254,243,199,0.7)'}; padding:8px 12px; border-radius:10px; border:1px solid ${isDark ? 'rgba(245,158,11,0.3)' : '#fde68a'};">
@@ -107,6 +114,16 @@
           </div>
         `;
         document.body.insertBefore(banner, document.body.firstChild);
+
+        const btnSwitchStandalone = document.getElementById('btnSwitchStandalone');
+        if (btnSwitchStandalone) {
+          btnSwitchStandalone.addEventListener('click', () => {
+            localStorage.setItem('pet_lead_mode', 'standalone');
+            banner.style.display = 'none';
+            showToast(currentLang === 'zh' ? '⚡ 已切换至独立模式！直接在浏览器运行，无需Python服务器。' : '⚡ Đã chuyển sang Chế Độ Độc Lập! Lọc cún & bóc tách trực tiếp trên trình duyệt không cần Server.');
+            checkServerConnection();
+          });
+        }
 
         const btnRetry = document.getElementById('btnRetryServerConn');
         if (btnRetry) btnRetry.addEventListener('click', retryServerConnection);
@@ -157,6 +174,27 @@
 
     async function checkServerConnection() {
       const banner = renderServerBanner();
+      const isStandalone = (localStorage.getItem('pet_lead_mode') === 'standalone');
+      if (isStandalone) {
+        banner.style.display = 'none';
+        const statusEl = document.getElementById('lblSystemOnline');
+        if (statusEl) {
+          statusEl.textContent = currentLang === 'zh' ? `● 独立运行模式 (离线AI)` : `● CHẾ ĐỘ ĐỘC LẬP (OFFLINE AI)`;
+          statusEl.style.color = '#a855f7';
+          statusEl.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+          statusEl.style.background = 'rgba(168, 85, 247, 0.12)';
+          statusEl.title = 'Đang chạy độc lập trên trình duyệt không cần Server. Click vào đây nếu muốn kết nối lại Máy chủ Python.';
+          statusEl.style.cursor = 'pointer';
+          statusEl.onclick = () => {
+            if (confirm(currentLang === 'zh' ? '是否切换回Python服务器模式？' : 'Bạn có muốn chuyển lại sang chế độ kết nối Máy chủ Python (Port 8000)?')) {
+              localStorage.removeItem('pet_lead_mode');
+              retryServerConnection();
+            }
+          };
+        }
+        return false;
+      }
+
       try {
         const resp = await fetch(`${API_BASE}/api/system-status`, { signal: AbortSignal.timeout(2200) });
         if (resp.ok) {
@@ -166,6 +204,11 @@
           if (statusEl) {
             statusEl.textContent = currentLang === 'zh' ? `● 系统在线 (${API_BASE})` : `● HỆ THỐNG TRỰC TUYẾN (${API_BASE})`;
             statusEl.style.color = 'var(--emerald)';
+            statusEl.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            statusEl.style.background = 'rgba(16, 185, 129, 0.12)';
+            statusEl.title = 'Đã kết nối máy chủ Python thành công!';
+            statusEl.onclick = null;
+            statusEl.style.cursor = 'default';
           }
           return true;
         }
@@ -185,6 +228,8 @@
       if (statusEl) {
         statusEl.textContent = currentLang === 'zh' ? `● 未连接服务器 (${API_BASE})` : `● CHƯA KẾT NỐI (${API_BASE})`;
         statusEl.style.color = 'var(--rose)';
+        statusEl.style.borderColor = 'rgba(244, 63, 94, 0.3)';
+        statusEl.style.background = 'rgba(244, 63, 94, 0.12)';
       }
       return false;
     }
@@ -1681,8 +1726,24 @@
           rawAvatar = rawAvatar.replace(/([?&])ctp=[sp]\d+x\d+(&|$)/, '$1').replace(/\?&/, '?').replace(/[?&]$/, '');
         }
 
-        // Đảm bảo 100% hồ sơ có Numeric FB_ID
-        let finalFbId = item.fb_id || '';
+        // Đảm bảo 100% hồ sơ có Numeric FB_ID thực tế từ Facebook (Numeric FB_ID Ground Truth)
+        let finalFbId = (item.fb_id || '').toString().trim();
+        const isVanity = url && !/[?&]id=\d+/.test(url) && !/facebook\.com\/(?:people\/[^\/]+\/)?\d{10,}/.test(url);
+        if (!finalFbId || !/^\d{8,}$/.test(finalFbId) || finalFbId.length > 16 || isVanity) {
+          try {
+            const rId = await fetch(`${API_BASE}/api/resolve-id`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: url })
+            });
+            if (rId.ok) {
+              const dId = await rId.json();
+              if (dId && dId.fb_id && /^\d+$/.test(dId.fb_id)) {
+                finalFbId = dId.fb_id;
+              }
+            }
+          } catch (e) {}
+        }
         if (!finalFbId || !/^\d+$/.test(finalFbId)) {
           let hashInt = 0;
           const str = (url || name);
@@ -2957,20 +3018,10 @@
       // =========================================================================
       // 9. BÓC TÁCH BÀI VIẾT GẦN NHẤT & PUBLISH TIME (TRÍCH XUẤT publish_time:"số" & PHÂN TÍCH CON SỐ)
       // =========================================================================
-      const foundTimestamps = [];
-      const htmlFull = document.documentElement ? document.documentElement.innerHTML : '';
-      
-      // Quét chính xác trường publish_time:"số" (hoặc creation_time:"số", story_time:"số")
-      const regexPub = /(?:"publish_time"|publish_time|"creation_time"|creation_time|"story_time"|story_time)\s*:\s*"?(\d{9,13})"?/g;
-      let mPub;
-      while ((mPub = regexPub.exec(htmlFull)) !== null) {
-        const parsed = parsePublishTimestamp(mPub[1]);
-        if (parsed) {
-          foundTimestamps.push(parsed.timestamp);
-        }
-      }
+      const domTimestamps = [];
+      const nowSec = Math.floor(Date.now() / 1000);
 
-      // Quét các script tags tìm website, email, phone
+      // 1. Quét các script tags tìm website, email, phone
       const scripts = document.querySelectorAll('script');
       for (const sc of scripts) {
         const text = sc.textContent || '';
@@ -3000,6 +3051,7 @@
         }
       }
 
+      // 2. Quét trực tiếp bài viết thực tế trên timeline DOM (Ưu tiên tuyệt đối)
       const feed = document.querySelector('div[role="feed"]') || document.querySelector('div[data-pagelet*="Feed"]') || document.querySelector('div[role="main"]') || document.body;
       const postUnits = feed.querySelectorAll('div[data-pagelet*="FeedUnit"], div[role="article"], div[data-pagelet*="ProfileTimeline"]');
       for (const p of postUnits) {
@@ -3015,35 +3067,63 @@
           const utime = timeLink.getAttribute('data-utime') || timeLink.closest('[data-utime]')?.getAttribute('data-utime');
           if (utime) {
             const parsed = parsePublishTimestamp(utime);
-            if (parsed) foundTimestamps.push(parsed.timestamp);
+            if (parsed && parsed.timestamp <= nowSec + 60) domTimestamps.push(parsed.timestamp);
           }
           const rawTxt = (timeLink.innerText || timeLink.getAttribute('aria-label') || '').trim();
           if (rawTxt && !isNotificationOrCommentGarbage(rawTxt)) {
-            const mDur = rawTxt.match(/(\d+)\s*(phút|min|giờ|hour|hr|h|ngày|day|tuần|week|tháng|month|năm|year)(?:[\s·•\-_,]|trước|ago|$)/i);
-            if (mDur) {
-              const num = parseInt(mDur[1], 10);
-              const unit = mDur[2].toLowerCase();
-              let secAgo = 3600;
-              if (unit.startsWith('phút') || unit.startsWith('min')) secAgo = num * 60;
-              else if (unit.startsWith('giờ') || unit.startsWith('hour') || unit.startsWith('hr') || unit === 'h') secAgo = num * 3600;
-              else if (unit.startsWith('ngày') || unit.startsWith('day')) secAgo = num * 86400;
-              else if (unit.startsWith('tuần') || unit.startsWith('week')) secAgo = num * 7 * 86400;
-              else if (unit.startsWith('tháng') || unit.startsWith('month')) secAgo = num * 30 * 86400;
-              else if (unit.startsWith('năm') || unit.startsWith('year')) secAgo = num * 365 * 86400;
-              foundTimestamps.push(Math.floor(Date.now() / 1000) - secAgo);
-            } else if (/vừa xong|just now|hôm nay|today/i.test(rawTxt)) {
-              foundTimestamps.push(Math.floor(Date.now() / 1000) - 1800);
-            } else if (/hôm qua|yesterday/i.test(rawTxt)) {
-              foundTimestamps.push(Math.floor(Date.now() / 1000) - 86400);
+            // Khớp ngày tháng Việt Nam: 19 thg 10 lúc 14:30 hoặc 19 thg 10
+            const mViDate = rawTxt.match(/(\d{1,2})\s+(?:tháng|thg)\s+(\d{1,2})(?:,?\s*(\d{4}))?(?:\s+lúc\s+(\d{1,2}):(\d{2}))?/i);
+            if (mViDate) {
+              const day = parseInt(mViDate[1], 10);
+              const month = parseInt(mViDate[2], 10) - 1;
+              const year = mViDate[3] ? parseInt(mViDate[3], 10) : new Date().getFullYear();
+              const hour = mViDate[4] ? parseInt(mViDate[4], 10) : 12;
+              const min = mViDate[5] ? parseInt(mViDate[5], 10) : 0;
+              const d = new Date(year, month, day, hour, min, 0);
+              const ts = Math.floor(d.getTime() / 1000);
+              if (ts <= nowSec + 60) domTimestamps.push(ts);
+            } else {
+              const mDur = rawTxt.match(/(\d+)\s*(phút|min|giờ|hour|hr|h|ngày|day|tuần|week|tháng|month|năm|year)(?:[\s·•\-_,]|trước|ago|$)/i);
+              if (mDur) {
+                const num = parseInt(mDur[1], 10);
+                const unit = mDur[2].toLowerCase();
+                let secAgo = 3600;
+                if (unit.startsWith('phút') || unit.startsWith('min')) secAgo = num * 60;
+                else if (unit.startsWith('giờ') || unit.startsWith('hour') || unit.startsWith('hr') || unit === 'h') secAgo = num * 3600;
+                else if (unit.startsWith('ngày') || unit.startsWith('day')) secAgo = num * 86400;
+                else if (unit.startsWith('tuần') || unit.startsWith('week')) secAgo = num * 7 * 86400;
+                else if (unit.startsWith('tháng') || unit.startsWith('month')) secAgo = num * 30 * 86400;
+                else if (unit.startsWith('năm') || unit.startsWith('year')) secAgo = num * 365 * 86400;
+                const ts = Math.floor(Date.now() / 1000) - secAgo;
+                if (ts <= nowSec + 60) domTimestamps.push(ts);
+              } else if (/vừa xong|just now|hôm nay|today/i.test(rawTxt)) {
+                domTimestamps.push(Math.floor(Date.now() / 1000) - 1800);
+              } else if (/hôm qua|yesterday/i.test(rawTxt)) {
+                domTimestamps.push(Math.floor(Date.now() / 1000) - 86400);
+              }
             }
           }
         }
-        if (res.latest_post.post_text && foundTimestamps.length > 0) break;
+        if (res.latest_post.post_text && domTimestamps.length > 0) break;
+      }
+
+      // 3. Fallback duy nhất: Nếu DOM timeline không có bài nào, mới quét script regex
+      let finalTimestamps = domTimestamps;
+      if (finalTimestamps.length === 0) {
+        const htmlFull = document.documentElement ? document.documentElement.innerHTML : '';
+        const regexPub = /(?:"post_context"|"creation_story")[\s\S]{0,300}?(?:"publish_time"|"creation_time")\s*:\s*"?(\d{9,12})"?/g;
+        let mPub;
+        while ((mPub = regexPub.exec(htmlFull)) !== null) {
+          const parsed = parsePublishTimestamp(mPub[1]);
+          if (parsed && parsed.timestamp <= nowSec + 60) {
+            finalTimestamps.push(parsed.timestamp);
+          }
+        }
       }
 
       // Tổng hợp và phân tích con số publish_time chuẩn xác
-      if (foundTimestamps.length > 0) {
-        const maxTs = Math.max(...foundTimestamps);
+      if (finalTimestamps.length > 0) {
+        const maxTs = Math.max(...finalTimestamps);
         const parsedTime = parsePublishTimestamp(maxTs);
         if (parsedTime) {
           res.latest_post.publish_timestamp = parsedTime.timestamp;

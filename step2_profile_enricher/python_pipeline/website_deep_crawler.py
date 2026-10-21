@@ -43,7 +43,8 @@ US_CENSUS_FIRST_NAMES = {
     "Scott", "Joan", "Chase", "Darcy", "Rachael", "Karen", "Theresa", "Mary", "Shannon",
     "Daryl", "Helen", "Megan", "Stephanie", "Melissa", "Laura", "Barbara", "Donna", "Carol",
     "Ruth", "Sharon", "Deborah", "Cynthia", "Kathleen", "Shirley", "Brenda", "Pamela", "Emma",
-    "Justin", "Brandon", "Tyler", "Austin", "Zachary", "Kyle", "Noah", "Ethan", "Jeremy"
+    "Justin", "Brandon", "Tyler", "Austin", "Zachary", "Kyle", "Noah", "Ethan", "Jeremy",
+    "Trina", "Tami", "Tammy", "Carly", "Dawn", "Kristin", "Traci", "Tracie"
 }
 
 STOPWORDS = {
@@ -51,7 +52,11 @@ STOPWORDS = {
     'learn more', 'contact us', 'about us', 'puppy application', 'puppies available',
     'home page', 'read more', 'click here', 'site map', 'puppy starter', 'golden retriever',
     'boykin spaniel', 'schnauzer', 'general information', 'available puppies', 'contact',
-    'nutrition guidelines', 'our dogs', 'prices', 'reserve', 'guardian homes', 'pictures'
+    'nutrition guidelines', 'our dogs', 'prices', 'reserve', 'guardian homes', 'pictures',
+    'what we do', 'who we are', 'our mission', 'how it works', 'why choose us',
+    'amazon', 'amazon storefront', 'us amazon storefront', 'storefront', 'amazon shop',
+    'squarespace', 'squarespace ai', 'shopify', 'wix', 'wordpress', 'monday.com', 'forms monday',
+    'preciouspetcaresd', 'skip to content', 'menu', 'navigation'
 }
 
 # Amazon Keywords Taxonomies
@@ -118,11 +123,15 @@ def clean_extracted_name(cand):
         return ""
     c = str(cand).strip()
     c = re.sub(r'^(?:and|or|the|our|with|by|at|hi|hello|meet)\s+', '', c, flags=re.IGNORECASE).strip()
-    if any(st in c.lower() for st in STOPWORDS):
+    low = c.lower()
+    if any(st in low for st in STOPWORDS):
         return ""
     if len(c) < 3 or len(c) > 35:
         return ""
     words = c.split()
+    # Loại bỏ nếu chứa các từ ngữ ngữ pháp hoặc pronouns/verbs
+    if any(w.lower() in {'what', 'we', 'do', 'how', 'it', 'our', 'us', 'the', 'and', 'or', 'is', 'are', 'by', 'with', 'to', 'from', 'for', 'in', 'on', 'at', 'all', 'any', 'storefront', 'amazon', 'squarespace'} for w in words):
+        return ""
     if words and (words[0].capitalize() in US_CENSUS_FIRST_NAMES or len(words) >= 2):
         return c
     return ""
@@ -194,16 +203,18 @@ def crawl_website_details(website_url, timeout=8):
         visited.add(website_url)
         home_soup = BeautifulSoup(resp.text, 'html.parser')
 
-        # Dò tìm các link nội bộ phù hợp
+        # Dò tìm các link nội bộ phù hợp (bao gồm cả Cửa hàng, Phụ kiện, Amazon Storefront lẫn About, Meet Breeder)
         priority_keywords = [
-            'supplies', 'recommend', 'shop', 'resource', 'kit',
-            'about', 'meet', 'story', 'breeder', 'contact',
+            'supplies', 'recommend', 'shop', 'store', 'resource', 'kit',
+            'product', 'gear', 'favorite', 'amazon',
+            'about', 'meet', 'story', 'breeder', 'team', 'contact',
             'puppy', 'puppies', 'application', 'reserve', 'price'
         ]
 
         found_subpages = []
         for a in home_soup.find_all('a', href=True):
             href = a['href']
+            link_text = (a.get_text() or '').strip().lower()
             # Kiểm tra Cloudflare email protection ngay trên trang chủ
             if 'email-protection#' in href:
                 cf_hex = href.split('email-protection#')[-1]
@@ -220,12 +231,14 @@ def crawl_website_details(website_url, timeout=8):
 
             if sub_domain == base_domain and full_link not in visited:
                 path = sub_parsed.path.lower()
-                if any(pk in path for pk in priority_keywords):
+                matches_path = any(pk in path for pk in priority_keywords)
+                matches_text = any(pk in link_text for pk in ['shop', 'store', 'amazon', 'supplies', 'recommended', 'about', 'meet', 'contact', 'team'])
+                if matches_path or matches_text:
                     if full_link not in found_subpages:
                         found_subpages.append(full_link)
 
-        # Lấy tối đa 7 trang con tiềm năng nhất
-        subpages_queue.extend(found_subpages[:7])
+        # Lấy tối đa 8 trang con tiềm năng nhất (cả Shop/Supplies lẫn Breeder/About)
+        subpages_queue.extend(found_subpages[:8])
 
         # 2. Quét tuần tự từng trang con trong Queue
         amazon_links_found = []
@@ -317,6 +330,9 @@ def crawl_website_details(website_url, timeout=8):
                         if not result['amz_link']:
                             result['amz_link'] = href
 
+                        if '/shop/' in href.lower() or '/stores/' in href.lower():
+                            result['amz_has_storefront'] = True
+
                         # Lấy ngữ cảnh văn bản xung quanh thẻ a
                         parent = a.find_parent(['li', 'p', 'tr', 'td', 'div'])
                         context_text = (parent.get_text(separator=' ', strip=True) if parent else a.get_text(strip=True)).lower()
@@ -333,6 +349,15 @@ def crawl_website_details(website_url, timeout=8):
                         if any(k in context_text for k in ['crate', 'carrier', 'shampoo', 'brush', 'probiotic', 'vitamin', 'food', 'collar', 'leash', 'book', 'clipper']):
                             result['amz_has_other'] = True
 
+                # Quét thêm link Amazon Storefront dạng text trực tiếp trong HTML/Text
+                raw_storefronts = re.findall(r'https?://(?:www\.)?amazon\.com/shop/[a-zA-Z0-9_\-\.\/]+', page_html, re.I)
+                for sf in raw_storefronts:
+                    if sf not in amazon_links_found:
+                        amazon_links_found.append(sf)
+                    if not result['amz_link']:
+                        result['amz_link'] = sf
+                    result['amz_has_storefront'] = True
+
             except Exception:
                 continue
 
@@ -344,6 +369,8 @@ def crawl_website_details(website_url, timeout=8):
                 result['amz_cat'] = "Selling artificial grass/pet toilets (TARGET)"
             elif result['amz_has_toys']:
                 result['amz_cat'] = "Selling pet toys"
+            elif result.get('amz_has_storefront') or any('/shop/' in x for x in amazon_links_found):
+                result['amz_cat'] = "Selling on Amazon (Target Storefront)"
             else:
                 result['amz_cat'] = "There's an Amazon link, but no target sales."
         else:

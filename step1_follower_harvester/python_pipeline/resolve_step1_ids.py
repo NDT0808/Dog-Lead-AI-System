@@ -11,29 +11,33 @@ sys.path.insert(0, SCRIPT_DIR)
 from fbid_resolver import resolve_numeric_fbid
 
 def process_item(item, idx, total):
+    import re
     current_id = str(item.get('fb_id') or '').strip()
-    url = item.get('url') or ''
+    url = item.get('url') or item.get('raw_url') or ''
     name = item.get('name') or ''
     
-    if current_id.isdigit():
+    is_vanity = bool(url and not re.search(r'[?&]id=\d{8,}', url) and not re.search(r'facebook\.com/(?:people/[^/]+/)?\d{10,}', url))
+    need_resolve = (not current_id) or (not current_id.isdigit()) or (current_id.startswith('10008') and len(current_id) == 15) or (len(current_id) > 16) or is_vanity
+    
+    if not need_resolve and current_id.isdigit():
         return idx, current_id, 'ALREADY'
         
-    # 1. Check url
+    # 1. Check url via network / SSR HTML
     resolved_id = resolve_numeric_fbid(url)
-    # 2. Check photos / avatar
+    # 2. Check photos / avatar with photo set params
     if not resolved_id:
         for p in item.get('photo_urls', []) + [item.get('avatar_url', '')]:
-            if p:
+            if p and ('set=pb.' in p or 'set=a.' in p or 'fbid=' in p):
                 resolved_id = resolve_numeric_fbid(p)
                 if resolved_id:
                     break
                     
     if resolved_id:
-        print(f"[{idx+1}/{total}] [✓ RESOLVED] {name} -> {resolved_id}", flush=True)
+        print(f"[{idx+1}/{total}] [✓ RESOLVED] {name} ({url}) -> {resolved_id}", flush=True)
         return idx, resolved_id, 'RESOLVED'
     else:
         print(f"[{idx+1}/{total}] [x NOT RESOLVED] {name} | {url}", flush=True)
-        return idx, None, 'FAILED'
+        return idx, current_id, 'FAILED'
 
 def resolve_file(filepath):
     if not os.path.exists(filepath):

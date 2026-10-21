@@ -204,19 +204,24 @@ class DashboardApiHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, *')
+        self.send_header('Access-Control-Allow-Private-Network', 'true')
         self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
         super().end_headers()
 
     def do_OPTIONS(self):
-        self.send_response(200)
+        self.send_response(204)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, *')
+        self.send_header('Access-Control-Allow-Private-Network', 'true')
         self.end_headers()
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
-        # API: Trạng thái hệ thống máy chủ
-        if path == '/api/system-status':
+        # API: Trạng thái hệ thống máy chủ & Health Checks
+        if path in ('/api/system-status', '/api/health', '/api/ping', '/api/status'):
             self.send_json_response({'status': 'ok', 'online': True, 'port': PORT, 'time': time.time()})
             return
 
@@ -406,6 +411,30 @@ class DashboardApiHandler(http.server.SimpleHTTPRequestHandler):
             url = req_data.get('url', '').strip()
             resolved = resolve_numeric_fbid(url) if url else ""
             self.send_json_response({'status': 'ok', 'url': url, 'fb_id': resolved})
+            return
+
+        # API: Giải quyết ID số hàng loạt (Batch Resolve) cho danh sách hồ sơ hoặc URLs
+        if path == '/api/resolve-fbids':
+            items = req_data.get('items', []) or req_data.get('records', [])
+            urls = req_data.get('urls', [])
+            if urls and not items:
+                items = [{'url': u} for u in urls]
+            
+            from concurrent.futures import ThreadPoolExecutor
+            def _res_single(rec):
+                u = rec.get('url', '')
+                cur_id = str(rec.get('fb_id', '')).strip()
+                is_v = bool(u and not re.search(r'[?&]id=\d{8,}', u) and not re.search(r'facebook\.com/(?:people/[^/]+/)?\d{10,}', u))
+                if not cur_id or not cur_id.isdigit() or len(cur_id) > 16 or is_v:
+                    r_id = resolve_numeric_fbid(u)
+                    if r_id:
+                        rec['fb_id'] = r_id
+                return rec
+
+            with ThreadPoolExecutor(max_workers=8) as ex:
+                res_list = list(ex.map(_res_single, items))
+
+            self.send_json_response({'status': 'ok', 'count': len(res_list), 'data': res_list})
             return
 
         # API: Khởi chạy Quét tự động hàng loạt làm giàu hồ sơ Bước 2 (Headless Bulk Scanner)

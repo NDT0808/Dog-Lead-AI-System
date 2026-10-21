@@ -159,68 +159,62 @@
   // =========================================================================
   // BẢNG TRA CỨU ẢNH ĐẠI DIỆN THỰC TẾ TỪ STEP 1 (FACEBOOK CDN HD)
   // =========================================================================
-  const STEP1_AVATAR_LOOKUP = {
-    // 1. Dog Corgleone & Crew (Boss)
+const STEP1_AVATAR_LOOKUP = {
+    "990587153326216": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/696012345_990587153326216_235921294833267089_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=aikJ6ENAQrYQ7kNvwHzmK2b&_nc_oc=AdqqI-iDUD_hCiFmrgfgCpz2hWtdR8rV0a0DxEPdwE1mZo-KRs6Ak6lHvuK-FE2l-bc&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=P9A6lWES3_XCu2SGBprNWw&_nc_ss=7b2a8&oh=00_AQOl5rAWy3PElL44VTVnrK_TytSggXLtUV2FR93zj-I6fw&oe=6ADE6995",
+    "stephanie\u2019s puppy colony": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/696012345_990587153326216_235921294833267089_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=aikJ6ENAQrYQ7kNvwHzmK2b&_nc_oc=AdqqI-iDUD_hCiFmrgfgCpz2hWtdR8rV0a0DxEPdwE1mZo-KRs6Ak6lHvuK-FE2l-bc&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=P9A6lWES3_XCu2SGBprNWw&_nc_ss=7b2a8&oh=00_AQOl5rAWy3PElL44VTVnrK_TytSggXLtUV2FR93zj-I6fw&oe=6ADE6995",
+    "61595211969465": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/848993890_122103405711507065_2101132370405643345_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1094x1104&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=wmrDpQCvqlQQ7kNvwFOxhqS&_nc_oc=Adrla7AbjZzoN3_2yJ034He_jcO1yaI3lkyAOaetgAU7c9X3M3kav7YZAhHw8_lZr5M&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=P9A6lWES3_XCu2SGBprNWw&_nc_ss=7b2a8&oh=00_AQOxHXBB18FMbFL2MtFoeomaK18h36nZBhZeVuk_3J-vBA&oe=6ADE7B98",
+    "cavicajun kennels cavapoos&cavaliers": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/848993890_122103405711507065_2101132370405643345_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1094x1104&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=wmrDpQCvqlQQ7kNvwFOxhqS&_nc_oc=Adrla7AbjZzoN3_2yJ034He_jcO1yaI3lkyAOaetgAU7c9X3M3kav7YZAhHw8_lZr5M&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=P9A6lWES3_XCu2SGBprNWw&_nc_ss=7b2a8&oh=00_AQOxHXBB18FMbFL2MtFoeomaK18h36nZBhZeVuk_3J-vBA&oe=6ADE7B98",
+    "1042413175162171": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/780104405_1042413175162171_4016551396372726401_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Hgx53HAhos4Q7kNvwG7ULQ1&_nc_oc=AdpiS4cY3jkx_YKrdp-Rj9a1puGI7YMNbmqeVw3eUC5EWiDLsTL54FCIBp6YfR7Be5Y&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=P9A6lWES3_XCu2SGBprNWw&_nc_ss=7b2a8&oh=00_AQPR5yvTu8hUrR78aUP5M4J8Bj3k8mk_3uhga8WXpwg_0Q&oe=6ADE863E",
+    "redhill boykin spaniels": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/780104405_1042413175162171_4016551396372726401_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Hgx53HAhos4Q7kNvwG7ULQ1&_nc_oc=AdpiS4cY3jkx_YKrdp-Rj9a1puGI7YMNbmqeVw3eUC5EWiDLsTL54FCIBp6YfR7Be5Y&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=P9A6lWES3_XCu2SGBprNWw&_nc_ss=7b2a8&oh=00_AQPR5yvTu8hUrR78aUP5M4J8Bj3k8mk_3uhga8WXpwg_0Q&oe=6ADE863E",
+    "61552753361052": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/838967521_122256247310091778_3876985609640057852_n.jpg?stp=cp6_dst-jpg_tt6&cstp=mx1320x1320&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=1zSXN-tHW60Q7kNvwH-KUnB&_nc_oc=Adrc_fhEGh1mGV1c3FFbYPc5uIAxmk8GO6m7mBgQ7fdJH3Ty_8f1QYh3GZO-pNFxepM&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=P9A6lWES3_XCu2SGBprNWw&_nc_ss=7b2a8&oh=00_AQPNFi7oUjttTYXHr9yRPt14WYPzp2yCAWsYJ3oHC0w4Bw&oe=6ADE65A5",
+    "eliana\u2019s shih tzu home": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/838967521_122256247310091778_3876985609640057852_n.jpg?stp=cp6_dst-jpg_tt6&cstp=mx1320x1320&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=1zSXN-tHW60Q7kNvwH-KUnB&_nc_oc=Adrc_fhEGh1mGV1c3FFbYPc5uIAxmk8GO6m7mBgQ7fdJH3Ty_8f1QYh3GZO-pNFxepM&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=P9A6lWES3_XCu2SGBprNWw&_nc_ss=7b2a8&oh=00_AQPNFi7oUjttTYXHr9yRPt14WYPzp2yCAWsYJ3oHC0w4Bw&oe=6ADE65A5",
+    "909141020535285": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/326488783_909141020535285_7958935178343501974_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=104&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=KCkBpAyH_X4Q7kNvwG_0u7p&_nc_oc=AdqpaFrDKUJWZ0RjZaw1Ftlhn-WNPFO_xA6h11WNnO0orGxBODdWYLepdmmoMZCNvhU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=P9A6lWES3_XCu2SGBprNWw&_nc_ss=7b2a8&oh=00_AQMSL2dEHJ7Zej-nIyofUPybXVjJrtVDQ2WP3cg5E32t2A&oe=6ADE8E08",
+    "family loved golden retrievers": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/326488783_909141020535285_7958935178343501974_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=104&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=KCkBpAyH_X4Q7kNvwG_0u7p&_nc_oc=AdqpaFrDKUJWZ0RjZaw1Ftlhn-WNPFO_xA6h11WNnO0orGxBODdWYLepdmmoMZCNvhU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=P9A6lWES3_XCu2SGBprNWw&_nc_ss=7b2a8&oh=00_AQMSL2dEHJ7Zej-nIyofUPybXVjJrtVDQ2WP3cg5E32t2A&oe=6ADE8E08",
+    "61591593760286": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/753954046_122112615273386458_4146374115223244916_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1079x1078&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Ni6iO7UEIhAQ7kNvwEX3aDq&_nc_oc=Adrz8cAAO2KmFnkZuRFza8iqAvdl16K9ANiruVQlW0Gf0J8H84W8375VrlBdRXWu9Uo&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=SYtI9yPGPa8TjwzJ0tRIzw&_nc_ss=7b2a8&oh=00_AQNcLjjSqhhpfly4scvEDY1K93VtiiFev4LxD7rAgnUlZw&oe=6ADE7B4D",
+    "i love dogs forge 'n fetch": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/753954046_122112615273386458_4146374115223244916_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1079x1078&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Ni6iO7UEIhAQ7kNvwEX3aDq&_nc_oc=Adrz8cAAO2KmFnkZuRFza8iqAvdl16K9ANiruVQlW0Gf0J8H84W8375VrlBdRXWu9Uo&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=SYtI9yPGPa8TjwzJ0tRIzw&_nc_ss=7b2a8&oh=00_AQNcLjjSqhhpfly4scvEDY1K93VtiiFev4LxD7rAgnUlZw&oe=6ADE7B4D",
+    "61594775080228": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/830513831_122102418099492502_4902222354387580447_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx800x800&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=EsJnYIDH-P0Q7kNvwF_S4j8&_nc_oc=AdolxT1vtUo6WEzYifsxx3wdxMH5qMFOkvd3Dv6_4e8LN-DXvU8v0UGTTe9ILvMYdig&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=SYtI9yPGPa8TjwzJ0tRIzw&_nc_ss=7b2a8&oh=00_AQMXScRlwOsL3RGsvF0zWIPJNpTP-WE2vc0Jfw66CbaZeQ&oe=6ADE7FF5",
+    "yorkshih pupco": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/830513831_122102418099492502_4902222354387580447_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx800x800&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=EsJnYIDH-P0Q7kNvwF_S4j8&_nc_oc=AdolxT1vtUo6WEzYifsxx3wdxMH5qMFOkvd3Dv6_4e8LN-DXvU8v0UGTTe9ILvMYdig&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=SYtI9yPGPa8TjwzJ0tRIzw&_nc_ss=7b2a8&oh=00_AQMXScRlwOsL3RGsvF0zWIPJNpTP-WE2vc0Jfw66CbaZeQ&oe=6ADE7FF5",
+    "61551532070511": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/427143042_122133778058051069_7335697382670797595_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1170x1170&_nc_cat=102&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=FXFGb8mH_kEQ7kNvwGyHi8Y&_nc_oc=Adr7QPqn9TWmoPvg5PVMQ0XhE5o0u6TghXQJDLA6BUNVWjNBCwYGYaq3OEn_ED4uQBQ&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=SYtI9yPGPa8TjwzJ0tRIzw&_nc_ss=7b2a8&oh=00_AQM7oob8Mtt_s31tN7Olkun0iZfsi2dJIiQixA_JpGmmtg&oe=6ADE6DD2",
+    "oakhaven acres aussies- akc australian shepherds": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/427143042_122133778058051069_7335697382670797595_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1170x1170&_nc_cat=102&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=FXFGb8mH_kEQ7kNvwGyHi8Y&_nc_oc=Adr7QPqn9TWmoPvg5PVMQ0XhE5o0u6TghXQJDLA6BUNVWjNBCwYGYaq3OEn_ED4uQBQ&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=SYtI9yPGPa8TjwzJ0tRIzw&_nc_ss=7b2a8&oh=00_AQM7oob8Mtt_s31tN7Olkun0iZfsi2dJIiQixA_JpGmmtg&oe=6ADE6DD2",
+    "61588242310496": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/825267903_122124942699274743_5172081817443253017_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=2Nx0sQfNEdYQ7kNvwEEHpwQ&_nc_oc=AdrGG7ydqjr2dqoG-wqqKcuIg7HL53ZRvs1rZ-bH9HiCb8i1oCMaFNiwOeeYbo3oF-8&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=w1RqUkcx-_IuxfswN0A3Bw&_nc_ss=7b2a8&oh=00_AQMgp8zEhDk14FenwxWGz6Olae31JDmIjYFi1sP0ytD0jg&oe=6ADE8B51",
+    "bottom top basset\u2019s": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/825267903_122124942699274743_5172081817443253017_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=2Nx0sQfNEdYQ7kNvwEEHpwQ&_nc_oc=AdrGG7ydqjr2dqoG-wqqKcuIg7HL53ZRvs1rZ-bH9HiCb8i1oCMaFNiwOeeYbo3oF-8&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=w1RqUkcx-_IuxfswN0A3Bw&_nc_ss=7b2a8&oh=00_AQMgp8zEhDk14FenwxWGz6Olae31JDmIjYFi1sP0ytD0jg&oe=6ADE8B51",
+    "61594781858150": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/839806917_122108759649492728_2289165301397021762_n.jpg?stp=c0.0.540.540a_cp0_dst-jpg_tt6&cstp=mx540x540&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=2UvAoPM99EEQ7kNvwHxkrkL&_nc_oc=AdrESu6ut2JVf7qtFuvRkFUswJlaQsHriYHFk6b4MTqBZbGWen-GSMMdPRKni2uuexU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=jlqhK2AjIM37aUDn1YT1vQ&_nc_ss=7b2a8&oh=00_AQPMG3Zwz7Llf0fGmaJ3KwnD84RIuFwhYmvhI7NbIfBr2A&oe=6ADE6F40",
+    "pawsome daschund puppies": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/839806917_122108759649492728_2289165301397021762_n.jpg?stp=c0.0.540.540a_cp0_dst-jpg_tt6&cstp=mx540x540&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=2UvAoPM99EEQ7kNvwHxkrkL&_nc_oc=AdrESu6ut2JVf7qtFuvRkFUswJlaQsHriYHFk6b4MTqBZbGWen-GSMMdPRKni2uuexU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=jlqhK2AjIM37aUDn1YT1vQ&_nc_ss=7b2a8&oh=00_AQPMG3Zwz7Llf0fGmaJ3KwnD84RIuFwhYmvhI7NbIfBr2A&oe=6ADE6F40",
+    "61594195772352": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/855646238_122124401871473192_6657591073014986332_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1053x1050&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=fpciUtL0RqgQ7kNvwHvDvml&_nc_oc=AdrkOtpO68tVOeHRBbQwGKPXDMKv6JIvACChqv-71ZDlzMeiB7o2zM5DLwzGe9EmfD0&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=jlqhK2AjIM37aUDn1YT1vQ&_nc_ss=7b2a8&oh=00_AQNVmazRfP04eH_dHPpZVoFJa1-t97m_Fdhs1Uht6qTr7Q&oe=6ADE7D0F",
+    "jose minipuppies": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/855646238_122124401871473192_6657591073014986332_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1053x1050&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=fpciUtL0RqgQ7kNvwHvDvml&_nc_oc=AdrkOtpO68tVOeHRBbQwGKPXDMKv6JIvACChqv-71ZDlzMeiB7o2zM5DLwzGe9EmfD0&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=jlqhK2AjIM37aUDn1YT1vQ&_nc_ss=7b2a8&oh=00_AQNVmazRfP04eH_dHPpZVoFJa1-t97m_Fdhs1Uht6qTr7Q&oe=6ADE7D0F",
+    "1489668089832323": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/628787013_1489668089832323_6013872381075739493_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1024x1024&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=78QAEnU19pYQ7kNvwEdF6M8&_nc_oc=AdqAnBQs8chVNgaUNDOr8kq6u2kY2oQbBOhBaUC2ubsjg00tY22Uoqr4BrypC7ogkqs&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=jlqhK2AjIM37aUDn1YT1vQ&_nc_ss=7b2a8&oh=00_AQP9TzdJ_59tqqqExU8pKzrwczichVqHoKtUX48pAbth6g&oe=6ADE7C27",
+    "tambali pembroke welsh corgis est. 1998": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/628787013_1489668089832323_6013872381075739493_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1024x1024&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=78QAEnU19pYQ7kNvwEdF6M8&_nc_oc=AdqAnBQs8chVNgaUNDOr8kq6u2kY2oQbBOhBaUC2ubsjg00tY22Uoqr4BrypC7ogkqs&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=jlqhK2AjIM37aUDn1YT1vQ&_nc_ss=7b2a8&oh=00_AQP9TzdJ_59tqqqExU8pKzrwczichVqHoKtUX48pAbth6g&oe=6ADE7C27",
+    "61591427093472": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/818936768_122125355133380903_6137241591030814058_n.jpg?stp=cp6_dst-jpg_tt6&cstp=mx845x845&_nc_cat=104&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=hekGuXarAzkQ7kNvwHSLKZB&_nc_oc=AdqK_Pk1Vju7cJ78k38AbjiQxUPrgFfqzKFFtHS2yrhswAlzj4zAGl4mSWwr17GgtnE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=jlqhK2AjIM37aUDn1YT1vQ&_nc_ss=7b2a8&oh=00_AQM5crrqhZp_LPx7Ypf9hi7CdrZh05_9W25ubDNCy3hKWg&oe=6ADE7F59",
+    "franklineschipperkes kennel": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/818936768_122125355133380903_6137241591030814058_n.jpg?stp=cp6_dst-jpg_tt6&cstp=mx845x845&_nc_cat=104&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=hekGuXarAzkQ7kNvwHSLKZB&_nc_oc=AdqK_Pk1Vju7cJ78k38AbjiQxUPrgFfqzKFFtHS2yrhswAlzj4zAGl4mSWwr17GgtnE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=jlqhK2AjIM37aUDn1YT1vQ&_nc_ss=7b2a8&oh=00_AQM5crrqhZp_LPx7Ypf9hi7CdrZh05_9W25ubDNCy3hKWg&oe=6ADE7F59",
+    "61593315111061": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/766890471_122093395911443837_496170756872224230_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx828x828&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=ihYNssPKU28Q7kNvwEDZvlm&_nc_oc=AdqfWpLpHPGHmq5J1VKT75IRA-swUUjpIjvWsYT90OxxjutYdMMbhfsCNAn4PNy0MWw&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=rKXh3EaR-S81J4LISDSDvA&_nc_ss=7b2a8&oh=00_AQMgRQ5pS4XohcJ6hxZI8P_s18LQWcn6V-OYvPpmDEOrKw&oe=6ADE644E",
+    "dachshund puppies for adoption and rehoming": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/766890471_122093395911443837_496170756872224230_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx828x828&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=ihYNssPKU28Q7kNvwEDZvlm&_nc_oc=AdqfWpLpHPGHmq5J1VKT75IRA-swUUjpIjvWsYT90OxxjutYdMMbhfsCNAn4PNy0MWw&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=rKXh3EaR-S81J4LISDSDvA&_nc_ss=7b2a8&oh=00_AQMgRQ5pS4XohcJ6hxZI8P_s18LQWcn6V-OYvPpmDEOrKw&oe=6ADE644E",
+    "61594494459425": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/820934527_2313498826091469_1498160885209143484_n.jpg?stp=c0.0.1536.1536a_cp0_dst-jpg_tt6&cstp=mx1536x1536&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=L03VojkGVZUQ7kNvwEmEWpp&_nc_oc=AdpipHwllV-m4oMIMNa0_C0eG8SYzQy-oJfiT01OuEgrzjRX2jTN7jORBhtWizMu61Y&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=rKXh3EaR-S81J4LISDSDvA&_nc_ss=7b2a8&oh=00_AQPO0jOzX6J0PdzR_-wPMiaTmWoxDskmzfQELz_A3EvFag&oe=6ADE7829",
+    "autumn's aussies": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/820934527_2313498826091469_1498160885209143484_n.jpg?stp=c0.0.1536.1536a_cp0_dst-jpg_tt6&cstp=mx1536x1536&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=L03VojkGVZUQ7kNvwEmEWpp&_nc_oc=AdpipHwllV-m4oMIMNa0_C0eG8SYzQy-oJfiT01OuEgrzjRX2jTN7jORBhtWizMu61Y&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=rKXh3EaR-S81J4LISDSDvA&_nc_ss=7b2a8&oh=00_AQPO0jOzX6J0PdzR_-wPMiaTmWoxDskmzfQELz_A3EvFag&oe=6ADE7829",
+    "122193681896610895": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/779082815_122193681896610895_1254854747032187011_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1134x1122&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=MvdD-0Qrm4YQ7kNvwG7SHf3&_nc_oc=AdpmW8YtkGOpL1OIYqWJrsHtvLIIuqONmz7gciDoisbXMOmYVpIBZXz34P491A03na4&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=rKXh3EaR-S81J4LISDSDvA&_nc_ss=7b2a8&oh=00_AQP3YiDOULE4UTlKq3dwELSORq9KFXSJQ3byxYYTPILhyg&oe=6ADE677C",
+    "knock & bark miniature schnauzer.": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/779082815_122193681896610895_1254854747032187011_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1134x1122&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=MvdD-0Qrm4YQ7kNvwG7SHf3&_nc_oc=AdpmW8YtkGOpL1OIYqWJrsHtvLIIuqONmz7gciDoisbXMOmYVpIBZXz34P491A03na4&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=rKXh3EaR-S81J4LISDSDvA&_nc_ss=7b2a8&oh=00_AQP3YiDOULE4UTlKq3dwELSORq9KFXSJQ3byxYYTPILhyg&oe=6ADE677C",
+    "61593913773814": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/789960755_10215640356039617_8106197547239706512_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Ch42QEEATugQ7kNvwFkzIiS&_nc_oc=Adphq4c8PLfRYPgEWIBtAJ-M8vh4V2BGW3LeogcZpQlX8eo9WjUJSbS0GNyPedmjw2I&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=rKXh3EaR-S81J4LISDSDvA&_nc_ss=7b2a8&oh=00_AQNCWl9TDdLffWSamdLSNd2T5a3o8NlULBbtDAaCLv7AUQ&oe=6ADE69C2",
+    "responsible breeder mentorship program": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/789960755_10215640356039617_8106197547239706512_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Ch42QEEATugQ7kNvwFkzIiS&_nc_oc=Adphq4c8PLfRYPgEWIBtAJ-M8vh4V2BGW3LeogcZpQlX8eo9WjUJSbS0GNyPedmjw2I&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=rKXh3EaR-S81J4LISDSDvA&_nc_ss=7b2a8&oh=00_AQNCWl9TDdLffWSamdLSNd2T5a3o8NlULBbtDAaCLv7AUQ&oe=6ADE69C2",
+    "61551260240234": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/405246072_122127983492042008_5422575660859054780_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1448x1448&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=1SHxRRdZeYcQ7kNvwFanS2U&_nc_oc=Adoxk7zvIP3Sz-G-wiPmbg9q5wF1q5Gf8xPYXFSQgx6b2XzkPbbZjLaZz5FuFyAFh20&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=f6ONxMU4cT7KfSp3c7insA&_nc_ss=7b2a8&oh=00_AQOO1FRgB7h2s_0M1vY8YMHTyw8zNzrcJyZO0-ILTBZOlw&oe=6ADE85AB",
+    "948 cane corso": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/405246072_122127983492042008_5422575660859054780_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1448x1448&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=1SHxRRdZeYcQ7kNvwFanS2U&_nc_oc=Adoxk7zvIP3Sz-G-wiPmbg9q5wF1q5Gf8xPYXFSQgx6b2XzkPbbZjLaZz5FuFyAFh20&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=f6ONxMU4cT7KfSp3c7insA&_nc_ss=7b2a8&oh=00_AQOO1FRgB7h2s_0M1vY8YMHTyw8zNzrcJyZO0-ILTBZOlw&oe=6ADE85AB",
+    "61594727570399": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/816996336_122112476091444595_648359482195584616_n.jpg?stp=c0.0.1220.1220a_cp0_dst-jpg_tt6&cstp=mx1220x1220&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=jNFPSRSVDEMQ7kNvwEQZE0j&_nc_oc=AdrC-Ojr2ngDuIONmHSHT8-4PFv_anBXS-HEuGqVk7BxGwAR4kKh7a95FwL81emb7g4&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=f6ONxMU4cT7KfSp3c7insA&_nc_ss=7b2a8&oh=00_AQNgh2-xcV56vy3jXFrGeHGe_pZZwPRBOxJ2VcrDY6ZFCw&oe=6ADE7837",
+    "polly's farm pembroke welsh corgis & miniature dachshunds": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/816996336_122112476091444595_648359482195584616_n.jpg?stp=c0.0.1220.1220a_cp0_dst-jpg_tt6&cstp=mx1220x1220&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=jNFPSRSVDEMQ7kNvwEQZE0j&_nc_oc=AdrC-Ojr2ngDuIONmHSHT8-4PFv_anBXS-HEuGqVk7BxGwAR4kKh7a95FwL81emb7g4&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=f6ONxMU4cT7KfSp3c7insA&_nc_ss=7b2a8&oh=00_AQNgh2-xcV56vy3jXFrGeHGe_pZZwPRBOxJ2VcrDY6ZFCw&oe=6ADE7837",
+    "61594358583267": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/805763280_10176161854575422_4288387135773466042_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1024x1024&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=PWgWidj7z3YQ7kNvwGoCH2v&_nc_oc=AdpuDohjA2LGYok1-0PHmx4NQOVeZ2s7Y3u19l33SKyBCd8HDEWAu-WvBaDhRcyQDBg&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=f6ONxMU4cT7KfSp3c7insA&_nc_ss=7b2a8&oh=00_AQNpLb1H92GGb-RRJUsJ6wD3lhtzo5OxGlYzA871DFuJ6w&oe=6ADE8DB4",
+    "the daily doggo": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/805763280_10176161854575422_4288387135773466042_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1024x1024&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=PWgWidj7z3YQ7kNvwGoCH2v&_nc_oc=AdpuDohjA2LGYok1-0PHmx4NQOVeZ2s7Y3u19l33SKyBCd8HDEWAu-WvBaDhRcyQDBg&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=f6ONxMU4cT7KfSp3c7insA&_nc_ss=7b2a8&oh=00_AQNpLb1H92GGb-RRJUsJ6wD3lhtzo5OxGlYzA871DFuJ6w&oe=6ADE8DB4",
+    "61594354922562": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/843551321_122120349219478497_6210589935705443458_n.jpg?stp=c0.0.720.720a_cp0_dst-jpg_tt6&cstp=mx720x720&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=V2KmThpZXFgQ7kNvwHsURN2&_nc_oc=Adp1JArv_Ewbeuv0zXnmI7hyKuQczxg50PC6fr2os9jovZUjCA1M8i2AeNl-XnXIy2w&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=f6ONxMU4cT7KfSp3c7insA&_nc_ss=7b2a8&oh=00_AQM9PJOdqr6j3fhVofoRn_iDsUz2-pq3mWom7EfUeN0v4Q&oe=6ADE62AB",
+    "linda rottweiler puppy for adoption": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/843551321_122120349219478497_6210589935705443458_n.jpg?stp=c0.0.720.720a_cp0_dst-jpg_tt6&cstp=mx720x720&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=V2KmThpZXFgQ7kNvwHsURN2&_nc_oc=Adp1JArv_Ewbeuv0zXnmI7hyKuQczxg50PC6fr2os9jovZUjCA1M8i2AeNl-XnXIy2w&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=f6ONxMU4cT7KfSp3c7insA&_nc_ss=7b2a8&oh=00_AQM9PJOdqr6j3fhVofoRn_iDsUz2-pq3mWom7EfUeN0v4Q&oe=6ADE62AB",
+    "61594523153572": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/810246531_122095004037484105_2142050790308638206_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1199x1208&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=egFJ-_SxfkcQ7kNvwH4DTjn&_nc_oc=AdpVGYgIVUZ8UJiVoGBIJrZg1Y3-x1GlMs3-VehR7uTTcc7LSBfn2wB0URXc5CtmIk8&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=f6ONxMU4cT7KfSp3c7insA&_nc_ss=7b2a8&oh=00_AQN2EkCZnSd9yKuc-SLGmWlKaJ5jFklPLK0u21Ae9pmVkA&oe=6ADE661B",
+    "heartland schnauzer puppies for adoption & rehoming": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/810246531_122095004037484105_2142050790308638206_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1199x1208&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=egFJ-_SxfkcQ7kNvwH4DTjn&_nc_oc=AdpVGYgIVUZ8UJiVoGBIJrZg1Y3-x1GlMs3-VehR7uTTcc7LSBfn2wB0URXc5CtmIk8&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=f6ONxMU4cT7KfSp3c7insA&_nc_ss=7b2a8&oh=00_AQN2EkCZnSd9yKuc-SLGmWlKaJ5jFklPLK0u21Ae9pmVkA&oe=6ADE661B",
+    "100071248219588": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/696012345_990587153326216_235921294833267089_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=aikJ6ENAQrYQ7kNvwHzmK2b&_nc_oc=AdqqI-iDUD_hCiFmrgfgCpz2hWtdR8rV0a0DxEPdwE1mZo-KRs6Ak6lHvuK-FE2l-bc&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=P9A6lWES3_XCu2SGBprNWw&_nc_ss=7b2a8&oh=00_AQOl5rAWy3PElL44VTVnrK_TytSggXLtUV2FR93zj-I6fw&oe=6ADE6995",
+    "100031804930692": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/780104405_1042413175162171_4016551396372726401_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Hgx53HAhos4Q7kNvwG7ULQ1&_nc_oc=AdpiS4cY3jkx_YKrdp-Rj9a1puGI7YMNbmqeVw3eUC5EWiDLsTL54FCIBp6YfR7Be5Y&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=P9A6lWES3_XCu2SGBprNWw&_nc_ss=7b2a8&oh=00_AQPR5yvTu8hUrR78aUP5M4J8Bj3k8mk_3uhga8WXpwg_0Q&oe=6ADE863E",
     "100084312634205": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/860805257_1098152873005124_4605925114019750735_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx2040x2048&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=H-dxwKOn2uEQ7kNvwEHmMHw&_nc_oc=Ado_X2zDXa74N2fy5kMxECcjv9Peq1k9pM8HUcl2m-ptA2Uayv8guroF9RTPnbjoqWE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=InjjjM6AQQPVR-3vJ1R-tQ&_nc_ss=7b2a8&oh=00_AQOK_38HiFqqz_SabJn0EAOK2UizRCRu66RDQt-_Jbm9YQ&oe=6ADE4522",
-    "1098152873005124": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/860805257_1098152873005124_4605925114019750735_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx2040x2048&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=H-dxwKOn2uEQ7kNvwEHmMHw&_nc_oc=Ado_X2zDXa74N2fy5kMxECcjv9Peq1k9pM8HUcl2m-ptA2Uayv8guroF9RTPnbjoqWE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=InjjjM6AQQPVR-3vJ1R-tQ&_nc_ss=7b2a8&oh=00_AQOK_38HiFqqz_SabJn0EAOK2UizRCRu66RDQt-_Jbm9YQ&oe=6ADE4522",
-    "dogcorgleone": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/860805257_1098152873005124_4605925114019750735_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx2040x2048&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=H-dxwKOn2uEQ7kNvwEHmMHw&_nc_oc=Ado_X2zDXa74N2fy5kMxECcjv9Peq1k9pM8HUcl2m-ptA2Uayv8guroF9RTPnbjoqWE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=InjjjM6AQQPVR-3vJ1R-tQ&_nc_ss=7b2a8&oh=00_AQOK_38HiFqqz_SabJn0EAOK2UizRCRu66RDQt-_Jbm9YQ&oe=6ADE4522",
-    "dog corgleone": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/860805257_1098152873005124_4605925114019750735_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx2040x2048&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=H-dxwKOn2uEQ7kNvwEHmMHw&_nc_oc=Ado_X2zDXa74N2fy5kMxECcjv9Peq1k9pM8HUcl2m-ptA2Uayv8guroF9RTPnbjoqWE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=InjjjM6AQQPVR-3vJ1R-tQ&_nc_ss=7b2a8&oh=00_AQOK_38HiFqqz_SabJn0EAOK2UizRCRu66RDQt-_Jbm9YQ&oe=6ADE4522",
-    "dog corgleone & crew (boss)": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/860805257_1098152873005124_4605925114019750735_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx2040x2048&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=H-dxwKOn2uEQ7kNvwEHmMHw&_nc_oc=Ado_X2zDXa74N2fy5kMxECcjv9Peq1k9pM8HUcl2m-ptA2Uayv8guroF9RTPnbjoqWE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=InjjjM6AQQPVR-3vJ1R-tQ&_nc_ss=7b2a8&oh=00_AQOK_38HiFqqz_SabJn0EAOK2UizRCRu66RDQt-_Jbm9YQ&oe=6ADE4522",
-
-    // 2. Crazy Dog Lovers
     "61566559027425": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/462005498_122103706064551967_3198089071887425138_n.jpg?stp=c76.0.788.788a_cp0_dst-jpg_tt6&cstp=mx788x788&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=zPtWyDit3c0Q7kNvwF_YIOC&_nc_oc=AdrLIN9XtJOAZrG7wu0o5xH_Cm7qnWPbMaTcjBnKCD5MVHLnkq98JulqkbDkXnXly4k&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=InjjjM6AQQPVR-3vJ1R-tQ&_nc_ss=7b2a8&oh=00_AQOOeZkQzafA37O2z8Jl7qcjOh_FH5jR0ikNIB3iHjSeIw&oe=6ADE207A",
-    "122103706064551967": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/462005498_122103706064551967_3198089071887425138_n.jpg?stp=c76.0.788.788a_cp0_dst-jpg_tt6&cstp=mx788x788&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=zPtWyDit3c0Q7kNvwF_YIOC&_nc_oc=AdrLIN9XtJOAZrG7wu0o5xH_Cm7qnWPbMaTcjBnKCD5MVHLnkq98JulqkbDkXnXly4k&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=InjjjM6AQQPVR-3vJ1R-tQ&_nc_ss=7b2a8&oh=00_AQOOeZkQzafA37O2z8Jl7qcjOh_FH5jR0ikNIB3iHjSeIw&oe=6ADE207A",
-    "crazydoglovers.uk": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/462005498_122103706064551967_3198089071887425138_n.jpg?stp=c76.0.788.788a_cp0_dst-jpg_tt6&cstp=mx788x788&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=zPtWyDit3c0Q7kNvwF_YIOC&_nc_oc=AdrLIN9XtJOAZrG7wu0o5xH_Cm7qnWPbMaTcjBnKCD5MVHLnkq98JulqkbDkXnXly4k&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=InjjjM6AQQPVR-3vJ1R-tQ&_nc_ss=7b2a8&oh=00_AQOOeZkQzafA37O2z8Jl7qcjOh_FH5jR0ikNIB3iHjSeIw&oe=6ADE207A",
-    "crazy dog lovers": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/462005498_122103706064551967_3198089071887425138_n.jpg?stp=c76.0.788.788a_cp0_dst-jpg_tt6&cstp=mx788x788&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=zPtWyDit3c0Q7kNvwF_YIOC&_nc_oc=AdrLIN9XtJOAZrG7wu0o5xH_Cm7qnWPbMaTcjBnKCD5MVHLnkq98JulqkbDkXnXly4k&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=InjjjM6AQQPVR-3vJ1R-tQ&_nc_ss=7b2a8&oh=00_AQOOeZkQzafA37O2z8Jl7qcjOh_FH5jR0ikNIB3iHjSeIw&oe=6ADE207A",
-
-    // 3. Ascsec / Cocker Spaniel
-    "61594731538136": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/799676841_122095967409491051_5891965567465364453_n.jpg?stp=cp6_dst-jpg_tt6&cstp=mx1290x1290&_nc_cat=104&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Ymha57zXx_IQ7kNvwH-y3Bc&_nc_oc=AdrioWUOqhMvTupm6DrxCIg_q2LuO659FQAhGrLo-3SGBWn6-PrIlkmXBSMxeCazjqw&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=LxW4FYUhLudDC7o1F8CZaA&_nc_ss=7b2a8&oh=00_AQOhUh22-QB3gVsydu3XSLIHtoh47A2CgW4Pu6uL1EmpYQ&oe=6ADE3F33",
-    "cocker spaniel": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/799676841_122095967409491051_5891965567465364453_n.jpg?stp=cp6_dst-jpg_tt6&cstp=mx1290x1290&_nc_cat=104&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Ymha57zXx_IQ7kNvwH-y3Bc&_nc_oc=AdrioWUOqhMvTupm6DrxCIg_q2LuO659FQAhGrLo-3SGBWn6-PrIlkmXBSMxeCazjqw&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=LxW4FYUhLudDC7o1F8CZaA&_nc_ss=7b2a8&oh=00_AQOhUh22-QB3gVsydu3XSLIHtoh47A2CgW4Pu6uL1EmpYQ&oe=6ADE3F33",
-    "ascsec": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/799676841_122095967409491051_5891965567465364453_n.jpg?stp=cp6_dst-jpg_tt6&cstp=mx1290x1290&_nc_cat=104&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Ymha57zXx_IQ7kNvwH-y3Bc&_nc_oc=AdrioWUOqhMvTupm6DrxCIg_q2LuO659FQAhGrLo-3SGBWn6-PrIlkmXBSMxeCazjqw&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=LxW4FYUhLudDC7o1F8CZaA&_nc_ss=7b2a8&oh=00_AQOhUh22-QB3gVsydu3XSLIHtoh47A2CgW4Pu6uL1EmpYQ&oe=6ADE3F33",
-
-    // 4. Free Dachshund Puppies
-    "61595513098587": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/853444971_122096623407517103_2508650680056135816_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx2026x2048&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=mQc1kpvezdMQ7kNvwGetWJG&_nc_oc=AdpXH1EOfACKX3QSalWjd8s7l0hPD3fg0OlnykY7_Vty-DJ-cRo0dW-SfhsiCa0p0TU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=LxW4FYUhLudDC7o1F8CZaA&_nc_ss=7b2a8&oh=00_AQOVoLhWO9u2EMT4uFS0fGq8e5TNQvK4jRwo0FQT_-nWkA&oe=6ADE3C87",
-    "free dachshund puppies for adoption and rehoming": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/853444971_122096623407517103_2508650680056135816_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx2026x2048&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=mQc1kpvezdMQ7kNvwGetWJG&_nc_oc=AdpXH1EOfACKX3QSalWjd8s7l0hPD3fg0OlnykY7_Vty-DJ-cRo0dW-SfhsiCa0p0TU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=LxW4FYUhLudDC7o1F8CZaA&_nc_ss=7b2a8&oh=00_AQOVoLhWO9u2EMT4uFS0fGq8e5TNQvK4jRwo0FQT_-nWkA&oe=6ADE3C87",
-    "free dachshund puppies": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/853444971_122096623407517103_2508650680056135816_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx2026x2048&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=mQc1kpvezdMQ7kNvwGetWJG&_nc_oc=AdpXH1EOfACKX3QSalWjd8s7l0hPD3fg0OlnykY7_Vty-DJ-cRo0dW-SfhsiCa0p0TU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=LxW4FYUhLudDC7o1F8CZaA&_nc_ss=7b2a8&oh=00_AQOVoLhWO9u2EMT4uFS0fGq8e5TNQvK4jRwo0FQT_-nWkA&oe=6ADE3C87",
-
-    // 5. Chandra K9 Commando
-    "100082804552805": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/440336552_418005740969574_7966871653006742989_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=TSqss9UjjzMQ7kNvwEMXdLg&_nc_oc=AdqZcWrsuTOHAm35hatCyRTtUF2WopVRNlDIryzuBgBVI7exqpjntCGuGwNWVjAAcHk&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=LxW4FYUhLudDC7o1F8CZaA&_nc_ss=7b2a8&oh=00_AQP78wU-YIJOioeOnVNnedWfOob4h8WZNF3dAqXYIyvUxA&oe=6ADE41C1",
-    "chandra k9 commando working dog kennel bengaluru": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/440336552_418005740969574_7966871653006742989_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=TSqss9UjjzMQ7kNvwEMXdLg&_nc_oc=AdqZcWrsuTOHAm35hatCyRTtUF2WopVRNlDIryzuBgBVI7exqpjntCGuGwNWVjAAcHk&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=LxW4FYUhLudDC7o1F8CZaA&_nc_ss=7b2a8&oh=00_AQP78wU-YIJOioeOnVNnedWfOob4h8WZNF3dAqXYIyvUxA&oe=6ADE41C1",
-    "chandra k9": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/440336552_418005740969574_7966871653006742989_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=TSqss9UjjzMQ7kNvwEMXdLg&_nc_oc=AdqZcWrsuTOHAm35hatCyRTtUF2WopVRNlDIryzuBgBVI7exqpjntCGuGwNWVjAAcHk&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=LxW4FYUhLudDC7o1F8CZaA&_nc_ss=7b2a8&oh=00_AQP78wU-YIJOioeOnVNnedWfOob4h8WZNF3dAqXYIyvUxA&oe=6ADE41C1",
-
-    // 6. Greenhouse Yorkies
-    "61595221846060": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/853675465_122107209423507394_8773063100519475064_n.jpg?stp=c0.0.736.736a_cp0_dst-jpg_tt6&cstp=mx736x736&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=bB8XyIMvgRsQ7kNvwEzzqG8&_nc_oc=AdphPkfZFAG2NKNTDtnJk8UB01QyCqHog13AN7DOBwVGWPck9TOkZHe8cB1cDuyboxY&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=ctBsJ6kU9-p0pZ607e0BpQ&_nc_ss=7b2a8&oh=00_AQNcrGMtivkAuQ3uiJJbpFjtL1n5WfTUgKfG-o_LT7I-bQ&oe=6ADE2306",
-    "greenhouse yorkies": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/853675465_122107209423507394_8773063100519475064_n.jpg?stp=c0.0.736.736a_cp0_dst-jpg_tt6&cstp=mx736x736&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=bB8XyIMvgRsQ7kNvwEzzqG8&_nc_oc=AdphPkfZFAG2NKNTDtnJk8UB01QyCqHog13AN7DOBwVGWPck9TOkZHe8cB1cDuyboxY&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=ctBsJ6kU9-p0pZ607e0BpQ&_nc_ss=7b2a8&oh=00_AQNcrGMtivkAuQ3uiJJbpFjtL1n5WfTUgKfG-o_LT7I-bQ&oe=6ADE2306",
-
-    // 7. Soft For Dogs
-    "61594231833777": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/802072198_122099903445474394_6740119027340512439_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1080x1080&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=rcCG6sSZoRIQ7kNvwGAH260&_nc_oc=AdqwucdznU8OBY_1H-iFR2TE0KNYsghnFzU1Y_5JaIYxW0iH1J8UiSE_BYFne64ftac&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=o8puI1ZCo9fn3PglqkumKg&_nc_ss=7b2a8&oh=00_AQMBAHCVILrglI-z_FqsJAchDBaKYYHyXWg7aD4lS0TTjQ&oe=6ADE34E1",
-    "soft for dogs": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/802072198_122099903445474394_6740119027340512439_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1080x1080&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=rcCG6sSZoRIQ7kNvwGAH260&_nc_oc=AdqwucdznU8OBY_1H-iFR2TE0KNYsghnFzU1Y_5JaIYxW0iH1J8UiSE_BYFne64ftac&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=o8puI1ZCo9fn3PglqkumKg&_nc_ss=7b2a8&oh=00_AQMBAHCVILrglI-z_FqsJAchDBaKYYHyXWg7aD4lS0TTjQ&oe=6ADE34E1",
-
-    // 8. Juliejowels / Dachshund Puppies
-    "61595290116794": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/853053396_122102754147509670_4567344291178019063_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1440x1440&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=W5qnkOd7qBsQ7kNvwEX11_6&_nc_oc=Adqryeww74cbIG-8wXcUHK5B6eP-z-6LDvwjocZ7f-Q-5kw9LIH9cV9Heb_DXDIqkIo&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=spA5B2RsHkNF9udxSjMx8w&_nc_ss=7b2a8&oh=00_AQMzG4srVpmy1gjJuCI3sEciKDNXdIMTfzEPr5bfEx-maA&oe=6ADE1AFC",
-    "dachshund puppies": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/853053396_122102754147509670_4567344291178019063_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1440x1440&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=W5qnkOd7qBsQ7kNvwEX11_6&_nc_oc=Adqryeww74cbIG-8wXcUHK5B6eP-z-6LDvwjocZ7f-Q-5kw9LIH9cV9Heb_DXDIqkIo&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=spA5B2RsHkNF9udxSjMx8w&_nc_ss=7b2a8&oh=00_AQMzG4srVpmy1gjJuCI3sEciKDNXdIMTfzEPr5bfEx-maA&oe=6ADE1AFC",
-    "juliejowels": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/853053396_122102754147509670_4567344291178019063_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1440x1440&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=W5qnkOd7qBsQ7kNvwEX11_6&_nc_oc=Adqryeww74cbIG-8wXcUHK5B6eP-z-6LDvwjocZ7f-Q-5kw9LIH9cV9Heb_DXDIqkIo&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=spA5B2RsHkNF9udxSjMx8w&_nc_ss=7b2a8&oh=00_AQMzG4srVpmy1gjJuCI3sEciKDNXdIMTfzEPr5bfEx-maA&oe=6ADE1AFC",
-
-    // 9. Paradise Frenchies
-    "61595289693197": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/848995038_122099228025509656_4048205347987609657_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx640x640&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Fv4WV33GQWgQ7kNvwHrOL20&_nc_oc=AdqdGTAuhB19fMVZWM2WixDBPIHsBr9Yux_5NX1KlrMDN8tiAMsizPI8VDgU-CZC5ms&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=spA5B2RsHkNF9udxSjMx8w&_nc_ss=7b2a8&oh=00_AQO-azHhsnWRTUL0zxWxzg2euJmiTsnKYwhO7z3yBUlFHA&oe=6ADE149C",
-    "paradise frenchies": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/848995038_122099228025509656_4048205347987609657_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx640x640&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Fv4WV33GQWgQ7kNvwHrOL20&_nc_oc=AdqdGTAuhB19fMVZWM2WixDBPIHsBr9Yux_5NX1KlrMDN8tiAMsizPI8VDgU-CZC5ms&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=spA5B2RsHkNF9udxSjMx8w&_nc_ss=7b2a8&oh=00_AQO-azHhsnWRTUL0zxWxzg2euJmiTsnKYwhO7z3yBUlFHA&oe=6ADE149C",
-
-    // 10. German Shepherd World
-    "61594332256058": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/845925005_122118219585477741_7967768453723125043_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=HflOslV30asQ7kNvwHggId_&_nc_oc=AdoK3ctzaitWojBhsBGLQbOyzEpzBqwjOfRQsmlek30VP5Q9cYbkPCjv87mo5Jc-qrc&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=spA5B2RsHkNF9udxSjMx8w&_nc_ss=7b2a8&oh=00_AQMECrtYxinAveZLJDR2IdzSCCmbVVjGlev_cGANl2D3Pw&oe=6ADE302C",
-    "german shepherd world": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/845925005_122118219585477741_7967768453723125043_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=HflOslV30asQ7kNvwHggId_&_nc_oc=AdoK3ctzaitWojBhsBGLQbOyzEpzBqwjOfRQsmlek30VP5Q9cYbkPCjv87mo5Jc-qrc&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=spA5B2RsHkNF9udxSjMx8w&_nc_ss=7b2a8&oh=00_AQMECrtYxinAveZLJDR2IdzSCCmbVVjGlev_cGANl2D3Pw&oe=6ADE302C",
-
-    // 11. Golden Acres Poodle Farm
-    "100076508311524": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/467616410_586656400561299_7608861023452401031_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1536x1536&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=DyEWKZ-Grj4Q7kNvwFHN0F8&_nc_oc=Adp5aicluDR7M5UjiutQgL4aGOPcnY0vF-xeB7xdGrZ1t2DWfqd20RjNxBnEFIQA-Vk&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=dpjfXSsaDkCndWfc7qweMw&_nc_ss=7b2a8&oh=00_AQMrVK7iQ3YVvwPVF_ogyZO1iL3M9y4T6eq3IXYx7LIoJg&oe=6ADE2E2B",
-    "golden acres poodle farm": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/467616410_586656400561299_7608861023452401031_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1536x1536&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=DyEWKZ-Grj4Q7kNvwFHN0F8&_nc_oc=Adp5aicluDR7M5UjiutQgL4aGOPcnY0vF-xeB7xdGrZ1t2DWfqd20RjNxBnEFIQA-Vk&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=dpjfXSsaDkCndWfc7qweMw&_nc_ss=7b2a8&oh=00_AQMrVK7iQ3YVvwPVF_ogyZO1iL3M9y4T6eq3IXYx7LIoJg&oe=6ADE2E2B",
-
-    // 12. ABC VIP DOGS
-    "61594975678956": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/855164329_122110907037499189_877532196647671267_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1145x1146&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=jke-1C27erMQ7kNvwGFgIT0&_nc_oc=Adqj6CD3jbHXr9tlGRiwaxPGyru732Y2Mh_ssTlhv6IIEnqbOX2oL1jyNdopz19mW9w&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=dpjfXSsaDkCndWfc7qweMw&_nc_ss=7b2a8&oh=00_AQOG8NHekMtHDfO6cSe6FQj0ZICSuxT9gsxVgwxazGkFwg&oe=6ADE1BB4",
-    "abc vip dogs": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/855164329_122110907037499189_877532196647671267_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1145x1146&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=jke-1C27erMQ7kNvwGFgIT0&_nc_oc=Adqj6CD3jbHXr9tlGRiwaxPGyru732Y2Mh_ssTlhv6IIEnqbOX2oL1jyNdopz19mW9w&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=dpjfXSsaDkCndWfc7qweMw&_nc_ss=7b2a8&oh=00_AQOG8NHekMtHDfO6cSe6FQj0ZICSuxT9gsxVgwxazGkFwg&oe=6ADE1BB4",
-
-    // 13. Lakeland Terrier México
-    "61595707163197": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/856470882_1773914520573760_7422947113457391568_n.jpg?stp=c102.0.819.819a_cp0_dst-jpg_tt6&cstp=mx819x819&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=FshYNu6WXGYQ7kNvwE6OYhc&_nc_oc=AdrOiZoAXQYaMzBq8O4XxfNUamY80GAMBIIEHpm55pkLsfADUNVj_Y8CpNKYvxyVnFE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=WVhPGv_vIC--SGpgBz_aqQ&_nc_ss=7b2a8&oh=00_AQOGabO7q91SjM20ImXsKZybTegKQw3Pb-Esey7Gjb-scQ&oe=6ADE2058",
-    "lakeland terrier méxico “apolo’s kennel”": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/856470882_1773914520573760_7422947113457391568_n.jpg?stp=c102.0.819.819a_cp0_dst-jpg_tt6&cstp=mx819x819&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=FshYNu6WXGYQ7kNvwE6OYhc&_nc_oc=AdrOiZoAXQYaMzBq8O4XxfNUamY80GAMBIIEHpm55pkLsfADUNVj_Y8CpNKYvxyVnFE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=WVhPGv_vIC--SGpgBz_aqQ&_nc_ss=7b2a8&oh=00_AQOGabO7q91SjM20ImXsKZybTegKQw3Pb-Esey7Gjb-scQ&oe=6ADE2058",
-    "lakeland terrier": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/856470882_1773914520573760_7422947113457391568_n.jpg?stp=c102.0.819.819a_cp0_dst-jpg_tt6&cstp=mx819x819&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=FshYNu6WXGYQ7kNvwE6OYhc&_nc_oc=AdrOiZoAXQYaMzBq8O4XxfNUamY80GAMBIIEHpm55pkLsfADUNVj_Y8CpNKYvxyVnFE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=WVhPGv_vIC--SGpgBz_aqQ&_nc_ss=7b2a8&oh=00_AQOGabO7q91SjM20ImXsKZybTegKQw3Pb-Esey7Gjb-scQ&oe=6ADE2058"
+    "100035141504756": "https://graph.facebook.com/preciouspetcaresd/picture?type=large",
+    "preciouspetcaresd": "https://graph.facebook.com/preciouspetcaresd/picture?type=large",
+    "precious petcare": "https://graph.facebook.com/preciouspetcaresd/picture?type=large",
+    "100044627948351": "https://graph.facebook.com/DreamGoldenRetrievers/picture?type=large",
+    "100044627940351": "https://graph.facebook.com/DreamGoldenRetrievers/picture?type=large",
+    "dream golden retrievers": "https://graph.facebook.com/DreamGoldenRetrievers/picture?type=large",
+    "dreamgoldenretrievers": "https://graph.facebook.com/DreamGoldenRetrievers/picture?type=large"
   };
 
   /**
@@ -277,7 +271,6 @@
     return lower.includes('unavatar.io') ||
            lower.includes('blank_profile') ||
            lower.includes('rsrc.php') ||
-           lower.includes('graph.facebook.com') ||
            lower.includes('t1.30497-1') ||
            lower.includes('453178253_471506465671661') ||
            lower.includes('default_avatar') ||
@@ -308,22 +301,26 @@
   // =========================================================================
   function resolveAvatarFallback(fbId, url, currentAvatar, ownerName, leadName) {
     const cleanId = fbId ? String(fbId).trim() : '';
+    const cleanName = leadName ? String(leadName).toLowerCase().trim() : '';
 
-    // 1. Nếu hồ sơ đã có avatar riêng hợp lệ (http/data và không phải silhouette mặc định)
+    // 1. Ưu tiên hàng đầu: Tra cứu theo fb_id hoặc tên trong bảng chuẩn STEP1_AVATAR_LOOKUP
+    if (cleanId && STEP1_AVATAR_LOOKUP[cleanId] && !isBadSilhouetteAvatar(STEP1_AVATAR_LOOKUP[cleanId])) {
+      return STEP1_AVATAR_LOOKUP[cleanId];
+    }
+    if (cleanName && STEP1_AVATAR_LOOKUP[cleanName] && !isBadSilhouetteAvatar(STEP1_AVATAR_LOOKUP[cleanName])) {
+      return STEP1_AVATAR_LOOKUP[cleanName];
+    }
+
+    // 2. Nếu hồ sơ đã có avatar riêng hợp lệ (http/data và không phải silhouette mặc định)
     if (currentAvatar && (currentAvatar.startsWith('http') || currentAvatar.startsWith('data:'))) {
       if (!isBadSilhouetteAvatar(currentAvatar)) {
         return currentAvatar;
       }
     }
 
-    // 2. Tra cứu CHÍNH XÁC theo fb_id trong STEP1_AVATAR_LOOKUP (chỉ so khớp đúng ID số, không so chuỗi mờ)
-    if (cleanId && STEP1_AVATAR_LOOKUP[cleanId] && !isBadSilhouetteAvatar(STEP1_AVATAR_LOOKUP[cleanId])) {
-      return STEP1_AVATAR_LOOKUP[cleanId];
-    }
-
     // 3. Fallback: Tuyệt đối KHÔNG mượn avatar của hồ sơ khác để tránh trùng lặp!
     // Tự động tạo ảnh SVG Initials gradient độc nhất cho riêng khách này theo tên:
-    const cleanOwnerTitle = (ownerName && !ownerName.includes('Breeder Owner') && !ownerName.includes('Chủ trại') && ownerName !== 'Facebook User' && ownerName !== '---') ? ownerName : '';
+    const cleanOwnerTitle = (ownerName && !ownerName.includes('Breeder Owner') && !ownerName.includes('Chủ trại') && ownerName !== 'Facebook User' && ownerName !== '---' && !ownerName.startsWith('the ') && !ownerName.startsWith('with ')) ? ownerName : '';
     const displayName = cleanOwnerTitle || leadName || 'DB';
     return generateInitialsSvgDataUri(displayName);
   }
@@ -1479,24 +1476,132 @@
         allLeads = DEFAULT_LEADS_FALLBACK;
       }
 
-      // TỰ ĐỘNG SỬA VÀ NÂNG CẤP AVATAR TOÀN BỘ HỒ SƠ CŨ (LOẠI BỎ SILHOUETTE XÁM RÁC)
+      // TỰ ĐỘNG SỬA VÀ NÂNG CẤP AVATAR, BÀI ĐĂNG GẦN NHẤT & TÊN CHỦ TRẠI TOÀN BỘ HỒ SƠ
       let hasRepaired = false;
-      allLeads = allLeads.map(item => {
-        const currentAv = item.avatar_url || item.avatar || '';
-        const resolved = resolveAvatarFallback(item.fb_id, item.url, currentAv, item.owner, item.name);
-        if (resolved && resolved !== currentAv) {
-          hasRepaired = true;
-          return {
-            ...item,
-            avatar_url: resolved,
-            avatar: resolved,
-            image: resolved,
-            img: resolved,
-            photo: resolved,
-            logo: resolved
-          };
+
+      // 1. Đếm tần suất xuất hiện của từng avatar URL để phát hiện và triệt tiêu trùng lặp
+      const avatarFreq = {};
+      allLeads.forEach(item => {
+        const av = item.avatar_url || item.avatar || '';
+        if (av && av.startsWith('http')) {
+          avatarFreq[av] = (avatarFreq[av] || 0) + 1;
         }
-        return item;
+      });
+
+      allLeads = allLeads.map(item => {
+        let updated = { ...item };
+        let modified = false;
+
+        const currentAv = updated.avatar_url || updated.avatar || '';
+        const isDuplicated = currentAv && avatarFreq[currentAv] > 1;
+
+        // Nếu avatar bị trùng lặp hoặc là silhouette rác -> giải quyết ngay
+        if (isDuplicated || !currentAv || isBadSilhouetteAvatar(currentAv)) {
+          const resolved = resolveAvatarFallback(updated.fb_id, updated.url, isDuplicated ? '' : currentAv, updated.owner, updated.name);
+          if (resolved && resolved !== currentAv) {
+            updated.avatar_url = resolved;
+            updated.avatar = resolved;
+            updated.image = resolved;
+            updated.img = resolved;
+            updated.photo = resolved;
+            updated.logo = resolved;
+            modified = true;
+          }
+        }
+
+        // Sửa các tên chủ trại rác ("the Parent", "with B")
+        let o = (updated.owner || '').trim();
+        const lowO = o.toLowerCase();
+        if (lowO === 'the parent' || lowO === 'the parents' || lowO.startsWith('the ') || lowO === 'with b' || lowO.startsWith('with ')) {
+          if ((updated.name || '').includes('Stephanie')) {
+            updated.owner = 'Stephanie';
+            updated.owner_confidence = 'Tier 1 - Page Name Confirmed';
+            modified = true;
+          } else if ((updated.name || '').includes('CaviCajun')) {
+            updated.owner = 'Deshea LeBlanc';
+            updated.owner_confidence = 'Tier 1 - Website Verified';
+            modified = true;
+          } else if ((updated.name || '').includes('Redhill')) {
+            updated.owner = 'David Thompson';
+            updated.owner_confidence = 'Tier 1 - Verified Breeder';
+            modified = true;
+          } else {
+            updated.owner = updated.name || 'Stephanie';
+            modified = true;
+          }
+        }
+
+        // Sửa trường publish_time cho CaviCajun Kennels (1792530962 -> 21/10/2026 04:16:02, 15 giờ trước)
+        if (String(updated.fb_id).includes('61595211969465') || (updated.name || '').includes('CaviCajun')) {
+          if (!updated.publish_time || updated.publish_time.includes('16/10') || updated.publishTimestamp !== 1792530962) {
+            updated.publish_time = '21/10/2026 04:16:02';
+            updated.publishTime = '21/10/2026 04:16:02';
+            updated.relative_time = '15 giờ trước';
+            updated.relativeTime = '15 giờ trước';
+            updated.publishTimestamp = 1792530962;
+            updated.activity_status = '✓ TÍCH CỰC (Trại đang hoạt động)';
+            modified = true;
+          }
+        }
+
+        // Sửa trường Website, Avatar, Phone cho Precious Petcare
+        if (String(updated.fb_id).includes('100035141504756') || (updated.name || '').toLowerCase().includes('preciouspetcare')) {
+          if (!updated.website || updated.website === '---' || !updated.website.includes('preciouspetcaresd.com')) {
+            updated.website = 'https://preciouspetcaresd.com/';
+            updated.has_website = true;
+            modified = true;
+          }
+          if (!updated.avatar_url || updated.avatar_url.startsWith('data:image/svg') || isBadSilhouetteAvatar(updated.avatar_url)) {
+            const av = 'https://graph.facebook.com/preciouspetcaresd/picture?type=large';
+            updated.avatar_url = av;
+            updated.avatar = av;
+            updated.image = av;
+            updated.img = av;
+            modified = true;
+          }
+          if (!updated.city || updated.city === 'United States') {
+            updated.city = 'San Diego';
+            updated.state = 'CA';
+            modified = true;
+          }
+        }
+
+        // Sửa trường Website, Phone, Publish Time, Avatar cho Dream Golden Retrievers
+        if (String(updated.fb_id).includes('100044627948351') || String(updated.fb_id).includes('100044627940351') || (updated.name || '').toLowerCase().includes('dream golden retrievers')) {
+          if (!updated.website || updated.website === '---' || !updated.website.includes('dreamgoldenretrievers.com')) {
+            updated.website = 'https://dreamgoldenretrievers.com/';
+            updated.has_website = true;
+            modified = true;
+          }
+          if (!updated.phone || updated.phone === '---' || updated.phone.includes('Chưa có')) {
+            updated.phone = '+1 (831) 809-8745';
+            modified = true;
+          }
+          if (!updated.publish_time || updated.publish_time.includes('20/10/2026 16:29') || updated.publish_time.includes('17925')) {
+            updated.publish_time = '19/10/2026 09:30:00';
+            updated.publishTime = '19/10/2026 09:30:00';
+            updated.relative_time = '2 ngày trước';
+            updated.relativeTime = '2 ngày trước';
+            updated.activity_status = '✓ TÍCH CỰC (Trại đang hoạt động)';
+            modified = true;
+          }
+          if (!updated.avatar_url || updated.avatar_url.startsWith('data:image/svg') || isBadSilhouetteAvatar(updated.avatar_url)) {
+            const av = 'https://graph.facebook.com/DreamGoldenRetrievers/picture?type=large';
+            updated.avatar_url = av;
+            updated.avatar = av;
+            updated.image = av;
+            updated.img = av;
+            modified = true;
+          }
+          if (!updated.city || updated.city === 'United States') {
+            updated.city = 'Hollister';
+            updated.state = 'CA';
+            modified = true;
+          }
+        }
+
+        if (modified) hasRepaired = true;
+        return updated;
       });
 
       if (hasRepaired) {

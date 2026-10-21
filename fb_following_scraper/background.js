@@ -930,6 +930,13 @@ async function executeStep2BrowserScan(links, options = {}) {
 
 // Lắng nghe messages từ content.js & dashboard.js
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'PING_SERVER') {
+    fetch(`${message.url || 'http://127.0.0.1:8000'}/api/system-status`, { signal: AbortSignal.timeout(2200) })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => sendResponse({ ok: !!data, data }))
+      .catch(() => sendResponse({ ok: false }));
+    return true;
+  }
   if (message.action === 'EXECUTE_STEP2_BROWSER_SCAN' || message.action === 'START_STEP2_DIRECT_SCAN' || message.action === 'START_AUTO_FROM_DASHBOARD') {
     if (sender && sender.tab) {
       currentDashboardTabId = sender.tab.id;
