@@ -1758,9 +1758,12 @@
           <button id="langBtnVi" class="lang-btn" onclick="setLanguage('vi')">🇻🇳 Tiếng Việt</button>
           <button id="langBtnZh" class="lang-btn" onclick="setLanguage('zh')">🇨🇳 简体中文</button>
         </div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
           <button class="btn btn-import" onclick="triggerImport()" id="btnImport"></button>
           <button class="btn btn-primary" onclick="exportSalesData()" id="btnExport"></button>
+          <button class="btn btn-emerald" onclick="exportPriorityBatch38Data()" id="btnExportBatch38" style="background:#059669; border:1px solid #047857; color:#fff; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+            <span id="lblBtnExportBatch38">📊 Xuất Excel 38 Cột (Priority Batch)</span>
+          </button>
           <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="handleImportFile(event)">
         </div>
       </div>
@@ -1813,6 +1816,7 @@
           <select id="amzFilter" class="select-filter" onchange="onFilterChange()"></select>
           <select id="tierFilter" class="select-filter" onchange="onFilterChange()"></select>
           <select id="catFilter" class="select-filter" onchange="onFilterChange()"></select>
+          <select id="ownerFilter" class="select-filter" onchange="onFilterChange()" style="font-weight:600;"></select>
           <select id="weatherFilter" class="select-filter" onchange="onFilterChange()"></select>
           <select id="avatarFilter" class="select-filter" onchange="onFilterChange()"></select>
           <button class="btn btn-sm" onclick="resetFilters()" id="btnReset"></button>
@@ -1950,8 +1954,13 @@
       fillSelect('amzFilter', 'amzOptions');
       fillSelect('tierFilter', 'tierOptions');
       fillSelect('catFilter', 'catOptions');
+      fillSelect('ownerFilter', 'ownerOptions');
       fillSelect('weatherFilter', 'weatherOptions');
       fillSelect('avatarFilter', 'avatarOptions');
+
+      if ($('lblBtnExportBatch38')) {
+        $('lblBtnExportBatch38').textContent = t('btnExportPriority') || (isVi() ? '📊 Xuất Excel 38 Cột (Priority Batch)' : '📊 导出 38 列标准潜客表 (Priority Batch)');
+      }
 
       const cols = [
         { key: 'thCode', label: t('thCode'), sort: 'stt' },
@@ -2255,11 +2264,25 @@
       return { 'Tier S': 's', 'Tier A': 'a', 'Tier B': 'b', 'Tier C': 'c', 'Tier D': 'd' }[tier] || 'c';
     }
 
+    function isGenericOwner(owner, kennelName) {
+      if (!owner) return true;
+      const o = String(owner).trim();
+      if (o === 'Đang cập nhật hồ sơ' || o === 'Chưa xác thực' || o === '—' || o === '待进一步核实' || o === 'Chưa có thông tin') return true;
+      if (/chủ trại|quản lý chuồng trại|breeder owner|kennel manager|huấn luyện viên|head trainer|shelter intake|director|manager|待进一步核实|管舍人|负责人/i.test(o)) {
+        return true;
+      }
+      if (kennelName && o.toLowerCase() === String(kennelName).trim().toLowerCase()) {
+        return true;
+      }
+      return false;
+    }
+
     function applyFilters() {
       const q = ($('searchInput').value || '').toLowerCase().trim();
       const amzVal = $('amzFilter').value;
       const tierVal = $('tierFilter').value;
       const catVal = $('catFilter').value;
+      const ownerVal = $('ownerFilter') ? $('ownerFilter').value : '';
       const wVal = $('weatherFilter').value;
       const avVal = $('avatarFilter') ? $('avatarFilter').value : '';
       const rules = S.meta.weatherRules;
@@ -2273,6 +2296,11 @@
         if (tierVal && l.rank_tier !== tierVal) return false;
         if (catVal && l.cat_code !== catVal) return false;
         if (avVal && l.avatar_type !== avVal) return false;
+        if (ownerVal) {
+          const isGen = isGenericOwner(l.owner, l.name);
+          if (ownerVal === 'generic' && !isGen) return false;
+          if (ownerVal === 'named' && isGen) return false;
+        }
         if (amzVal) {
           const k = amzKindOf(l);
           if (amzVal === 'has_amz' ? k === 'no_amz' : k !== amzVal) return false;
@@ -2342,9 +2370,22 @@
         else links.push(`<span class="lead-name">${esc(lead.name)}</span>`);
         if (lead.website) links.push(` <a href="${esc(lead.website)}" target="_blank" rel="noopener" title="Website" style="font-size:.8rem">🌐</a>`);
 
-        const owner = lead.owner && lead.owner !== 'Đang cập nhật hồ sơ' && lead.owner !== 'Chưa xác thực'
-          ? `<div class="lead-owner">👤 <b>${esc(t('ownerLabel'))}</b> ${esc(lead.owner)}</div>`
-          : `<div class="lead-owner" style="color:var(--text-3)">👤 ${esc(t('ownerUnknown'))}</div>`;
+        const isGen = isGenericOwner(lead.owner, lead.name);
+        let owner = '';
+        if (isGen) {
+          const displayOwner = lead.owner || (isVi() ? 'Chủ trại / Quản lý chuồng trại' : '犬舍负责人 / 管舍人');
+          owner = `<div class="lead-owner" style="margin-top:4px;">
+            <span style="font-size:0.77rem; font-weight:700; color:#b45309; background:#fef3c7; border:1px solid #fde68a; padding:2px 7px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;" title="${isVi() ? 'Chưa có tên cụ thể' : '待核实具体人名'}">
+              ⚠️ ${esc(t('ownerLabel'))} ${esc(displayOwner)}
+            </span>
+          </div>`;
+        } else {
+          owner = `<div class="lead-owner" style="margin-top:4px;">
+            <span style="font-size:0.77rem; font-weight:750; color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; padding:2px 7px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;">
+              👤 <b>${esc(t('ownerLabel'))}</b> ${esc(lead.owner)} ✨
+            </span>
+          </div>`;
+        }
 
         const chips = [];
         if (lead.phone) {
@@ -2440,7 +2481,7 @@
     function onPageSizeChange() { S.page = 1; renderTable(); }
     function resetFilters() {
       $('searchInput').value = '';
-      ['amzFilter', 'tierFilter', 'catFilter', 'weatherFilter', 'avatarFilter'].forEach(id => { if ($(id)) $(id).value = ''; });
+      ['amzFilter', 'tierFilter', 'catFilter', 'ownerFilter', 'weatherFilter', 'avatarFilter'].forEach(id => { if ($(id)) $(id).value = ''; });
       S.page = 1;
       renderTable();
     }
@@ -2854,6 +2895,95 @@
         ws['!cols'] = [16, 22, 32, 25, 18, 28, 30, 26, 16, 10, 12, 15, 26, 26, 30, 28, 10, 12, 52, 40].map(wch => ({ wch }));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, isVi() ? 'Khach_Hang_Sales' : '潜客销售列表');
+        XLSX.writeFile(wb, `${prefix}.xlsx`);
+      } else {
+        const csv = '\uFEFF' + [headers, ...rows]
+          .map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+        a.download = `${prefix}.csv`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      }
+    }
+
+    /* Xuất theo định dạng chuẩn 38 Cột như file priority-data-batch3-20-leads-20261016.xlsx */
+    function exportPriorityBatch38Data() {
+      const headers = [
+        '邮箱地址', '邮箱地址状态', '名字', '姓氏', '全名',
+        '用户社交', 'Facebook ID', 'LinkedIn', '工作职位', '国家',
+        '地址', '行业', '添加日期', '公司名称', '公司网址',
+        '公司社交', '公司规模', '公司所处国家', '公司位置', '州',
+        '城市', '公司所在行业', '总部电话', '电话', '背调链接',
+        '测试打开次数', '客户等级', '打开网页', '营销更新', '回复次数',
+        '营销打开次数', '营销邮件次数', '营销邮件数量', '年级/班级', '班级',
+        '休眠原因', 'remark', 'CRM NO.'
+      ];
+
+      const rows = S.filtered.map(l => {
+        const isGen = isGenericOwner(l.owner, l.name);
+        let firstName = '', lastName = '', fullName = '';
+        let jobTitle = 'Breeder Owner / Kennel Manager';
+
+        if (!isGen && l.owner) {
+          fullName = String(l.owner).trim();
+          const parts = fullName.split(/\s+/);
+          if (parts.length > 1) {
+            lastName = parts[parts.length - 1];
+            firstName = parts.slice(0, -1).join(' ');
+          } else {
+            firstName = parts[0];
+          }
+          jobTitle = 'Owner / Breeder';
+        }
+
+        const email = l.email || '';
+        const emailStatus = email ? 'valid' : '';
+        const rawPhone = l.phone || '';
+        const cleanDigits = rawPhone.replace(/\D/g, '');
+        const intlPhone = cleanDigits ? (cleanDigits.startsWith('1') ? cleanDigits : '1' + cleanDigits) : '';
+        const locAddress = l.address || [l.city, l.state, l.zip].filter(Boolean).join(', ') || '';
+        const stateName = l.state || '';
+        const cityName = l.city || '';
+        const countryName = l.country || 'United States';
+        const industryName = l.industry || l.cat || 'Pet Breeding / Dog Breeder (B2B)';
+        const dateAdded = fmtDateTime(new Date(), false);
+        const companyName = l.name || '';
+        const website = l.website || '';
+        const fbUrl = l.url || '';
+        const fbId = l.fb_id || '';
+        const crmNo = l.stt || ('LEAD-US-' + String(l.id || '').padStart(6, '0'));
+        const remarkStr = `${l.rank_tier || 'Tier S'} (Score: ${l.score || 80}) | FB ID: ${fbId}${l.product_fit ? ' | Fit: ' + l.product_fit : ''}${l.amz_cat ? ' | Amazon: ' + l.amz_cat : ''}`;
+
+        return [
+          email, emailStatus, firstName, lastName, fullName,
+          fbUrl, fbId, '', jobTitle, countryName,
+          locAddress, industryName, dateAdded, companyName, website,
+          fbUrl, '', countryName, locAddress, stateName,
+          cityName, industryName, rawPhone, intlPhone, '',
+          '', '', '', '', '',
+          '', '', '', '', '',
+          '', remarkStr, crmNo
+        ];
+      });
+
+      const src = currentSource();
+      const prefix = (isVi() ? 'Priority_Data_Batch_Leads_38Cot' : '美国狗舍标准潜客38列联络表')
+        + '_' + safeName(src.name) + '_' + stampOf(new Date());
+
+      if (typeof XLSX !== 'undefined') {
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        ws['!cols'] = [
+          { wch: 28 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 24 },
+          { wch: 35 }, { wch: 18 }, { wch: 15 }, { wch: 24 }, { wch: 15 },
+          { wch: 35 }, { wch: 32 }, { wch: 20 }, { wch: 30 }, { wch: 30 },
+          { wch: 35 }, { wch: 12 }, { wch: 15 }, { wch: 35 }, { wch: 15 },
+          { wch: 18 }, { wch: 32 }, { wch: 18 }, { wch: 18 }, { wch: 15 },
+          { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+          { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+          { wch: 12 }, { wch: 45 }, { wch: 18 }
+        ];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Batch3_20_Khach_Hang');
         XLSX.writeFile(wb, `${prefix}.xlsx`);
       } else {
         const csv = '\uFEFF' + [headers, ...rows]

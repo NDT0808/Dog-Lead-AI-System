@@ -210,7 +210,22 @@
     "avatarTypeDog": "🐶 Avatar: Chó cưng / Cún con (dog-model.onnx Verified)",
     "avatarTypePerson": "👤 Avatar: Chủ trại / Người đại diện (Breeder Owner)",
     "copyFbIdBtn": "📋 Sao chép FB ID",
-    "openFbProfileBtn": "🔗 Mở Trang Facebook"
+    "openFbProfileBtn": "🔗 Mở Trang Facebook",
+    "ownerOptions": [
+      {
+        "val": "",
+        "text": "👤 Tất cả đại diện"
+      },
+      {
+        "val": "generic",
+        "text": "⚠️ Chưa có tên (Chủ trại / Quản lý chuồng trại)"
+      },
+      {
+        "val": "named",
+        "text": "✨ Đã có tên chủ sở hữu cụ thể"
+      }
+    ],
+    "btnExportPriority": "📊 Xuất Excel 38 Cột (Priority Batch)"
   },
   "zh": {
     "pageTitle": "Pet & Grass 潜客智能 CRM - 美国本土市场专案",
@@ -422,6 +437,21 @@
     "avatarTypeDog": "🐶 头像属性：宠物犬 / 幼犬 (dog-model.onnx 视觉验证)",
     "avatarTypePerson": "👤 头像属性：犬舍主理人 / 个人代表 (Breeder Owner)",
     "copyFbIdBtn": "📋 复制 FB ID",
-    "openFbProfileBtn": "🔗 打开 Facebook 主页"
+    "openFbProfileBtn": "🔗 打开 Facebook 主页",
+    "ownerOptions": [
+      {
+        "val": "",
+        "text": "👤 全部负责人/代表"
+      },
+      {
+        "val": "generic",
+        "text": "⚠️ 待核实姓名 (犬舍负责人/管舍人)"
+      },
+      {
+        "val": "named",
+        "text": "✨ 已核实具体代表姓名"
+      }
+    ],
+    "btnExportPriority": "📊 导出 38 列标准潜客表 (Priority Batch)"
   }
 }
