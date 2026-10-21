@@ -55,7 +55,7 @@ async function sendToDashboard(action, data) {
   try {
     const tabs = await chrome.tabs.query({});
     for (const t of tabs) {
-      if (t.url && (t.url.includes('dashboard.html') || t.url.includes('8000') || t.url.includes('localhost'))) {
+      if (t.url && (t.url.includes('harvester_dashboard.html') || t.url.includes('dashboard.html') || t.url.includes('8000') || t.url.includes('localhost'))) {
         try {
           await chrome.tabs.sendMessage(t.id, payload);
         } catch (_) {}
@@ -968,6 +968,35 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       currentDashboardTabId = sender.tab.id;
     }
     sendResponse({ status: 'registered', dashboardTabId: currentDashboardTabId });
+    return true;
+  } else if (message.action === 'NEW_FOLLOWERS_BATCH') {
+    // Lưu tự động vào chrome.storage.local để đồng bộ giữa các tab
+    const incoming = message.data || [];
+    if (incoming.length > 0) {
+      chrome.storage.local.get(['scrapedFollowers'], (res) => {
+        const current = res.scrapedFollowers || [];
+        const map = new Map();
+        current.forEach(item => {
+          const k = item.fb_id || item.url;
+          if (k) map.set(k, item);
+        });
+        incoming.forEach(item => {
+          const k = item.fb_id || item.url;
+          if (k) {
+            if (!map.has(k)) map.set(k, item);
+            else map.set(k, { ...map.get(k), ...item });
+          }
+        });
+        const updated = Array.from(map.values());
+        chrome.storage.local.set({
+          scrapedFollowers: updated,
+          lastHarvestTime: Date.now()
+        });
+      });
+    }
+    // Broadcast cho các tab Tool 1 và Dashboard
+    sendToDashboard('NEW_FOLLOWERS_BATCH', { data: incoming });
+    sendResponse({ status: 'broadcasted', count: incoming.length });
     return true;
   }
   return true;

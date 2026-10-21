@@ -792,3 +792,22 @@ body {
   align-items: center;
   gap: 10px;
 }
+
+/* Row Flash Animation Khi Cào Được Người Mới */
+@keyframes rowStreamFlash {
+  0% {
+    background-color: rgba(34, 197, 94, 0.28);
+    transform: scale(1.003);
+  }
+  50% {
+    background-color: rgba(79, 70, 229, 0.12);
+  }
+  100% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+.row-newly-added {
+  animation: rowStreamFlash 2.5s cubic-bezier(0.16, 1, 0.3, 1);
+}

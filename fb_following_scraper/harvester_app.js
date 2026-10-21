@@ -231,6 +231,59 @@ function addSampleUrl(url) {
   parseUrlsFromTextarea();
 }
 
+// Chuẩn hóa và làm sạch liên kết Facebook (Hỗ trợ cả UID số profile.php, Fanpage, Vanity URL)
+function cleanFacebookUrl(raw) {
+  let l = (raw || '').trim();
+  if (!l) return null;
+  if (!/^https?:\/\//i.test(l)) {
+    l = 'https://' + l.replace(/^www\./, 'www.');
+  }
+  try {
+    const u = new URL(l);
+    if (!u.hostname.includes('facebook.com')) return null;
+
+    // Loại trừ trang lỗi do lần trước tạo sai: /profile.php/followers (không có ?id=...)
+    if (u.pathname === '/profile.php/followers' || u.pathname === '/profile.php/following') {
+      return null;
+    }
+
+    // Trường hợp 1: Trang cá nhân dùng UID số (VD: https://www.facebook.com/profile.php?id=100080649772274)
+    if (u.pathname.includes('profile.php')) {
+      const id = u.searchParams.get('id');
+      if (id) {
+        let sk = u.searchParams.get('sk') || 'followers';
+        if (sk !== 'followers' && sk !== 'following') {
+          sk = 'followers';
+        }
+        return `https://www.facebook.com/profile.php?id=${id}&sk=${sk}`;
+      }
+      return null;
+    }
+
+    // Trường hợp 2: People URL (VD: facebook.com/people/Breeder-Name/100080649772274)
+    if (u.pathname.includes('/people/')) {
+      let p = u.pathname.replace(/\/+$/, '');
+      if (!p.endsWith('/followers') && !p.endsWith('/following')) {
+        p += '/followers';
+      }
+      return `https://www.facebook.com${p}`;
+    }
+
+    // Trường hợp 3: Trang cá nhân / Fanpage dạng Vanity URL (VD: /officialgooddog, /Cavicajunkennels)
+    let p = u.pathname.replace(/\/+$/, '');
+    if (!p || p === '/' || p === '/followers' || p === '/following' || p === '/home.php') return null;
+
+    if (p.endsWith('/followers') || p.endsWith('/following')) {
+      return `https://www.facebook.com${p}`;
+    }
+
+    // Tự động thêm đuôi /followers cho trang cá nhân / fanpage
+    return `https://www.facebook.com${p}/followers`;
+  } catch (e) {
+    return null;
+  }
+}
+
 // Bóc tách danh sách URL hợp lệ
 function parseUrlsFromTextarea() {
   const ta = document.getElementById('urlInputTextarea');
@@ -238,20 +291,10 @@ function parseUrlsFromTextarea() {
   const cleanList = [];
 
   for (let l of lines) {
-    if (!l.startsWith('http')) {
-      l = 'https://' + l.replace(/^www\./, 'www.');
+    const cleaned = cleanFacebookUrl(l);
+    if (cleaned) {
+      cleanList.push(cleaned);
     }
-    try {
-      const u = new URL(l);
-      if (u.hostname.includes('facebook.com')) {
-        let p = u.pathname.replace(/\/$/, '');
-        // Đảm bảo có đuôi followers hoặc following
-        if (!p.endsWith('/followers') && !p.endsWith('/following')) {
-          p = p + '/followers';
-        }
-        cleanList.push(`https://www.facebook.com${p}`);
-      }
-    } catch (e) {}
   }
 
   // Deduplicate
@@ -368,6 +411,22 @@ function mergeIncomingFollowers(newItems) {
     renderQueue();
   }
 
+  // Hiển thị trạng thái cào sống động trên Navbar
+  if (newlyAdded > 0) {
+    const extStatus = document.getElementById('txtExtStatus');
+    if (extStatus) {
+      extStatus.textContent = currentLang === 'vi'
+        ? `🟢 Đang cào trực tiếp (+${newlyAdded} người vừa cập nhật)...`
+        : `🟢 正在实时采集 (新增 +${newlyAdded} 条)...`;
+      clearTimeout(window._statusResetTimer);
+      window._statusResetTimer = setTimeout(() => {
+        if (isHarvesting && !isPaused) {
+          extStatus.textContent = I18N[currentLang].extRunning;
+        }
+      }, 3500);
+    }
+  }
+
   try {
     chrome.storage.local.set({ scrapedFollowers: harvestedRecords });
   } catch (e) {
@@ -375,7 +434,7 @@ function mergeIncomingFollowers(newItems) {
   }
 
   updateKPIs();
-  renderTable();
+  renderTable(newlyAdded);
 }
 
 // Cập nhật các thẻ KPI trên đầu trang
@@ -391,7 +450,7 @@ function updateKPIs() {
 }
 
 // Hiển thị bảng dữ liệu
-function renderTable() {
+function renderTable(highlightCount = 0) {
   const tbody = document.getElementById('harvesterTableBody');
   const t = I18N[currentLang];
   const query = (document.getElementById('tableSearchInput').value || '').trim().toLowerCase();
@@ -429,9 +488,10 @@ function renderTable() {
     const badgeClass = isBreeder ? 'badge-breeder' : 'badge-lover';
     const avatar = r.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.name || 'User')}&background=4f46e5&color=fff`;
     const sourceClean = (r.source_page || '').replace('https://www.facebook.com/', '').replace(/\/followers.*/, '');
+    const isNew = i < highlightCount;
 
     return `
-      <tr>
+      <tr class="${isNew ? 'row-newly-added' : ''}">
         <td style="color: var(--text-muted); font-size: 11.5px; font-weight: 700;">#${i + 1}</td>
         <td>
           <div class="avatar-cell">
@@ -505,29 +565,54 @@ async function executeNextInQueue() {
   try {
     // Mở tab Facebook cào dữ liệu qua Chrome API
     if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
-      const tab = await chrome.tabs.create({ url: task.url, active: false });
+      let targetIndex = undefined;
+      try {
+        const curTab = await chrome.tabs.getCurrent();
+        if (curTab && typeof curTab.index === 'number') {
+          targetIndex = curTab.index + 1;
+        }
+      } catch (e) {}
+
+      // Mở tab Facebook ngay bên cạnh tab UI và giữ nguyên tab UI đang xem (active: false)
+      const tab = await chrome.tabs.create({
+        url: task.url,
+        active: false,
+        index: targetIndex
+      });
       activeTabIds.push(tab.id);
 
-      // Đợi tab load xong và kích hoạt cào
-      setTimeout(() => {
-        chrome.tabs.sendMessage(tab.id, { action: 'START_HARVESTING' }, () => {
-          if (chrome.runtime.lastError) {
-            chrome.scripting.executeScript({
-              target: { tabId: tab.id },
-              files: ['content.js']
-            }, () => {
-              chrome.tabs.sendMessage(tab.id, { action: 'START_HARVESTING' });
-            });
+      // Kích hoạt cào với cơ chế thử lại (retry ping) đảm bảo content script nhận lệnh
+      let ackReceived = false;
+      let retries = 0;
+      const sendStartHarvest = () => {
+        if (ackReceived || !isHarvesting || isPaused) return;
+        retries++;
+        chrome.tabs.sendMessage(tab.id, { action: 'START_HARVESTING' }, (res) => {
+          if (!chrome.runtime.lastError && res && res.status === 'started') {
+            ackReceived = true;
+            console.log(`🐾 [Tool 1] Đã kích hoạt cào tab #${tab.id} thành công! Số lượng:`, res.initialCount || 0);
+          } else {
+            // Thử nạp lại content script nếu Facebook chưa hydrate
+            if (retries === 2 || retries === 4) {
+              chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ['content.js']
+              }).catch(() => {});
+            }
+            if (retries <= 10) {
+              setTimeout(sendStartHarvest, 1500);
+            }
           }
         });
-      }, 4000);
+      };
+      setTimeout(sendStartHarvest, 2500);
 
       // Chạy cào link này trong 45 giây trước khi chuyển sang link tiếp theo
       queueTimer = setTimeout(() => {
         task.status = 'done';
         renderQueue();
         
-        // Đóng tab cũ để nhẹ RAM
+        // Đóng tab cũ để tiết kiệm RAM
         try { chrome.tabs.remove(tab.id); } catch (e) {}
         
         currentQueueIndex++;
@@ -535,7 +620,7 @@ async function executeNextInQueue() {
       }, 45000);
 
     } else {
-      // Chạy ở chế độ mở popup bình thường nếu không có tabs permission
+      // Chạy ở chế độ mở tab bình thường nếu mở ngoài extension
       window.open(task.url, '_blank');
       task.status = 'done';
       renderQueue();

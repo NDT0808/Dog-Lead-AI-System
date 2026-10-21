@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "FB Following Scraper - Pet Lead AI",
   "version": "3.0.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0YzSA3e58NVE7FYTNq9tFGVVi8fYY9VVg61870lp7o2E5LpPkaaq3A0R8CoY5GO75/eqIeYB9RCsZULIu85EwmYo+HOrxsJ342DGxxyzldE9pMSPQxinQwgYNQRVZrWvTnqtFV1QQqHjeVdDHODFwozhXPFcqc971OuREDLvUUkRh1knM0gLRtF6sQxpz8nCwm8rXdTxKlzAeRG+CvV1Izych6tkK6gwbypJDueWI9YXhEX9yfsTKAYppOu24On4KNHX7PkS6Drk7v1gQgoHsQcrAbKsSvM1rj+LfG0PSYQavBOnX5EFx+74mX/kB2VJ1B5OpxMjLY/JnaMGNTCzRwIDAQAB",
   "description": "Thu thập người theo dõi / đang theo dõi từ Facebook Profile & Fanpage chuẩn xác, trích xuất FB_ID số, Avatar HD gốc, liên kết trực tiếp sang Web Dashboard Lọc AI.",
   "permissions": [
     "activeTab",

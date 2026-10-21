@@ -1,110 +1,177 @@
 {
-  "990587153326216": {
-    "fb_id": "990587153326216",
-    "name": "Stephanie’s Puppy Colony",
-    "url": "https://www.facebook.com/stephaniespuppycolony",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/696012345_990587153326216_235921294833267089_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=aikJ6ENAQrYQ7kNvwHzmK2b&_nc_oc=AdqqI-iDUD_hCiFmrgfgCpz2hWtdR8rV0a0DxEPdwE1mZo-KRs6Ak6lHvuK-FE2l-bc&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=TwICOsyVNFPr1QMO3-Kemw&_nc_ss=7b2a8&oh=00_AQOhEGIqNeYTF1X7iMkn_MglHpgDQ_GKTEsAjekMf7PQYg&oe=6ADE3155",
+  "1596373112283090": {
+    "fb_id": "1596373112283090",
+    "name": "Firestorm Goldens",
+    "url": "https://www.facebook.com/Firestormgoldenretrievers",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/760620948_1596373112283090_8124428097826053721_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx2048x2048&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=vQnoXfeIIAsQ7kNvwHIoe36&_nc_oc=AdrRtHloFKO14oKmFm4hrxLJpVJ4J7kh_TzW0hNMYCZans0AfawhWRHo7Z3aypBJT94&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=wvBxwXYC6uM7D2fsdOPfcA&_nc_ss=7b2a8&oh=00_AQOkNojq6ZxWDllkdngCdZ4PW99tEfnO33OsWHCSOcAGlQ&oe=6ADE3BAE",
     "subtitle": "",
     "is_target_dog": true,
-    "detection_method": "B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder: puppy, dog)",
-    "ai_vision_result": "non_dog (P=0.95)",
-    "confidence": 0.95,
+    "detection_method": "Logo/Biển hiệu trại chó & Từ khóa xác thực: goldens, golden retriever (không có mặt người)",
+    "ai_vision_result": "non_dog (P=0.88)",
+    "confidence": 0.88,
+    "matched_keywords": [
+      "goldens",
+      "golden retriever"
+    ],
+    "local_photos": [
+      "downloaded_collections/1596373112283090/1596373112283090_01.jpg"
+    ],
+    "scraped_at": "2026-10-21T08:56:20.955Z"
+  },
+  "4221994157846952": {
+    "fb_id": "4221994157846952",
+    "name": "Hunnington Farms",
+    "url": "https://www.facebook.com/HunningtonFarms",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/236899535_4221994157846952_776519505087245503_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx788x788&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=vYFavSiZKDoQ7kNvwFmbBvM&_nc_oc=AdrdBQ681PZHzIwdErgObLVMgMCxySuC2AUS6zDKZri9gtZd4KNyhwXLcBR5ccpwUlE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=wvBxwXYC6uM7D2fsdOPfcA&_nc_ss=7b2a8&oh=00_AQOI-Bo_sKy2D_8ldeGOn9OgVSxJagcQlBDtwVkWrLY1gg&oe=6ADE5689",
+    "subtitle": "",
+    "is_target_dog": false,
+    "detection_method": "Phát hiện khuôn mặt người (1 mặt) - Avatar Ground Truth",
+    "ai_vision_result": "adult_dog (P=1.00)",
+    "confidence": 0.0,
+    "matched_keywords": [],
+    "local_photos": [],
+    "scraped_at": "2026-10-21T08:56:20.955Z"
+  },
+  "1058086863465242": {
+    "fb_id": "1058086863465242",
+    "name": "Smooches for Pooches",
+    "url": "https://www.facebook.com/loveofpups",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/773486111_1058086863465242_344051957738859922_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1086x1086&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Q7quceSoaj4Q7kNvwF9pNK7&_nc_oc=Adowdu5feQlQuIM8cMskP7WX5FjSWMgEsv_sozqn4lbdoomeyZZ9i1cgkZALzQ_EcJw&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=wvBxwXYC6uM7D2fsdOPfcA&_nc_ss=7b2a8&oh=00_AQPT5aTSyALYre6DBDFzRfYcLpomB41eaR0Yd_XXP1HpHg&oe=6ADE5BEE",
+    "subtitle": "",
+    "is_target_dog": true,
+    "detection_method": "B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder: puppy, dog, puppies)",
+    "ai_vision_result": "adult_dog (P=1.00)",
+    "confidence": 1.0,
     "matched_keywords": [
       "puppy",
-      "dog"
+      "dog",
+      "puppies"
     ],
     "local_photos": [
-      "downloaded_collections/990587153326216/990587153326216_01.jpg"
+      "downloaded_collections/1058086863465242/1058086863465242_01.jpg"
     ],
-    "scraped_at": "2026-10-21T08:31:49.749Z"
+    "scraped_at": "2026-10-21T08:56:20.956Z"
   },
-  "61563727394331": {
-    "fb_id": "61563727394331",
-    "name": "Author Valeri Caronna",
-    "url": "https://www.facebook.com/profile.php?id=61563727394331",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/679498434_122100576782457579_4037880744212396607_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=eLRhJqXS11UQ7kNvwFjFEmt&_nc_oc=AdodmXhrMRUIAcWJyiAFUimo9A9r_gvasCRRwvhM1rxd0jHj2UT02NiAJd5UKts8kJo&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=TwICOsyVNFPr1QMO3-Kemw&_nc_ss=7b2a8&oh=00_AQMAYV4gHc9kYKaM71YqGR16LPiS0KcNWCpbIVBwvGlPeQ&oe=6ADE5BF3",
+  "122095855856933094": {
+    "fb_id": "122095855856933094",
+    "name": "Bailey’s Cajun Canines LLC",
+    "url": "https://www.facebook.com/Baileyscajuncaninesllc",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/514361430_122095855856933094_4776262354102086972_n.jpg?stp=c28.0.1160.1160a_cp0_dst-jpg_tt6&cstp=mx1160x1160&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=m0gI9fOCmkoQ7kNvwGO-eGL&_nc_oc=AdqJQi32T0aUKVaL0X8svdciqgtz6-VRtlNQtRrFAGJkrxaU99PDIDKzTD8ht5sJWus&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=pelMvMZbxRbN5uMQAHbS1Q&_nc_ss=7b2a8&oh=00_AQPUrI0rX38UHxgde2mbt26ygN76wHf49g8rVFWk6NIEZw&oe=6ADE463A",
     "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (1 mặt) - Avatar Ground Truth",
-    "ai_vision_result": "non_dog (P=0.01)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:49.749Z"
-  },
-  "61595211969465": {
-    "fb_id": "61595211969465",
-    "name": "CaviCajun Kennels Cavapoos&Cavaliers",
-    "url": "https://www.facebook.com/profile.php?id=61595211969465",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/848993890_122103405711507065_2101132370405643345_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1094x1104&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=wmrDpQCvqlQQ7kNvwFOxhqS&_nc_oc=Adrla7AbjZzoN3_2yJ034He_jcO1yaI3lkyAOaetgAU7c9X3M3kav7YZAhHw8_lZr5M&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=TwICOsyVNFPr1QMO3-Kemw&_nc_ss=7b2a8&oh=00_AQOEqW7QtF7l9HwdoYHNGGLzuQxBC5czwDBO2clPwQ2ZLw&oe=6ADE4358",
-    "subtitle": "Kountze, Texas",
     "is_target_dog": true,
-    "detection_method": "B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder: kennels, cavalier, poodle)",
-    "ai_vision_result": "puppy (P=0.95)",
-    "confidence": 0.95,
+    "detection_method": "Chó xác thực qua Từ khóa & AI (Từ khóa: canines, P_dog=0.97)",
+    "ai_vision_result": "puppy (P=0.97)",
+    "confidence": 0.972,
     "matched_keywords": [
-      "kennels",
-      "cavalier",
-      "poodle",
-      "cavapoo"
+      "canines"
     ],
     "local_photos": [
-      "downloaded_collections/61595211969465/61595211969465_01.jpg"
+      "downloaded_collections/122095855856933094/122095855856933094_01.jpg"
     ],
-    "scraped_at": "2026-10-21T08:31:49.756Z"
+    "scraped_at": "2026-10-21T08:56:20.963Z"
   },
-  "61595089332375": {
-    "fb_id": "61595089332375",
-    "name": "Sylvia Gill",
-    "url": "https://www.facebook.com/profile.php?id=61595089332375",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/846707063_122104915407502977_9003226394491099321_n.jpg?stp=c0.0.1080.1080a_cp0_dst-jpg_tt6&cstp=mx1080x1080&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=yA8krIYp0vkQ7kNvwFO74o_&_nc_oc=Adq87Mv9FPiYV03ujZnqLDG1wfPC56DtWNS-DwsFPqhhuH2lsZeqQB_fWCiPa6CZHq4&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=TwICOsyVNFPr1QMO3-Kemw&_nc_ss=7b2a8&oh=00_AQPx1YHrf4brvB6Tp5-8mEoXl19OVN_LLNHcwT4MnxSiVA&oe=6ADE5362",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Không đủ chứng cứ chó (P_dog=0.98, P_non=0.02, Adult=0.49, Puppy=0.48, không có từ khóa cún cưng)",
-    "ai_vision_result": "adult_dog (P=0.98)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:49.756Z"
-  },
-  "61591393110397": {
-    "fb_id": "61591393110397",
-    "name": "Samantha Lindsay Louis",
-    "url": "https://www.facebook.com/profile.php?id=61591393110397",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/828457040_122126681949379770_1780053513163008387_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx761x761&_nc_cat=102&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=LxefZHgcjJQQ7kNvwECbYaw&_nc_oc=AdoIMYA5fidktWElU69fEGaQI0Nblo2TlT9mcXeDUqFhoSyEjst-TW5fbuvl2_BdC1E&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=TwICOsyVNFPr1QMO3-Kemw&_nc_ss=7b2a8&oh=00_AQMGs8sbh2enKe9DPcuQLs0HE7SKVac-oE740XOq7rD9gQ&oe=6ADE30C5",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (1 mặt) - Avatar Ground Truth",
-    "ai_vision_result": "puppy (P=0.86)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:49.756Z"
-  },
-  "1042413175162171": {
-    "fb_id": "1042413175162171",
-    "name": "Redhill Boykin Spaniels",
-    "url": "https://www.facebook.com/RedhillBoykinSpaniels",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/780104405_1042413175162171_4016551396372726401_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Hgx53HAhos4Q7kNvwG7ULQ1&_nc_oc=AdpiS4cY3jkx_YKrdp-Rj9a1puGI7YMNbmqeVw3eUC5EWiDLsTL54FCIBp6YfR7Be5Y&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=TwICOsyVNFPr1QMO3-Kemw&_nc_ss=7b2a8&oh=00_AQOQxEkwjDSowV8otco6c1JQ56-v5vGWyYuek0bVXHOn6g&oe=6ADE4DFE",
+  "1117686188781662": {
+    "fb_id": "1117686188781662",
+    "name": "Doodles of Louisiana",
+    "url": "https://www.facebook.com/DoodlesOfLouisiana",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/280485787_1117686188781662_1773497406171536734_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx958x958&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=LvizzZ2jb68Q7kNvwG_-9za&_nc_oc=AdrZ-6_n-rmjW0KFAoW248Qa7-Eczl9XNgE3CdB6Cq7AoXc4Fs6vhLSe-W2mKmgREGY&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=pelMvMZbxRbN5uMQAHbS1Q&_nc_ss=7b2a8&oh=00_AQM9fvnyUQYVOsjpJy_ToFyAqhYK3KsK0rzWs8DVS57_BQ&oe=6ADE69C2",
     "subtitle": "",
     "is_target_dog": true,
-    "detection_method": "Khách hàng nuôi cún xác thực qua NLP & Tên (Từ khóa: boykin, spaniels)",
+    "detection_method": "Khách hàng nuôi cún xác thực qua NLP & Tên (Từ khóa: doodles)",
     "ai_vision_result": "non_dog (P=0.85)",
     "confidence": 0.85,
     "matched_keywords": [
-      "boykin",
-      "spaniels"
+      "doodles"
     ],
     "local_photos": [
-      "downloaded_collections/1042413175162171/1042413175162171_01.jpg"
+      "downloaded_collections/1117686188781662/1117686188781662_01.jpg"
     ],
-    "scraped_at": "2026-10-21T08:31:49.757Z"
+    "scraped_at": "2026-10-21T08:56:20.964Z"
   },
-  "61552753361052": {
-    "fb_id": "61552753361052",
-    "name": "Eliana’s Shih Tzu Home",
-    "url": "https://www.facebook.com/profile.php?id=61552753361052",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/838967521_122256247310091778_3876985609640057852_n.jpg?stp=cp6_dst-jpg_tt6&cstp=mx1320x1320&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=1zSXN-tHW60Q7kNvwH-KUnB&_nc_oc=Adrc_fhEGh1mGV1c3FFbYPc5uIAxmk8GO6m7mBgQ7fdJH3Ty_8f1QYh3GZO-pNFxepM&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=TwICOsyVNFPr1QMO3-Kemw&_nc_ss=7b2a8&oh=00_AQOZcfg42vUA05lqNSqu4Y70ZV55QgWmYsRDhYrkhjoCjw&oe=6ADE65A5",
+  "122348323874064888": {
+    "fb_id": "122348323874064888",
+    "name": "16 Paws Goldens",
+    "url": "https://www.facebook.com/16PawsGoldens",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/853441685_122348323874064888_3226424898471433872_n.jpg?stp=cp6_dst-jpg_tt6&cstp=mx2048x2048&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=12YKDZ0y3MoQ7kNvwE4F8SH&_nc_oc=AdrfUphicb9s0yPRDTKRQnAvg71twQHzKlsle2Vw5awfEH_wJTAAcLXSKsN9Sw-esN0&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=pelMvMZbxRbN5uMQAHbS1Q&_nc_ss=7b2a8&oh=00_AQPwNvT5R7xJXZlNuaZ4yyZlfF4OD0i7s4Y4_3A1PRpPOQ&oe=6ADE3E17",
+    "subtitle": "",
+    "is_target_dog": true,
+    "detection_method": "Chó xác thực qua Từ khóa & AI (Từ khóa: goldens, golden retriever, P_dog=1.00)",
+    "ai_vision_result": "adult_dog (P=1.00)",
+    "confidence": 1.0,
+    "matched_keywords": [
+      "goldens",
+      "golden retriever"
+    ],
+    "local_photos": [
+      "downloaded_collections/122348323874064888/122348323874064888_01.jpg"
+    ],
+    "scraped_at": "2026-10-21T08:56:20.964Z"
+  },
+  "167575609124204": {
+    "fb_id": "167575609124204",
+    "name": "Brandi’s Southern Doodles & Poodles, LLC",
+    "url": "https://www.facebook.com/BrandisSouthernDoodlesandPoodles",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/290874043_167575609124204_8051960330153032304_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=YQZymWJ3-y4Q7kNvwHVe2fB&_nc_oc=Adrqjmp_DmhWnTiBimR93_qm4amEiy2QcxlW4LVFWkB4fnSxouhi4zAZCyA3UsGb2NM&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=pelMvMZbxRbN5uMQAHbS1Q&_nc_ss=7b2a8&oh=00_AQO4M9H1q9mWC48B-W7v-25Td6UV0PlCaHWQh7MMjNl9Lg&oe=6ADE4DE9",
+    "subtitle": "Northwestern State University",
+    "is_target_dog": true,
+    "detection_method": "Khách hàng nuôi cún xác thực qua NLP & Tên (Từ khóa: poodles, doodles)",
+    "ai_vision_result": "non_dog (P=0.85)",
+    "confidence": 0.85,
+    "matched_keywords": [
+      "poodles",
+      "doodles"
+    ],
+    "local_photos": [
+      "downloaded_collections/167575609124204/167575609124204_01.jpg"
+    ],
+    "scraped_at": "2026-10-21T08:56:20.964Z"
+  },
+  "224535483884124": {
+    "fb_id": "224535483884124",
+    "name": "Galaxy Golden Retrievers",
+    "url": "https://www.facebook.com/galaxygoldenretrievers",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/368381343_224535483884124_7262168979554044494_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx956x960&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Fozk3m8ofZUQ7kNvwHk3Dev&_nc_oc=AdoY_TUW80Ixf2IsE5KV1w5oPOPzi_ptw2OQjkTde9VcAhkPP-WYZF--YAjl8MBH2kY&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=W3-63CRhSeTi0X6tRyjinQ&_nc_ss=7b2a8&oh=00_AQMz1t90gf2bxZRAOPmzS40sKuqK23udRILxoIZ99ekuEA&oe=6ADE565A",
+    "subtitle": "",
+    "is_target_dog": true,
+    "detection_method": "Khách hàng nuôi cún xác thực qua NLP & Tên (Từ khóa: golden retrievers, retrievers)",
+    "ai_vision_result": "non_dog (P=0.85)",
+    "confidence": 0.85,
+    "matched_keywords": [
+      "golden retrievers",
+      "retrievers",
+      "goldens"
+    ],
+    "local_photos": [
+      "downloaded_collections/224535483884124/224535483884124_01.jpg"
+    ],
+    "scraped_at": "2026-10-21T08:56:21.893Z"
+  },
+  "727311656940554": {
+    "fb_id": "727311656940554",
+    "name": "Golden Puppies",
+    "url": "https://www.facebook.com/goldenpuppies2004",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/530235894_727311656940554_8801302940165924973_n.jpg?stp=c507.540.1422.1423a_cp0_dst-jpg_tt6&cstp=mx1422x1423&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Hoq6NuCogV8Q7kNvwEB7GfP&_nc_oc=AdpXKgkhgvSL0qJc_-82d8oRZNf-J9oCE9OiklOMFQxEb4pDVAiVaMHpK6DlJcTS0zU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=W3-63CRhSeTi0X6tRyjinQ&_nc_ss=7b2a8&oh=00_AQMVJL9PwWeX-QIYDMIBsq4DIFAw8HukSKTfDaAwYbrD_A&oe=6ADE3D7D",
+    "subtitle": "",
+    "is_target_dog": true,
+    "detection_method": "B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder: puppies, puppy, dog)",
+    "ai_vision_result": "adult_dog (P=1.00)",
+    "confidence": 1.0,
+    "matched_keywords": [
+      "puppies",
+      "puppy",
+      "dog",
+      "goldens"
+    ],
+    "local_photos": [
+      "downloaded_collections/727311656940554/727311656940554_01.jpg"
+    ],
+    "scraped_at": "2026-10-21T08:56:21.893Z"
+  },
+  "1713907270555802": {
+    "fb_id": "1713907270555802",
+    "name": "Beauty and the Beast Shih Tzu",
+    "url": "https://www.facebook.com/BeautysShihTzu",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/854337368_1713907270555802_3166642091340115423_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=WCfvxI38zx8Q7kNvwEjrNu9&_nc_oc=Adob3XQ7o0vsKe8Rgt9BxFxPabxD6XcuUfYHgIvADOzYI7RB2-3hq8lgzeK92i34aLk&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=W3-63CRhSeTi0X6tRyjinQ&_nc_ss=7b2a8&oh=00_AQPuUc2qyLkwN3kVJj2jjdzhdI_z8WbladuDG1hEbwWhcQ&oe=6ADE3F59",
     "subtitle": "",
     "is_target_dog": true,
     "detection_method": "Chó xác thực qua Từ khóa & AI (Từ khóa: shih tzu, P_dog=1.00)",
@@ -114,155 +181,55 @@
       "shih tzu"
     ],
     "local_photos": [
-      "downloaded_collections/61552753361052/61552753361052_01.jpg"
+      "downloaded_collections/1713907270555802/1713907270555802_01.jpg"
     ],
-    "scraped_at": "2026-10-21T08:31:49.757Z"
+    "scraped_at": "2026-10-21T08:56:21.893Z"
   },
-  "909141020535285": {
-    "fb_id": "909141020535285",
-    "name": "Family Loved Golden Retrievers",
-    "url": "https://www.facebook.com/FamilyLovedGoldenRetrievers",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/326488783_909141020535285_7958935178343501974_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=104&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=KCkBpAyH_X4Q7kNvwG_0u7p&_nc_oc=AdqpaFrDKUJWZ0RjZaw1Ftlhn-WNPFO_xA6h11WNnO0orGxBODdWYLepdmmoMZCNvhU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=TwICOsyVNFPr1QMO3-Kemw&_nc_ss=7b2a8&oh=00_AQMIEW37_fVuRYohQzq54OCkEnN8kOT6qgITq91MNuE5tg&oe=6ADE55C8",
-    "subtitle": "Thành phố Yuba, California",
+  "122193969698840038": {
+    "fb_id": "122193969698840038",
+    "name": "Shih Tzu Love'r",
+    "url": "https://www.facebook.com/shihtzulovers02",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/751883689_122193969698840038_5392462303461976167_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=6neccbWYohAQ7kNvwE-4Qlt&_nc_oc=AdpFYRDPh9z0v8qmF9i8I8G5BGFYcr52nPHR8mg1--IoueFm2rurFK3muXwEoS5i8Ng&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=W3-63CRhSeTi0X6tRyjinQ&_nc_ss=7b2a8&oh=00_AQMjw30eryhv4uI7o57_txEXm663N77XwQ5uan6uE4rzdw&oe=6ADE3DD7",
+    "subtitle": "",
     "is_target_dog": true,
-    "detection_method": "Chó xác thực qua Từ khóa & AI (Từ khóa: golden retrievers, retrievers, P_dog=1.00)",
-    "ai_vision_result": "adult_dog (P=1.00)",
-    "confidence": 1.0,
-    "matched_keywords": [
-      "golden retrievers",
-      "retrievers",
-      "goldens"
-    ],
-    "local_photos": [
-      "downloaded_collections/909141020535285/909141020535285_01.jpg"
-    ],
-    "scraped_at": "2026-10-21T08:31:49.757Z"
-  },
-  "61591593760286": {
-    "fb_id": "61591593760286",
-    "name": "I Love Dogs Forge 'N Fetch",
-    "url": "https://www.facebook.com/profile.php?id=61591593760286",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/753954046_122112615273386458_4146374115223244916_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1079x1078&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Ni6iO7UEIhAQ7kNvwEX3aDq&_nc_oc=Adrz8cAAO2KmFnkZuRFza8iqAvdl16K9ANiruVQlW0Gf0J8H84W8375VrlBdRXWu9Uo&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=HP3imHJzQbwK5_D9L5y4YQ&_nc_ss=7b2a8&oh=00_AQO2tZAE_PYlpJU34MDZlFQD15hI23WOU7elgwST5qh6bw&oe=6ADE430D",
-    "subtitle": "Tempe, Arizona",
-    "is_target_dog": true,
-    "detection_method": "Chó xác thực qua Từ khóa & AI (Từ khóa: dogs, P_dog=1.00)",
+    "detection_method": "Chó xác thực qua Từ khóa & AI (Từ khóa: shih tzu, P_dog=1.00)",
     "ai_vision_result": "puppy (P=1.00)",
     "confidence": 1.0,
     "matched_keywords": [
-      "dogs"
+      "shih tzu"
     ],
     "local_photos": [
-      "downloaded_collections/61591593760286/61591593760286_01.jpg"
+      "downloaded_collections/122193969698840038/122193969698840038_01.jpg"
     ],
-    "scraped_at": "2026-10-21T08:31:49.757Z"
+    "scraped_at": "2026-10-21T08:56:21.893Z"
   },
-  "61594775080228": {
-    "fb_id": "61594775080228",
-    "name": "Yorkshih Pupco",
-    "url": "https://www.facebook.com/profile.php?id=61594775080228",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/830513831_122102418099492502_4902222354387580447_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx800x800&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=EsJnYIDH-P0Q7kNvwF_S4j8&_nc_oc=AdolxT1vtUo6WEzYifsxx3wdxMH5qMFOkvd3Dv6_4e8LN-DXvU8v0UGTTe9ILvMYdig&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=HP3imHJzQbwK5_D9L5y4YQ&_nc_ss=7b2a8&oh=00_AQMxPuNOASl5lLsgUP07MQPcBGYSzfk1IVucqOeJFMC7Vw&oe=6ADE47B5",
-    "subtitle": "Breeder tại Breeders' World Online Sales",
+  "134105013011006": {
+    "fb_id": "134105013011006",
+    "name": "Lil’ Bit’s Shih Tzu PUPS of NC",
+    "url": "https://www.facebook.com/lilbitspups",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/349320352_134105013011006_4377198773058659903_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1170x1170&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=dWgF00YllvgQ7kNvwFoblVY&_nc_oc=AdpcjWk8V-ykX3wgyPm0TKbA-DOC6ueNtT7fBoymBY0v1cD56Oc5vKGCFhYxxsgQkeo&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=W3-63CRhSeTi0X6tRyjinQ&_nc_ss=7b2a8&oh=00_AQNoIW2nGko2V6-xIK8cQ1KYCC5mlJGs3kvJHcor3w8_KQ&oe=6ADE4B68",
+    "subtitle": "Walkertown, North Carolina",
     "is_target_dog": true,
-    "detection_method": "B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder: breeder, breeders, pupco)",
-    "ai_vision_result": "non_dog (P=0.95)",
-    "confidence": 0.95,
+    "detection_method": "B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder: pups, shih tzu, puppy)",
+    "ai_vision_result": "adult_dog (P=1.00)",
+    "confidence": 1.0,
     "matched_keywords": [
-      "breeder",
-      "breeders",
-      "pupco",
-      "yorkshire",
+      "pups",
       "shih tzu",
-      "pup",
       "puppy",
-      "dog"
+      "dog",
+      "puppies"
     ],
     "local_photos": [
-      "downloaded_collections/61594775080228/61594775080228_01.jpg"
+      "downloaded_collections/134105013011006/134105013011006_01.jpg"
     ],
-    "scraped_at": "2026-10-21T08:31:49.758Z"
+    "scraped_at": "2026-10-21T08:56:21.894Z"
   },
-  "10245174169992374": {
-    "fb_id": "10245174169992374",
-    "name": "House of Dixon",
-    "url": "https://www.facebook.com/house.of.dixon",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/843461338_10245174169992374_3148441180176453543_n.jpg?stp=c0.0.1536.1536a_cp0_dst-jpg_tt6&cstp=mx1536x1536&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=dDBOklflVMUQ7kNvwGnOrbU&_nc_oc=AdolZaBcQL5Q-mIivpyzHJC-3zCVFLANpmj2B_qkwlvURRn49zhZWefYVXfpcoDPfuQ&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=HP3imHJzQbwK5_D9L5y4YQ&_nc_ss=7b2a8&oh=00_AQMwJkcwLZCn6blio3lTpxOAQRJHLSADHOfdvqg0Dp-FTg&oe=6ADE5529",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (1 mặt) - Avatar Ground Truth",
-    "ai_vision_result": "puppy (P=1.00)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:49.758Z"
-  },
-  "100087170559523": {
-    "fb_id": "100087170559523",
-    "name": "Clovers Legacy Siberians",
-    "url": "https://www.facebook.com/profile.php?id=100087170559523",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/803828297_1063894169859592_3669210362130774243_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1660x1662&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=QWJGdMJtEh0Q7kNvwFDgObz&_nc_oc=AdozYnmKkfux1AZEDHRAUlMEXR7V3ilbyYuqYfgw-3Z0vKMd7Jj8AVr-MppcT3UY4c0&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=HP3imHJzQbwK5_D9L5y4YQ&_nc_ss=7b2a8&oh=00_AQPo6sney4awzuY4LL5hvMKbJBLLd58ihgfFqtBeZHpfXA&oe=6ADE4CA2",
-    "subtitle": "Ocala, Florida",
-    "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (1 mặt) - Avatar Ground Truth",
-    "ai_vision_result": "puppy (P=1.00)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:49.758Z"
-  },
-  "61551532070511": {
-    "fb_id": "61551532070511",
-    "name": "Oakhaven Acres Aussies- AKC Australian Shepherds",
-    "url": "https://www.facebook.com/profile.php?id=61551532070511",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/427143042_122133778058051069_7335697382670797595_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1170x1170&_nc_cat=102&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=FXFGb8mH_kEQ7kNvwGyHi8Y&_nc_oc=Adr7QPqn9TWmoPvg5PVMQ0XhE5o0u6TghXQJDLA6BUNVWjNBCwYGYaq3OEn_ED4uQBQ&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=HP3imHJzQbwK5_D9L5y4YQ&_nc_ss=7b2a8&oh=00_AQPI-hF_GlM-ASJS-S_YyieWtSZ-BN8gDQKxOwDEdZiD9Q&oe=6ADE3592",
-    "subtitle": "",
-    "is_target_dog": true,
-    "detection_method": "B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder: akc, shepherds, aussies)",
-    "ai_vision_result": "non_dog (P=0.95)",
-    "confidence": 0.95,
-    "matched_keywords": [
-      "akc",
-      "shepherds",
-      "aussies",
-      "australian shepherd"
-    ],
-    "local_photos": [
-      "downloaded_collections/61551532070511/61551532070511_01.jpg"
-    ],
-    "scraped_at": "2026-10-21T08:31:49.758Z"
-  },
-  "61595133877244": {
-    "fb_id": "61595133877244",
-    "name": "Stapleton Stapleton",
-    "url": "https://www.facebook.com/profile.php?id=61595133877244",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/846137411_122102657901504462_1013262175268017579_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1290x1290&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=DRIPnfbtT60Q7kNvwFN7N0q&_nc_oc=AdqGOlIdSwtfjR2EPR7sxTPEYkW8POKr9w05eqyXy9r26DN6XMeaZ_JZ74Wn4AvE1yY&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=HP3imHJzQbwK5_D9L5y4YQ&_nc_ss=7b2a8&oh=00_AQPCsTmngdQwYYN5Hpi___moB5JJ5UkUE6lC_AUTlVoh8A&oe=6ADE44DC",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Ảnh đại diện đơn điệu / Nền đơn sắc chiếm 90.9%",
-    "ai_vision_result": "non_dog",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:49.758Z"
-  },
-  "471506465671661": {
-    "fb_id": "471506465671661",
-    "name": "Gavin Gavin",
-    "url": "https://www.facebook.com/gavin.gavin.2026",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=cp0_dst-png&cstp=mx2048x2048&_nc_cat=1&ccb=1-7&_nc_sid=2afd5f&_nc_ohc=S6pIvhSwy0sQ7kNvwGPQ21E&_nc_oc=AdqvwXhIy4sLCqPsbtWPobQ08p_BYjMPeXo7H60O7X9Tk_0wxNbSeJOULZj_1ImNQi8&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_ss=7b2a8&oh=00_AQOiFSMKmxBNGkJbjOd-yD9gsNDzinVETr-muJlJNBXk4w&oe=6AFFD27A",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Ảnh đại diện mặc định / Trống (Default Silhouette)",
-    "ai_vision_result": "non_dog",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:49.759Z"
-  },
-  "61590018398181": {
-    "fb_id": "61590018398181",
-    "name": "Tiny Dream Tails Home",
-    "url": "https://www.facebook.com/profile.php?id=61590018398181",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/835845369_122118140535333946_819939920570636478_n.jpg?stp=c0.0.900.900a_cp0_dst-jpg_tt6&cstp=mx900x900&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=w53HfObICqsQ7kNvwE-UqOT&_nc_oc=AdpsGh2Hl0fcDJjluwgZJ-7z-2bM-cSJ9nRp_LV_PSdHyAJLAhuk1eTEOQOm7kairYw&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=HP3imHJzQbwK5_D9L5y4YQ&_nc_ss=7b2a8&oh=00_AQMhZjoUYBdYOoDOggW8kXzT4oj0BEcP6FlyVGnZjQaiqA&oe=6ADE5D4F",
+  "621170689532533": {
+    "fb_id": "621170689532533",
+    "name": "Gigante Pirineo",
+    "url": "https://www.facebook.com/nat.hernandez.98096",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/308357356_621170689532533_7234696837601595462_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx2048x2047&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=4tvfSN5VoW0Q7kNvwHrwlxG&_nc_oc=Adp0TcfSKW0ohKdUZLakAAfPrS-f7NB5TUrYV-6oh1IDFSIy3GA0JcdsSIUqCsNthCQ&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=W3-63CRhSeTi0X6tRyjinQ&_nc_ss=7b2a8&oh=00_AQM2kJ23dLzhRC0pP9h7EeWj6vT0zFyQXdFILu-FFRNYUg&oe=6ADE562B",
     "subtitle": "",
     "is_target_dog": false,
     "detection_method": "Phát hiện khuôn mặt người (1 mặt) - Avatar Ground Truth",
@@ -270,417 +237,283 @@
     "confidence": 0.0,
     "matched_keywords": [],
     "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:49.759Z"
+    "scraped_at": "2026-10-21T08:56:21.894Z"
   },
-  "61595808561948": {
-    "fb_id": "61595808561948",
-    "name": "Steve",
-    "url": "https://www.facebook.com/profile.php?id=61595808561948",
-    "avatar_url": "https://ui-avatars.com/api/?name=Steve&background=2563eb&color=fff&size=200",
+  "103750072031616": {
+    "fb_id": "103750072031616",
+    "name": "Willow Oak Farm White Labs",
+    "url": "https://www.facebook.com/willowoakfarmwhitelabs",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/239326327_103750072031616_8246519884499016640_n.png?stp=c226.0.1036.1036a_cp0_dst-png&cstp=mx1036x1036&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=VoCMcdQms2kQ7kNvwHGcnao&_nc_oc=Adolgiyk1m5c6zXpxZMofnxHL--Gs1-I-UW6ScqXoisJ0xL8nPGLYLJdAvZFomXgTFM&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=x_eCW6M3_boLIlu9Xz2UVw&_nc_ss=7b2a8&oh=00_AQPnsGKYXLsOnCGlBqyLiHfmVnP-v7OBQ_Wz0737M7M1ug&oe=6ADE538E",
     "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Ảnh đại diện mặc định / Trống (Default Silhouette)",
-    "ai_vision_result": "non_dog",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:49.760Z"
-  },
-  "2313795466088310": {
-    "fb_id": "2313795466088310",
-    "name": "Tham gia",
-    "url": "https://www.facebook.com/profile.php?id=2313795466088310",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/657365119_122100137462950562_4147497371526233657_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx400x402&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=f907e8&_nc_ohc=IjvmCBN5fAcQ7kNvwFeFr9s&_nc_oc=AdprHo3lsujLct0esMbMqlKz6XUG8IYT4HR7l-ixstH0ndMks63wy8ZOKTlBxlygV2E&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=-PLmbSTUlwtHEShUeNQvtg&_nc_ss=7b2a8&oh=00_AQN_wqDP9JITSGJ8i39-ooFE4aLVsNuRs0FFz75Xd9NUeA&oe=6ADE49B1",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Không đủ chứng cứ chó (P_dog=0.98, P_non=0.02, Adult=0.41, Puppy=0.58, không có từ khóa cún cưng)",
-    "ai_vision_result": "puppy (P=0.98)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:49.762Z"
-  },
-  "61591159874766": {
-    "fb_id": "61591159874766",
-    "name": "dogmode",
-    "url": "https://www.facebook.com/profile.php?id=61591159874766",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/819742723_122120490273371995_1203805570480069658_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1024x1024&_nc_cat=107&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=QrXlJSf5ZrcQ7kNvwFmGbip&_nc_oc=AdqHiI0OrUt7dgUGeWTzxzaL502T2QPs8IhE-A8w25QPY5w4YB8EslIWRRjVrwG1368&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=d0EBryXU1UgygpoH5zQ81A&_nc_ss=7b2a8&oh=00_AQN_cEZ4iJ5U_UD-5aoXmp71GUjFQeqPMLmQ91Ciw2gyVA&oe=6ADE38E6",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (1 mặt) - Avatar Ground Truth",
-    "ai_vision_result": "non_dog (P=0.00)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:51.447Z"
-  },
-  "61592810396425": {
-    "fb_id": "61592810396425",
-    "name": "Maurices Paws and Rides",
-    "url": "https://www.facebook.com/profile.php?id=61592810396425",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/761497497_122095831467427013_4855073860619383127_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=F516mW-18fwQ7kNvwEHW4q7&_nc_oc=Adou84mDDrInLCu3jsmgh-FvWEeX-T8w-I8qLatb7zjhXYpnj_bLIV1S94WV9rvOzzE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=d0EBryXU1UgygpoH5zQ81A&_nc_ss=7b2a8&oh=00_AQOelTYDTQRYGcap66JRydoZWlDVH6OsrxCSwfTs3zP91A&oe=6ADE53A7",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (1 mặt) - Avatar Ground Truth",
-    "ai_vision_result": "puppy (P=1.00)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:51.447Z"
-  },
-  "61588242310496": {
-    "fb_id": "61588242310496",
-    "name": "Bottom Top Basset’s",
-    "url": "https://www.facebook.com/profile.php?id=61588242310496",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/825267903_122124942699274743_5172081817443253017_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=2Nx0sQfNEdYQ7kNvwEEHpwQ&_nc_oc=AdrGG7ydqjr2dqoG-wqqKcuIg7HL53ZRvs1rZ-bH9HiCb8i1oCMaFNiwOeeYbo3oF-8&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=d0EBryXU1UgygpoH5zQ81A&_nc_ss=7b2a8&oh=00_AQMClSH_3Pr7Fo8AETARMoZoeLNCTt3jcoMjIHQnaOycgg&oe=6ADE5311",
-    "subtitle": "Quận Nelson",
     "is_target_dog": true,
-    "detection_method": "Khách hàng nuôi cún xác thực qua NLP & Tên (Từ khóa: basset)",
+    "detection_method": "Khách hàng nuôi cún xác thực qua NLP & Tên (Từ khóa: labs)",
     "ai_vision_result": "non_dog (P=0.85)",
     "confidence": 0.85,
     "matched_keywords": [
-      "basset"
+      "labs"
     ],
     "local_photos": [
-      "downloaded_collections/61588242310496/61588242310496_01.jpg"
+      "downloaded_collections/103750072031616/103750072031616_01.jpg"
     ],
-    "scraped_at": "2026-10-21T08:31:51.447Z"
+    "scraped_at": "2026-10-21T08:56:22.768Z"
   },
-  "443239151172810": {
-    "fb_id": "443239151172810",
-    "name": "Stonebrooke Subdivision HOA",
-    "url": "https://www.facebook.com/StonebrookSubdivisionga",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/301274952_443239151172810_5807777954778373216_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=heYWCNDOEE0Q7kNvwHCO6Kz&_nc_oc=Adr1SbOYIdKyAEIlQcht3Ys1nhE3BtwR6sGXnWxcFHu3v9k0v5-wLXzbgSVe3OhB4o8&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=d0EBryXU1UgygpoH5zQ81A&_nc_ss=7b2a8&oh=00_AQNSYBfI88B-7V49EvwTM2qmTIh0aO19YDN4hYG02Uj72g&oe=6ADE35C3",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (3 mặt) - Avatar Ground Truth",
-    "ai_vision_result": "non_dog (P=0.00)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:51.447Z"
-  },
-  "1558831339580802": {
-    "fb_id": "1558831339580802",
-    "name": "The Psychic Love Doctor Show",
-    "url": "https://www.facebook.com/pldshow",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/656180914_1558831339580802_4146835041684351911_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1154x1154&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=l8exNu3IpcoQ7kNvwGdFSl9&_nc_oc=AdrBKxjMvyTsODureFBKIeRugidqULT_XU0gxhieICiO9e0D1GxEc5X1sTMgacnqFr0&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=d0EBryXU1UgygpoH5zQ81A&_nc_ss=7b2a8&oh=00_AQNuUkSUwoWMwPxfcgcQCV74JXuXrhBftNgRmppPsbAb-g&oe=6ADE388A",
-    "subtitle": "Virginia Beach",
-    "is_target_dog": false,
-    "detection_method": "Từ khóa loại trừ phi thú cưng: 'Psychic'",
-    "ai_vision_result": "non_dog",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:51.447Z"
-  },
-  "151701987518063": {
-    "fb_id": "151701987518063",
-    "name": "Hill Top LLC",
-    "url": "https://www.facebook.com/hilltopgrooming",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/296017929_151701987518063_2231707952510620961_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=bkz-rw0IWPIQ7kNvwHA4vCy&_nc_oc=AdoskG52cOj5Ve-GbLIpXKByjhPd54i--EIRTXFFWzqBj4wH_zfrvLUTALk-tOU09cI&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=d0EBryXU1UgygpoH5zQ81A&_nc_ss=7b2a8&oh=00_AQMCA4JdAez_jUG7rjws8UK-mF8gJZx2vgxWcrSc_DzFhA&oe=6ADE3738",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (2 mặt) - Avatar Ground Truth",
-    "ai_vision_result": "puppy (P=1.00)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:51.448Z"
-  },
-  "61594634883707": {
-    "fb_id": "61594634883707",
-    "name": "Good Boy's Belly",
-    "url": "https://www.facebook.com/profile.php?id=61594634883707",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/835306596_122107786497487829_9099079779415783273_n.jpg?stp=c76.78.938.938a_cp6_dst-jpg_tt6&cstp=mx938x938&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=2blsmwX2F8MQ7kNvwHfXGJ7&_nc_oc=Adp-SG1-fZ6E_yrHA678zWqYx8A-UjKdlRZJq_Kzj8iPHLQ4J-rEciR2tVjVh3jwaVY&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=d0EBryXU1UgygpoH5zQ81A&_nc_ss=7b2a8&oh=00_AQNtQ6KVQohauHxlpyg3xoScqz_cGqpOPSCqPeXv_gaLWg&oe=6ADE3242",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (7 mặt) - Avatar Ground Truth",
-    "ai_vision_result": "non_dog (P=0.00)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:51.448Z"
-  },
-  "61592584514030": {
-    "fb_id": "61592584514030",
-    "name": "Lucky Pup Supply",
-    "url": "https://www.facebook.com/profile.php?id=61592584514030",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=cp0_dst-png&cstp=mx2048x2048&_nc_cat=1&ccb=1-7&_nc_sid=2afd5f&_nc_ohc=S6pIvhSwy0sQ7kNvwGPQ21E&_nc_oc=AdqvwXhIy4sLCqPsbtWPobQ08p_BYjMPeXo7H60O7X9Tk_0wxNbSeJOULZj_1ImNQi8&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_ss=7b2a8&oh=00_AQOiFSMKmxBNGkJbjOd-yD9gsNDzinVETr-muJlJNBXk4w&oe=6AFFD27A",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Ảnh đại diện mặc định / Trống (Default Silhouette)",
-    "ai_vision_result": "non_dog",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:51.448Z"
-  },
-  "61594781858150": {
-    "fb_id": "61594781858150",
-    "name": "Pawsome Daschund Puppies",
-    "url": "https://www.facebook.com/profile.php?id=61594781858150",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/839806917_122108759649492728_2289165301397021762_n.jpg?stp=c0.0.540.540a_cp0_dst-jpg_tt6&cstp=mx540x540&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=2UvAoPM99EEQ7kNvwHxkrkL&_nc_oc=AdrESu6ut2JVf7qtFuvRkFUswJlaQsHriYHFk6b4MTqBZbGWen-GSMMdPRKni2uuexU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=y4c-DeRUU11dMr2UX5j8JA&_nc_ss=7b2a8&oh=00_AQOcoHhyZy0YKhN_sW7QUn2AkPK_Kt9grNoXmvOIjVca6w&oe=6ADE3700",
-    "subtitle": "",
-    "is_target_dog": true,
-    "detection_method": "B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder: puppies, puppy, dog)",
-    "ai_vision_result": "adult_dog (P=1.00)",
-    "confidence": 1.0,
-    "matched_keywords": [
-      "puppies",
-      "puppy",
-      "dog"
-    ],
-    "local_photos": [
-      "downloaded_collections/61594781858150/61594781858150_01.jpg"
-    ],
-    "scraped_at": "2026-10-21T08:31:51.953Z"
-  },
-  "1117978860749730": {
-    "fb_id": "1117978860749730",
-    "name": "Chiedilo a Massimo",
-    "url": "https://www.facebook.com/chiediloamassimo",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/828832073_1117978860749730_5517301932627471295_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=af4OYOgGjIoQ7kNvwGyNfyQ&_nc_oc=AdoVoUo3o0RVztxQXOjswO9ATQpqfCOoE1wPJ13l32sLuYYrrapMDN6yR4zJar2JwqA&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=y4c-DeRUU11dMr2UX5j8JA&_nc_ss=7b2a8&oh=00_AQOsvD-s8rzRef4mNOjJtgJNEzEOtJVMIf4fc7AWr-yFdQ&oe=6ADE5B95",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (2 mặt) - Avatar Ground Truth",
-    "ai_vision_result": "non_dog (P=0.00)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:51.953Z"
-  },
-  "61594573876610": {
-    "fb_id": "61594573876610",
-    "name": "DawgRun",
-    "url": "https://www.facebook.com/profile.php?id=61594573876610",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/825268462_10175553976865022_8445002336887531917_n.jpg?stp=c16.0.1256.1256a_cp6_dst-jpg_tt6&cstp=mx1256x1256&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=8xKCDobGGYYQ7kNvwHseZ3I&_nc_oc=AdpZcUUYSf9NMcXFNkZKsuut-ZY_1fyqspCATU1obklcszJ3upofoTSYdMeJBbF2xrA&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=y4c-DeRUU11dMr2UX5j8JA&_nc_ss=7b2a8&oh=00_AQPH4uBWQNMv9yt_zG95HdtnSvFXxpP7d7Mu8ytOlDU7wg&oe=6ADE3403",
-    "subtitle": "",
+  "532411822219296": {
+    "fb_id": "532411822219296",
+    "name": "Jan Hauge",
+    "url": "https://www.facebook.com/jan.hauge.56",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/345151051_532411822219296_1462949678753599483_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx953x960&_nc_cat=107&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=SwiUsgh49h8Q7kNvwFnqICf&_nc_oc=Adq4BIRf6dNN-S7otFtagAXRTCJAlEDXEjse3aq0Lte3JKFm-bQRRnAAsgySql5_Rj4&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=x_eCW6M3_boLIlu9Xz2UVw&_nc_ss=7b2a8&oh=00_AQMX59wj7KO9UcVwtOOK_ajZXLXHPTS4ZhZ5T3XoBoo85Q&oe=6ADE4750",
+    "subtitle": "Rena, Norway",
     "is_target_dog": false,
     "detection_method": "Phát hiện khuôn mặt người (1 mặt) - Avatar Ground Truth",
     "ai_vision_result": "non_dog (P=0.00)",
     "confidence": 0.0,
     "matched_keywords": [],
     "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:51.953Z"
+    "scraped_at": "2026-10-21T08:56:22.769Z"
   },
-  "61594975918812": {
-    "fb_id": "61594975918812",
-    "name": "Evening Quialo",
-    "url": "https://www.facebook.com/profile.php?id=61594975918812",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/828152309_122096550147499197_7730613172707225904_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx480x481&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=unx99uKoPkgQ7kNvwHx6JJ3&_nc_oc=AdphM4b0K9mFAMbRaQOygjTWZHsVw2MyfCGD_vmafumZIV_MD8VzyUf_4bRGn9aK_gI&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=y4c-DeRUU11dMr2UX5j8JA&_nc_ss=7b2a8&oh=00_AQO6N53FF4Rn4EBTdMFxwEscQK0RfglFJtF1h4M8TjNq2g&oe=6ADE5505",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (3 mặt) - Avatar Ground Truth",
-    "ai_vision_result": "puppy (P=0.58)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:51.953Z"
-  },
-  "100064738564746": {
-    "fb_id": "100064738564746",
-    "name": "บ้านเด็กกำพร้าพระสิริ",
-    "url": "https://www.facebook.com/profile.php?id=100064738564746",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/834039701_1574748018026469_5397610714924799381_n.jpg?stp=c0.183.1547.1547a_cp0_dst-jpg_tt6&cstp=mx1547x1547&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=ynXHHC83X6MQ7kNvwF2E2no&_nc_oc=Adqd1KA-PXiIl4bkxVJZsexsTAW5mBg4PQDjxqyctL76aD1CVMkm5YQbFi7ONGuVA2g&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=y4c-DeRUU11dMr2UX5j8JA&_nc_ss=7b2a8&oh=00_AQP4chC9Uq4J1UKALMdrPdrpA_kDwcdk4AR7Eogpk4jVLA&oe=6ADE5139",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (4 mặt) - Avatar Ground Truth",
-    "ai_vision_result": "non_dog (P=0.01)",
-    "confidence": 0.0,
-    "matched_keywords": [],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:31:51.954Z"
-  },
-  "61594195772352": {
-    "fb_id": "61594195772352",
-    "name": "Jose MiniPuppies",
-    "url": "https://www.facebook.com/profile.php?id=61594195772352",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/855646238_122124401871473192_6657591073014986332_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1053x1050&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=fpciUtL0RqgQ7kNvwHvDvml&_nc_oc=AdrkOtpO68tVOeHRBbQwGKPXDMKv6JIvACChqv-71ZDlzMeiB7o2zM5DLwzGe9EmfD0&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=y4c-DeRUU11dMr2UX5j8JA&_nc_ss=7b2a8&oh=00_AQMoTuCS5W_fKqhvV4ISSWCagCN3T9NI57HCSPDhZ-PTug&oe=6ADE44CF",
-    "subtitle": "",
-    "is_target_dog": true,
-    "detection_method": "B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder: puppy, dog)",
-    "ai_vision_result": "puppy (P=1.00)",
-    "confidence": 0.9996,
-    "matched_keywords": [
-      "puppy",
-      "dog"
-    ],
-    "local_photos": [
-      "downloaded_collections/61594195772352/61594195772352_01.jpg"
-    ],
-    "scraped_at": "2026-10-21T08:31:51.954Z"
-  },
-  "1489668089832323": {
-    "fb_id": "1489668089832323",
-    "name": "Tambali Pembroke welsh corgis est. 1998",
-    "url": "https://www.facebook.com/Tambalicorgis",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/628787013_1489668089832323_6013872381075739493_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1024x1024&_nc_cat=106&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=78QAEnU19pYQ7kNvwEdF6M8&_nc_oc=AdqAnBQs8chVNgaUNDOr8kq6u2kY2oQbBOhBaUC2ubsjg00tY22Uoqr4BrypC7ogkqs&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=y4c-DeRUU11dMr2UX5j8JA&_nc_ss=7b2a8&oh=00_AQOjodBjmS0_j0jf04e6FFQTcRlWSJdebAz-hS_2oJMDmQ&oe=6ADE43E7",
-    "subtitle": "",
-    "is_target_dog": true,
-    "detection_method": "Khách hàng nuôi cún xác thực qua NLP & Tên (Từ khóa: corgis, pembroke)",
-    "ai_vision_result": "non_dog (P=0.85)",
-    "confidence": 0.85,
-    "matched_keywords": [
-      "corgis",
-      "pembroke"
-    ],
-    "local_photos": [
-      "downloaded_collections/1489668089832323/1489668089832323_01.jpg"
-    ],
-    "scraped_at": "2026-10-21T08:31:51.954Z"
-  },
-  "61591427093472": {
-    "fb_id": "61591427093472",
-    "name": "Franklineschipperkes Kennel",
-    "url": "https://www.facebook.com/profile.php?id=61591427093472",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/818936768_122125355133380903_6137241591030814058_n.jpg?stp=cp6_dst-jpg_tt6&cstp=mx845x845&_nc_cat=104&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=hekGuXarAzkQ7kNvwHSLKZB&_nc_oc=AdqK_Pk1Vju7cJ78k38AbjiQxUPrgFfqzKFFtHS2yrhswAlzj4zAGl4mSWwr17GgtnE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=y4c-DeRUU11dMr2UX5j8JA&_nc_ss=7b2a8&oh=00_AQMzIJk4OUXN4yGcWHszoK85mTqgYKndymGkEqsoTNLJQA&oe=6ADE4719",
+  "1930354481705111": {
+    "fb_id": "1930354481705111",
+    "name": "Prairie Creek Kennel",
+    "url": "https://www.facebook.com/PrairieCreekKennel",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/787924714_1930354481705111_8023386184839815697_n.jpg?stp=c0.0.1118.1118a_cp0_dst-jpg_tt6&cstp=mx1118x1118&_nc_cat=107&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=QUF7osBv29sQ7kNvwEs5iLa&_nc_oc=AdqzG72wd25ONZrGn15WhiecIpy6h64OKmGOdQAQGnirgeFQKii7WnI_hZJHUtU9xtU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=x_eCW6M3_boLIlu9Xz2UVw&_nc_ss=7b2a8&oh=00_AQN0rHZ7YxrseRLDb_rYSmbJf4O0iMqScL10q5MBAWNd0g&oe=6ADE686E",
     "subtitle": "",
     "is_target_dog": true,
     "detection_method": "B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder: kennel)",
-    "ai_vision_result": "adult_dog (P=1.00)",
+    "ai_vision_result": "puppy (P=1.00)",
     "confidence": 1.0,
     "matched_keywords": [
       "kennel"
     ],
     "local_photos": [
-      "downloaded_collections/61591427093472/61591427093472_01.jpg"
+      "downloaded_collections/1930354481705111/1930354481705111_01.jpg"
     ],
-    "scraped_at": "2026-10-21T08:31:51.954Z"
+    "scraped_at": "2026-10-21T08:56:22.769Z"
   },
-  "1230700958751014": {
-    "fb_id": "1230700958751014",
-    "name": "Two Way Dog Walking & Pet Services",
-    "url": "https://www.facebook.com/TwoWayDogWalking",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/474457799_1230700958751014_2049372310682325680_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1080x1080&_nc_cat=102&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=gWkAxBZoNSAQ7kNvwGuunc3&_nc_oc=Adrk1RxkxIArxpbIWTwOJ--1HPcvXGgv_NyTNR8YIKvexZ3eXAShdCx2tZTVPd93Jik&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=te8O4haIQ4bk8DSKcpSW7w&_nc_ss=7b2a8&oh=00_AQMX7MgruMyywepIfKVECROrRi8kUNAJaPjmwltgJi9ZOg&oe=6ADE41DA",
+  "3077212222515624": {
+    "fb_id": "3077212222515624",
+    "name": "Sandriano Hodowla Psów Rasowych",
+    "url": "https://www.facebook.com/HodowlaSandriano",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/244408216_3077212222515624_2057139661852482123_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1355x1356&_nc_cat=102&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=rbGEF28rEngQ7kNvwFz6L_b&_nc_oc=Adp_IJKgVDioYaGXDN89gE_Xrlh8XiPwgHHt5knpK6zzrhvi7A5480x_JjQ5u4HOLwU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=x_eCW6M3_boLIlu9Xz2UVw&_nc_ss=7b2a8&oh=00_AQOzpG5ZYZKTmnbXfVRkmLytZTEZ3G1rMymrvIjvylYa9Q&oe=6ADE5076",
     "subtitle": "",
     "is_target_dog": false,
-    "detection_method": "Ảnh đại diện là mặt người (1 mặt), không đủ chứng cứ nuôi/bán chó",
-    "ai_vision_result": "non_dog (P=0.00)",
-    "confidence": 0.85,
-    "matched_keywords": [
-      "dog"
-    ],
-    "local_photos": [],
-    "scraped_at": "2026-10-21T08:37:08.260Z"
-  },
-  "122100576915315299": {
-    "fb_id": "122100576915315299",
-    "name": "The Ark Animal App",
-    "url": "https://www.facebook.com/thearkanimalapp",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/699143022_122100576915315299_3835165728052119807_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx2048x2048&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=G1cLwe1V-t4Q7kNvwF6rezh&_nc_oc=Adp_9YHgD4SOGxJIU_0jxwmjlCiOnpKserkWBnLMPsYCoHlo4mpkOGMWSkM73wtgigg&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=te8O4haIQ4bk8DSKcpSW7w&_nc_ss=7b2a8&oh=00_AQNWfqRJF0FFkOszm1W5DqSQ08NA1lR6a32GmTj12hCiVw&oe=6ADE6611",
-    "subtitle": "",
-    "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (3 mặt) - Avatar Ground Truth",
-    "ai_vision_result": "non_dog (P=0.00)",
+    "detection_method": "Phát hiện khuôn mặt người (1 mặt) - Avatar Ground Truth",
+    "ai_vision_result": "puppy (P=1.00)",
     "confidence": 0.0,
     "matched_keywords": [],
     "local_photos": [],
-    "scraped_at": "2026-10-21T08:37:08.260Z"
+    "scraped_at": "2026-10-21T08:56:22.769Z"
   },
-  "61593315111061": {
-    "fb_id": "61593315111061",
-    "name": "Dachshund Puppies For Adoption And Rehoming",
-    "url": "https://www.facebook.com/profile.php?id=61593315111061",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/766890471_122093395911443837_496170756872224230_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx828x828&_nc_cat=100&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=ihYNssPKU28Q7kNvwEDZvlm&_nc_oc=AdqfWpLpHPGHmq5J1VKT75IRA-swUUjpIjvWsYT90OxxjutYdMMbhfsCNAn4PNy0MWw&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=te8O4haIQ4bk8DSKcpSW7w&_nc_ss=7b2a8&oh=00_AQPNEnh89ueLb2hAllV42UGJvYLcE2NzbTXbGNnpUNbBcg&oe=6ADE644E",
-    "subtitle": "",
-    "is_target_dog": true,
-    "detection_method": "B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder: puppies, dachshund, puppy)",
-    "ai_vision_result": "puppy (P=1.00)",
-    "confidence": 1.0,
-    "matched_keywords": [
-      "puppies",
-      "dachshund",
-      "puppy",
-      "dog"
-    ],
-    "local_photos": [
-      "downloaded_collections/61593315111061/61593315111061_01.jpg"
-    ],
-    "scraped_at": "2026-10-21T08:37:08.260Z"
-  },
-  "61594494459425": {
-    "fb_id": "61594494459425",
-    "name": "Autumn's Aussies",
-    "url": "https://www.facebook.com/profile.php?id=61594494459425",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/820934527_2313498826091469_1498160885209143484_n.jpg?stp=c0.0.1536.1536a_cp0_dst-jpg_tt6&cstp=mx1536x1536&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=L03VojkGVZUQ7kNvwEmEWpp&_nc_oc=AdpipHwllV-m4oMIMNa0_C0eG8SYzQy-oJfiT01OuEgrzjRX2jTN7jORBhtWizMu61Y&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=te8O4haIQ4bk8DSKcpSW7w&_nc_ss=7b2a8&oh=00_AQNfQcVVHLnK9yS2OtyTyFQgwP57d7A1ktjz9h38oZnzCQ&oe=6ADE3FE9",
-    "subtitle": "",
-    "is_target_dog": true,
-    "detection_method": "Chó xác thực qua Từ khóa & AI (Từ khóa: aussies, australian shepherd, P_dog=1.00)",
-    "ai_vision_result": "puppy (P=1.00)",
-    "confidence": 1.0,
-    "matched_keywords": [
-      "aussies",
-      "australian shepherd"
-    ],
-    "local_photos": [
-      "downloaded_collections/61594494459425/61594494459425_01.jpg"
-    ],
-    "scraped_at": "2026-10-21T08:37:08.261Z"
-  },
-  "737020464309322": {
-    "fb_id": "737020464309322",
-    "name": "Pelican & Friends",
-    "url": "https://www.facebook.com/Pelican.and.friends",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/292449699_737020464309322_6439185362993122046_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x959&_nc_cat=102&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=ErfAr9aRQhkQ7kNvwED2Yqe&_nc_oc=AdpwikDSQLe72s3wwHX2I55s1acinSansgM8tpKEBxV2sNaulvhpb0jhASja2S1_JzI&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=te8O4haIQ4bk8DSKcpSW7w&_nc_ss=7b2a8&oh=00_AQOIcUVCKTuU_aQJIYA3z_aDFdIdqbzyQ-wa21q9EgNmlw&oe=6ADE5BF9",
+  "2077687809250846": {
+    "fb_id": "2077687809250846",
+    "name": "Tatyana Katyunina",
+    "url": "https://www.facebook.com/katunina.tat.ana.235985",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/418190773_2077687809250846_3325283002104491238_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx828x828&_nc_cat=107&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=R-JT_DUSIN8Q7kNvwF-aZrZ&_nc_oc=AdpI-fnhxGl2yfVUeJF9C91UQ4p5SFg9bmyP9-ebDHBqI_qwCCnEJOE9lKihhhVL0dE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=x_eCW6M3_boLIlu9Xz2UVw&_nc_ss=7b2a8&oh=00_AQNcJ6Bnj-WopOFmTFjwLAV7TzYEzwUC4faNcQqfmLZkRg&oe=6ADE4E03",
     "subtitle": "",
     "is_target_dog": false,
-    "detection_method": "Phát hiện khuôn mặt người (2 mặt) - Avatar Ground Truth",
+    "detection_method": "Phát hiện khuôn mặt người (5 mặt) - Avatar Ground Truth",
     "ai_vision_result": "adult_dog (P=1.00)",
     "confidence": 0.0,
     "matched_keywords": [],
     "local_photos": [],
-    "scraped_at": "2026-10-21T08:37:08.261Z"
+    "scraped_at": "2026-10-21T08:56:22.770Z"
   },
-  "122193681896610895": {
-    "fb_id": "122193681896610895",
-    "name": "Knock & Bark Miniature Schnauzer.",
-    "url": "https://www.facebook.com/knockandbark",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/779082815_122193681896610895_1254854747032187011_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1134x1122&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=N6pIjA1Ts40Q7kNvwGdzE7P&_nc_oc=AdrKeMKHlIsY0Br3XkfOG2hxdtvMcmsaoRr84NZDJtCAPggWhjKVPK2mvbARdKt8b_A&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=te8O4haIQ4bk8DSKcpSW7w&_nc_ss=7b2a8&oh=00_AQOOfR66vg0y_jnCql9iGHPoPUknemKeAXcUGQCJ5PiMOw&oe=6ADE2F3C",
-    "subtitle": "Las Vegas, Nevada",
-    "is_target_dog": true,
-    "detection_method": "Chó xác thực qua Từ khóa & AI (Từ khóa: schnauzer, miniature schnauzer, P_dog=0.97)",
-    "ai_vision_result": "puppy (P=0.97)",
-    "confidence": 0.9741,
-    "matched_keywords": [
-      "schnauzer",
-      "miniature schnauzer"
-    ],
-    "local_photos": [
-      "downloaded_collections/122193681896610895/122193681896610895_01.jpg"
-    ],
-    "scraped_at": "2026-10-21T08:37:08.264Z"
-  },
-  "61593913773814": {
-    "fb_id": "61593913773814",
-    "name": "Responsible Breeder Mentorship Program",
-    "url": "https://www.facebook.com/profile.php?id=61593913773814",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/789960755_10215640356039617_8106197547239706512_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1254x1254&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Ch42QEEATugQ7kNvwFkzIiS&_nc_oc=Adphq4c8PLfRYPgEWIBtAJ-M8vh4V2BGW3LeogcZpQlX8eo9WjUJSbS0GNyPedmjw2I&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=te8O4haIQ4bk8DSKcpSW7w&_nc_ss=7b2a8&oh=00_AQN5vX4_YYWjLBxPJO8dxEdp3cxECEz9Rb-Q5FKwVbRF9w&oe=6ADE3182",
+  "434190195177077": {
+    "fb_id": "434190195177077",
+    "name": "Creme of the Crop Dachshunds",
+    "url": "https://www.facebook.com/englishcreammniaturedachshunds",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/277559970_434190195177077_5291667728461596283_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1242x1242&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=Af-UHt10BhYQ7kNvwFKMFhu&_nc_oc=Adq4GLGLEcT48PJP2FGuJITIIl12xW0MqVFnpLVN8ykxJJA2HyfIdvsvGCC6h1FU1bc&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=nWISXh2b8NBnOu23IzNfEw&_nc_ss=7b2a8&oh=00_AQM5eU7ropmhOAZJKXeubfTKexBF8l2_bxbDjXlsMd7GCw&oe=6ADE5970",
     "subtitle": "",
     "is_target_dog": true,
-    "detection_method": "B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder: breeder)",
+    "detection_method": "Chó xác thực qua Từ khóa & AI (Từ khóa: dachshunds, P_dog=1.00)",
+    "ai_vision_result": "adult_dog (P=1.00)",
+    "confidence": 1.0,
+    "matched_keywords": [
+      "dachshunds"
+    ],
+    "local_photos": [
+      "downloaded_collections/434190195177077/434190195177077_01.jpg"
+    ],
+    "scraped_at": "2026-10-21T08:56:24.019Z"
+  },
+  "122094153387516831": {
+    "fb_id": "122094153387516831",
+    "name": "Salvați cățeii de la Popești-Iași",
+    "url": "https://www.facebook.com/SalvatiCateiiDeLaPopesti",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/847550055_122094153387516831_8056891142274074859_n.jpg?stp=c0.70.1500.1500a_cp0_dst-jpg_tt6&cstp=mx1500x1500&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=nmoR64VsmXUQ7kNvwEu-_DI&_nc_oc=AdomVof3gO20cj8WM2qq8xPDzwL6bA_d9roWWyw4iv-1kmsLcGgfYkQpEnN8p3eD9XU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=nWISXh2b8NBnOu23IzNfEw&_nc_ss=7b2a8&oh=00_AQPm9thyDGnE8BmYq268iL2SrHXYV6zqXBKFWTM_JFnHew&oe=6ADE44D3",
+    "subtitle": "",
+    "is_target_dog": true,
+    "detection_method": "AI Thị giác nhận diện cún con sắc nét (Puppy=0.93, P_dog=1.00)",
+    "ai_vision_result": "puppy (P=1.00)",
+    "confidence": 1.0,
+    "matched_keywords": [],
+    "local_photos": [
+      "downloaded_collections/122094153387516831/122094153387516831_01.jpg"
+    ],
+    "scraped_at": "2026-10-21T08:56:24.019Z"
+  },
+  "100899445735036": {
+    "fb_id": "100899445735036",
+    "name": "Lasting Legacy Family Dogs",
+    "url": "https://www.facebook.com/LastingLegacyFamilyDogs",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/250386604_100899445735036_6818161615907366810_n.jpg?stp=c202.0.796.796a_cp0_dst-jpg_tt6&cstp=mx796x796&_nc_cat=105&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=DpbFOhaYpiAQ7kNvwEKnHRl&_nc_oc=Ado8y4vLD91d2zyJ93_qc0z4CXlzscX5NW2Ve75kWEk30epOjZakPAXqKGJumnQxKBM&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=nWISXh2b8NBnOu23IzNfEw&_nc_ss=7b2a8&oh=00_AQNwWXRZtnUNHyOAAp7XMTKqBIdNhnSVNUX5kkxUgaHtYg&oe=6ADE3A72",
+    "subtitle": "",
+    "is_target_dog": false,
+    "detection_method": "Ảnh đại diện là mặt người (4 mặt), không đủ chứng cứ nuôi/bán chó",
+    "ai_vision_result": "non_dog (P=0.00)",
+    "confidence": 0.85,
+    "matched_keywords": [
+      "dogs"
+    ],
+    "local_photos": [],
+    "scraped_at": "2026-10-21T08:56:24.019Z"
+  },
+  "1138905091673145": {
+    "fb_id": "1138905091673145",
+    "name": "Hyde Park Cavaliers",
+    "url": "https://www.facebook.com/hyde.park.cavaliers.2025",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/552894529_1138905091673145_212893724666853543_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=tb5968Uum_8Q7kNvwF09BmR&_nc_oc=AdoFUfd1wwWodC1ZSndp48NB8ar3nHcoCGpKz5UNfbs0gWdyTk1cWhfg9G3Y9Oc3Zfg&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=nWISXh2b8NBnOu23IzNfEw&_nc_ss=7b2a8&oh=00_AQPdYZGVKj-ASBzvtzllRKTEsYbVY2rLz1IXMuYvrfXbEA&oe=6ADE3C32",
+    "subtitle": "Greensboro, Bắc Carolina",
+    "is_target_dog": true,
+    "detection_method": "Chó xác thực qua Từ khóa & AI (Từ khóa: cavalier, P_dog=1.00)",
+    "ai_vision_result": "adult_dog (P=1.00)",
+    "confidence": 1.0,
+    "matched_keywords": [
+      "cavalier"
+    ],
+    "local_photos": [
+      "downloaded_collections/1138905091673145/1138905091673145_01.jpg"
+    ],
+    "scraped_at": "2026-10-21T08:56:24.020Z"
+  },
+  "122123912342347266": {
+    "fb_id": "122123912342347266",
+    "name": "MiniDox Pups",
+    "url": "https://www.facebook.com/minidoxpups",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/453383289_122123912342347266_388495722924606013_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx641x640&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=7ES5_0tyRfwQ7kNvwE7D1XU&_nc_oc=AdoJKwODYxrlaVzua3BMEIZXWnPoDGVcIzpl-s17BjcF6334NCCXeGLHf_hoeChYpcE&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=nWISXh2b8NBnOu23IzNfEw&_nc_ss=7b2a8&oh=00_AQM0t8pBAyJVLRiu7WdcIl_F9jMEktziUP3kgcN99WY55Q&oe=6ADE3D47",
+    "subtitle": "Sacramento, California",
+    "is_target_dog": true,
+    "detection_method": "B2B Breeder / Chủ trại cún xác thực qua NLP & Chân dung Chủ trại (Breeder: pups, puppy, dog)",
     "ai_vision_result": "non_dog (P=0.95)",
     "confidence": 0.95,
     "matched_keywords": [
-      "breeder"
+      "pups",
+      "puppy",
+      "dog",
+      "puppies"
     ],
     "local_photos": [
-      "downloaded_collections/61593913773814/61593913773814_01.jpg"
+      "downloaded_collections/122123912342347266/122123912342347266_01.jpg"
     ],
-    "scraped_at": "2026-10-21T08:37:08.264Z"
+    "scraped_at": "2026-10-21T08:56:24.020Z"
   },
-  "61590146927480": {
-    "fb_id": "61590146927480",
-    "name": "Artificial lawn fo pet",
-    "url": "https://www.facebook.com/profile.php?id=61590146927480",
-    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/786819660_122116523625338230_6013575568295166771_n.jpg?stp=c112.0.855.855a_cp0_dst-jpg_tt6&cstp=mx855x855&_nc_cat=103&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=RY7DbOVUeEYQ7kNvwHnZpJW&_nc_oc=AdrGKbq4HjRlD4XzXWnHdNvSD-3UQSxSGA8cz49WvWT01zgvgaY96tfuhWhs1q6MstY&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=te8O4haIQ4bk8DSKcpSW7w&_nc_ss=7b2a8&oh=00_AQNWL8NTaCotQOFeVF6pdXz5Y2gUulaO8xmxTYRhisiZXA&oe=6ADE527B",
+  "1420423891957092": {
+    "fb_id": "1420423891957092",
+    "name": "Діана Клітна",
+    "url": "https://www.facebook.com/diana.bileush",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/458795947_1420423891957092_3213187600126744334_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx952x960&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=gp7ZtakyD5AQ7kNvwHyhgQW&_nc_oc=AdpoMng2iiwn6dtLyxIccUI4cozMWPT9oKUZ0d1Ob6XUgkTa8MOB448We035UzpSgNk&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=nWISXh2b8NBnOu23IzNfEw&_nc_ss=7b2a8&oh=00_AQP9ZCADIPMoqr9PjPOkmEim23azqgcj9jpJAw8ahXnWTw&oe=6ADE3C2D",
+    "subtitle": "Бердичевский педагогический колледж",
+    "is_target_dog": false,
+    "detection_method": "Phát hiện khuôn mặt người (1 mặt) - Avatar Ground Truth",
+    "ai_vision_result": "non_dog (P=0.33)",
+    "confidence": 0.0,
+    "matched_keywords": [],
+    "local_photos": [],
+    "scraped_at": "2026-10-21T08:56:24.020Z"
+  },
+  "855344712613820": {
+    "fb_id": "855344712613820",
+    "name": "Sausage Dog Central",
+    "url": "https://www.facebook.com/SausageDogCentral",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/360084077_855344712613820_7250726187422931738_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1843x1843&_nc_cat=1&ccb=1-7&_nc_sid=edd80f&_nc_ohc=EeI4jy4NI6gQ7kNvwHNXgJh&_nc_oc=AdpYXAV-Q_oPfYJlJdBpYbAYLcOjhJypZZdQXPDMKnE3XUqsK8Gr4KuNdMPajEkKrLI&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=ak9sxYgbexO8hxOyCbHoeQ&_nc_ss=7b2a8&oh=00_AQNA75k3wb8Wp2XBtYPTl7XL18k0_dhj93RTFjv5rqZIPg&oe=6ADE416F",
     "subtitle": "",
+    "is_target_dog": true,
+    "detection_method": "Chó xác thực qua Từ khóa & AI (Từ khóa: dog, P_dog=1.00)",
+    "ai_vision_result": "adult_dog (P=1.00)",
+    "confidence": 1.0,
+    "matched_keywords": [
+      "dog"
+    ],
+    "local_photos": [
+      "downloaded_collections/855344712613820/855344712613820_01.jpg"
+    ],
+    "scraped_at": "2026-10-21T08:56:26.104Z"
+  },
+  "29244657735135090": {
+    "fb_id": "29244657735135090",
+    "name": "Tera Pardee",
+    "url": "https://www.facebook.com/tera.pardee",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/800958918_29244657735135090_1421186922901542451_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1122x1122&_nc_cat=102&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=tLLkByl_BoAQ7kNvwHu5wdk&_nc_oc=AdpsTLdcmoiUv20F-N5Y7ZFn1UpMn8vkPi3H_rI2tAUYw0kAOVHJDw1p-O6M8iRCfhA&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=ak9sxYgbexO8hxOyCbHoeQ&_nc_ss=7b2a8&oh=00_AQM7N_hXB8zz-gjbPDdO5H24KokvYm9DaU0VdmLyErFDiA&oe=6ADE6A5A",
+    "subtitle": "Barista tại Honey & Cream",
+    "is_target_dog": false,
+    "detection_method": "Phát hiện khuôn mặt người (1 mặt) - Avatar Ground Truth",
+    "ai_vision_result": "non_dog (P=0.00)",
+    "confidence": 0.0,
+    "matched_keywords": [],
+    "local_photos": [],
+    "scraped_at": "2026-10-21T08:56:26.104Z"
+  },
+  "2633710096804312": {
+    "fb_id": "2633710096804312",
+    "name": "Chiarafederica Zane",
+    "url": "https://www.facebook.com/sherlockholmes.deirovifioriti",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/402213230_2633710096804312_6428716692292582317_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx958x958&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=btygQpix7J4Q7kNvwFXp2vl&_nc_oc=AdpAFR2ar-GB2Y8E2XsR7bbNsTS58LqOzird-51OzfX4UyV2yBzySd7tVAp1FLOByKU&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=ak9sxYgbexO8hxOyCbHoeQ&_nc_ss=7b2a8&oh=00_AQOrI12l_xX7lKCHIHSWwKeqKdoTuZAjHKgM4GVTUu9erg&oe=6ADE5663",
+    "subtitle": "Làm việc tại Over the Wild Borders",
     "is_target_dog": false,
     "detection_method": "Phát hiện khuôn mặt người (3 mặt) - Avatar Ground Truth",
     "ai_vision_result": "non_dog (P=0.00)",
     "confidence": 0.0,
     "matched_keywords": [],
     "local_photos": [],
-    "scraped_at": "2026-10-21T08:37:08.264Z"
+    "scraped_at": "2026-10-21T08:56:26.105Z"
+  },
+  "4486464461616223": {
+    "fb_id": "4486464461616223",
+    "name": "Montpelier Cavaliers",
+    "url": "https://www.facebook.com/sarah.vasyukhnevich",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/717402555_4486464461616223_2174404301963023400_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1024x1024&_nc_cat=111&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=t_4vuELx2NgQ7kNvwEsfR7S&_nc_oc=AdoJS_nk0XF_8i8yMCxgNnHJFVKgKbHab_dzSD08etDlPt5Okrznfqq9QVaxxpJxNHY&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=ak9sxYgbexO8hxOyCbHoeQ&_nc_ss=7b2a8&oh=00_AQNVLcpIjOWLRxgCTIh3-VO_YwZYmcWZKEwHU5EL5rq7dw&oe=6ADE55CF",
+    "subtitle": "Montpelier, Virginia",
+    "is_target_dog": true,
+    "detection_method": "Chó xác thực qua Từ khóa & AI (Từ khóa: cavalier, P_dog=1.00)",
+    "ai_vision_result": "adult_dog (P=1.00)",
+    "confidence": 1.0,
+    "matched_keywords": [
+      "cavalier"
+    ],
+    "local_photos": [
+      "downloaded_collections/4486464461616223/4486464461616223_01.jpg"
+    ],
+    "scraped_at": "2026-10-21T08:56:26.105Z"
+  },
+  "25642511325416375": {
+    "fb_id": "25642511325416375",
+    "name": "Aurora Lopez Perez",
+    "url": "https://www.facebook.com/aurora.p.lopez",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/623396454_25642511325416375_1384894326437316373_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx960x960&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=G9Z8RlS_0aUQ7kNvwGXFEQU&_nc_oc=Ado2UrFjqY2E7cXSKqd6cutgVKUlenoSP-wHYT7DZleC0eT_7AfJ83Uu7ai1ku8vrwQ&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=ak9sxYgbexO8hxOyCbHoeQ&_nc_ss=7b2a8&oh=00_AQP8MhvOXcjrxB-f1wAOvmpBnhwk01jQzQQHvj7yeFZQcQ&oe=6ADE54B6",
+    "subtitle": "Malti Poo, Shih Tzu & Shih Poo tại Malti Poo, Shih Tzu & Shih Poo",
+    "is_target_dog": true,
+    "detection_method": "Khách hàng nuôi cún xác thực qua NLP & Tên (Từ khóa: shih tzu)",
+    "ai_vision_result": "non_dog (P=0.85)",
+    "confidence": 0.85,
+    "matched_keywords": [
+      "shih tzu"
+    ],
+    "local_photos": [
+      "downloaded_collections/25642511325416375/25642511325416375_01.jpg"
+    ],
+    "scraped_at": "2026-10-21T08:56:26.105Z"
+  },
+  "914151103783696": {
+    "fb_id": "914151103783696",
+    "name": "Fırat Alkan",
+    "url": "https://www.facebook.com/firat.alkan.391",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/437930682_914151103783696_5171096485179684629_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1080x1080&_nc_cat=1&ccb=1-7&_nc_sid=edd80f&_nc_ohc=1UPuoK3kWG0Q7kNvwHFTbYr&_nc_oc=AdqfIBK8l7ggRoIiJZtYizaxS3vFPt_JhF6VLzcboNCPdGjhxcu3-41_CQuRwG5LU4g&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=ak9sxYgbexO8hxOyCbHoeQ&_nc_ss=7b2a8&oh=00_AQPwG82TWLcj36ELjAWEPyV-Ld_NwXKRl4gBKwZVSFsG5g&oe=6ADE5134",
+    "subtitle": "Làm việc tại Alkan besicilik",
+    "is_target_dog": false,
+    "detection_method": "Phát hiện khuôn mặt người (3 mặt) - Avatar Ground Truth",
+    "ai_vision_result": "puppy (P=0.98)",
+    "confidence": 0.0,
+    "matched_keywords": [],
+    "local_photos": [],
+    "scraped_at": "2026-10-21T08:56:26.105Z"
   }
 }
