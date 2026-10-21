@@ -453,6 +453,80 @@ function isNotificationOrGarbageElement(el) {
  * Hàm giải mã chống cào GHL Scrambled Label của Facebook (ghép các thẻ span theo CSS order)
  * Loại bỏ triệt để các ký tự rác có gắn checksum hoặc đẩy ra ngoài bằng position: absolute / top: 3em
  */
+/**
+ * Hàm parseTimeFromString chuẩn hóa:
+ * Hỗ trợ định dạng có giờ phút ('16 tháng 10 lúc 16:03', 'Oct 16 at 4:03 PM')
+ * Chặn lỗi không khớp regex khi chuỗi có chữ 'lúc'
+ */
+function parseTimeFromString(str) {
+    if (!str) return null;
+    const clean = str.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+    if (clean.length < 2 || clean.length > 55) return null;
+
+    // 1. Thử parse thời gian tương đối ('8 giờ', '3 ngày trước', 'Hôm qua lúc 14:20'...)
+    const rel = parseRelativeTimeToTimestamp(clean);
+    if (rel) return rel;
+
+    const now = new Date();
+
+    // Tách phần giờ:phút (nếu chuỗi có dạng '16 tháng 10 lúc 16:03' hoặc 'Oct 16 at 4:03 PM')
+    let hour = 12, minute = 0;
+    const timeMatch = clean.match(/(?:lúc|at|,|\s)\s*(\d{1,2}):(\d{2})(?:\s*(AM|PM|SA|CH))?/i);
+    if (timeMatch) {
+        hour = parseInt(timeMatch[1], 10);
+        minute = parseInt(timeMatch[2], 10);
+        const ampm = (timeMatch[3] || '').toUpperCase();
+        if ((ampm === 'PM' || ampm === 'CH') && hour < 12) hour += 12;
+        if ((ampm === 'AM' || ampm === 'SA') && hour === 12) hour = 0;
+    }
+
+    // 2. Tiếng Việt: '16 tháng 10', '16 tháng 10 lúc 16:03', '16 tháng 10, 2025 lúc 16:03', '28 Tháng 9'
+    let m = clean.match(/(?:ngày\s+)?(\d{1,2})\s+th(?:áng|g)\s+(\d{1,2})(?:(?:\s*,\s*|\s+năm\s+|\s+)(\d{4}))?(?:\s+lúc\s+\d{1,2}:\d{2}.*)?$/i);
+    if (m) {
+        const day = parseInt(m[1], 10);
+        const month = parseInt(m[2], 10) - 1;
+        let year = m[3] ? parseInt(m[3], 10) : now.getFullYear();
+        let dt = new Date(year, month, day, hour, minute, 0);
+        if (!m[3] && dt.getTime() > now.getTime() + 86400000) {
+            year -= 1;
+            dt = new Date(year, month, day, hour, minute, 0);
+        }
+        return Math.floor(dt.getTime() / 1000);
+    }
+
+    // 3. Định dạng DD/MM/YYYY hoặc DD-MM-YYYY (có thể kèm giờ)
+    m = clean.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+\d{1,2}:\d{2}.*)?$/);
+    if (m) {
+        const d = parseInt(m[1], 10);
+        const mo = parseInt(m[2], 10) - 1;
+        let y = parseInt(m[3], 10);
+        if (y < 100) y += 2000;
+        const dt = new Date(y, mo, d, hour, minute, 0);
+        if (!isNaN(dt.getTime())) return Math.floor(dt.getTime() / 1000);
+    }
+
+    // 4. Tiếng Anh: 'October 16', 'Oct 16 at 4:03 PM', '16 October 2025'
+    const months = {
+        jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
+        may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7,
+        sep: 8, sept: 8, september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11
+    };
+    m = clean.match(/^([A-Za-z]+)\s+(\d{1,2})(?:,?\s+(\d{4}))?(?:\s+at\s+\d{1,2}:\d{2}.*)?$/i);
+    if (m && months[m[1].toLowerCase()] !== undefined) {
+        const mo = months[m[1].toLowerCase()];
+        const d = parseInt(m[2], 10);
+        let y = m[3] ? parseInt(m[3], 10) : now.getFullYear();
+        let dt = new Date(y, mo, d, hour, minute, 0);
+        if (!m[3] && dt.getTime() > now.getTime() + 86400000) {
+            y -= 1;
+            dt = new Date(y, mo, d, hour, minute, 0);
+        }
+        return Math.floor(dt.getTime() / 1000);
+    }
+
+    return null;
+}
+
 function decodeGHLScrambledText(container) {
     if (!container) return [];
     // Tìm các thẻ span dùng flex để sắp xếp chữ theo thuộc tính style="order:..."
@@ -637,9 +711,15 @@ function extractFacebookPublishTimeDetailed() {
     const minTs = 1577836800; // 01/01/2020
     const maxTs = nowSec + 60;
 
+    // Lấy ID của Page/Profile đang mở (nếu có) để không bốc nhầm bài Video/Reel của người khác được share
+    let currentProfileId = '';
+    try {
+        currentProfileId = extractFacebookID() || '';
+    } catch (_) {}
+
     let candidates = [];
 
-    // 1. Quét từ DOM (Đã có decodeGHLScrambledText giải mã chính xác '15 tháng 9' và đã chặn lỗi đọc nhầm [alt] ảnh)
+    // 1. Quét từ DOM (Giờ đây đã đọc chuẩn '16 tháng 10 lúc 16:03' ngay ở Header bài viết chủ trang!)
     try {
         const domCandidates = findAllPostTimesInDOM();
         for (const c of domCandidates) {
@@ -649,52 +729,69 @@ function extractFacebookPublishTimeDetailed() {
         }
     } catch (_) {}
 
-    // 2. Quét từ <script> JSON của Facebook (Bắt chính xác publish_time: 1789479583 đến từng giây)
+    // 2. Quét từ <script> JSON của Facebook (Có kiểm tra chủ sở hữu để tránh bẫy EntVideoCreationStory của Reel người khác)
     try {
         const scripts = Array.from(document.querySelectorAll('script')).filter(s => {
             const t = s.textContent || '';
             return t.includes('publish_time') || t.includes('creation_time');
         });
 
-        const postRegexList = [
-            // Bắt chuẩn bài gốc tự đăng (isShare:0 ... publish_time:1789479583)
-            /["\\]*isShare["\\]*\s*:\s*0[\s\S]{0,250}?["\\]*publish_time["\\]*\s*:\s*(\d{9,11})/g,
-            // Bắt post_context -> publish_time
-            /["\\]*post_context["\\]*[\s\S]{0,300}?["\\]*publish_time["\\]*\s*:\s*(\d{9,11})/g,
-            // Bắt creation_story / story -> creation_time
-            /["\\]*(?:creation_story|story)["\\]*\s*:\s*\{[\s\S]{0,200}?["\\]*(?:creation_time|publish_time)["\\]*\s*:\s*(\d{9,11})/g,
-            // Bắt timeline feed unit publish_time
-            /["\\]*publish_time["\\]*\s*:\s*(\d{9,11})/g
-        ];
-
         for (const s of scripts) {
             const text = s.textContent || '';
-            for (const reg of postRegexList) {
-                for (const m of text.matchAll(reg)) {
-                    const ts = parseInt(m[1], 10);
-                    if (ts >= minTs && ts <= maxTs) {
-                        candidates.push({
-                            timestamp: ts,
-                            source: 'post_script',
-                            isPinned: false
-                        });
-                    }
+
+            // Bắt các khối page_insights có chứa actor_id và publish_time
+            const insightRegex = /["\\]*actor_id["\\]*\s*:\s*["\\]*(\d+)["\\]*[\s\S]{0,350}?["\\]*publish_time["\\]*\s*:\s*(\d{9,11})/g;
+            for (const m of text.matchAll(insightRegex)) {
+                const actorId = m[1];
+                const ts = parseInt(m[2], 10);
+                const snippet = m[0];
+
+                // Nếu biết ID chủ trang đang mở (ví dụ Sleepy Puppy: 61573756265458),
+                // mà khối JSON lại là của trang khác (ví dụ Yeti the Iggy: 61584384788391), thì BỎ QUA NGAY!
+                if (currentProfileId && actorId && actorId !== currentProfileId) {
+                    continue;
+                }
+                // Nếu không phải bài của chủ trang mà lại là EntVideoCreationStory (video đính kèm) và có DOM rồi thì không ưu tiên
+                const isVideoAttachment = snippet.includes('EntVideoCreationStory');
+
+                if (ts >= minTs && ts <= maxTs) {
+                    candidates.push({
+                        timestamp: ts,
+                        source: isVideoAttachment ? 'video_script' : 'post_script',
+                        actorId: actorId,
+                        isPinned: false
+                    });
+                }
+            }
+
+            // Fallback cho creation_story thông thường trên tường
+            const storyRegex = /["\\]*(?:creation_story|story)["\\]*\s*:\s*\{[\s\S]{0,200}?["\\]*(?:creation_time|publish_time)["\\]*\s*:\s*(\d{9,11})/g;
+            for (const m of text.matchAll(storyRegex)) {
+                const ts = parseInt(m[1], 10);
+                if (ts >= minTs && ts <= maxTs) {
+                    candidates.push({
+                        timestamp: ts,
+                        source: 'post_script',
+                        isPinned: false
+                    });
                 }
             }
         }
     } catch (_) {}
 
     if (candidates.length > 0) {
-        // Nếu trong <script> có timestamp trùng ngày/tháng với bài đầu tiên trên DOM (ví dụ cùng ngày 15/09/2026),
-        // ưu tiên lấy timestamp của <script> vì nó có chính xác cả Giờ:Phút:Giây (1789479583 -> 20:39:43),
-        // trong khi DOM '15 tháng 9' mặc định đặt giờ là 12:00:00.
+        // ƯU TIÊN SỐ 1: Lấy bài đầu tiên hiển thị trên DOM (article_dom)
+        // Vì mắt người dùng nhìn vào bài đầu tiên trên tường (ví dụ '16 tháng 10 lúc 16:03')
         const firstDom = candidates.find(c => c.source === 'article_dom');
         let chosen = null;
 
         if (firstDom) {
             const domDate = new Date(firstDom.timestamp * 1000);
+            // Tìm xem trong <script> có timestamp nào CÙNG NGÀY/THÁNG/NĂM với bài đầu tiên trên DOM không
+            // để lấy chính xác số giây (nếu có). Nếu trong <script> là ngày khác (như 28/09 của video share),
+            // tuyệt đối giữ nguyên firstDom ('16/10/2026 16:03:00')!
             const matchingScript = candidates.find(c => {
-                if (c.source !== 'post_script') return false;
+                if (c.source !== 'post_script' && c.source !== 'video_script') return false;
                 const sDate = new Date(c.timestamp * 1000);
                 return sDate.getDate() === domDate.getDate() &&
                        sDate.getMonth() === domDate.getMonth() &&
@@ -702,9 +799,9 @@ function extractFacebookPublishTimeDetailed() {
             });
             chosen = matchingScript || firstDom;
         } else {
-            // Nếu DOM chưa render kịp, lấy từ post_script
-            const scriptOnes = candidates.filter(c => c.source === 'post_script');
-            chosen = scriptOnes.length > 0 ? scriptOnes[0] : candidates[0];
+            // Nếu DOM chưa có, ưu tiên post_script của đúng chủ trang trước, cuối cùng mới đến video_script
+            const postScripts = candidates.filter(c => c.source === 'post_script');
+            chosen = postScripts.length > 0 ? postScripts[0] : candidates[0];
         }
 
         const targetTs = chosen.timestamp;

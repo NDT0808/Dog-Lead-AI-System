@@ -4,7 +4,7 @@ cd /d "%~dp0"
 title PET LEAD AI - DONG BO CAP NHAT TU GITHUB
 
 echo ===========================================================================
-echo       🐾 DONG BO CAP NHAT CODE MOI TU GITHUB VE SERVER / VPS 🐾
+echo       PET LEAD AI - DONG BO CAP NHAT CODE MOI TU GITHUB VE SERVER / VPS
 echo ===========================================================================
 echo Repo: https://github.com/NDT0808/Dog-Lead-AI-System
 echo.
@@ -15,8 +15,7 @@ git pull origin main
 
 if errorlevel 1 (
     echo.
-    echo [!] CO THE CO XUNG DOT (CONFLICT) HOAC LOI KET NOI MANG.
-    echo Dang thu dat lai de dong bo nguyen ven tu GitHub...
+    echo [!] Phat hien xung dot hoac loi mang. Dang dat lai ve ban moi nhat tren GitHub...
     git fetch origin main
     git reset --hard origin/main
     echo [*] Da dong bo thanh cong theo ban moi nhat tren GitHub!
