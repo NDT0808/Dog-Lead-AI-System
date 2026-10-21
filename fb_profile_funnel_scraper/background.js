@@ -1434,8 +1434,8 @@ async function inspectWebsiteVisually(tabId, websiteUrl, leadName, leadEmail) {
 
   console.log(`[Web Live Inspector] Bắt đầu quét trực quan website: ${entryUrl} cho lead: ${leadName}`);
 
-  // 1. Mở trang chủ / trang vào chính và đợi nạp DOM xong hoàn toàn
-  const homeLoaded = await navigateTabAndWait(tabId, entryUrl, 25000);
+  // 1. Mở trang chủ / trang vào chính và đợi nạp DOM xong hoàn toàn (khống chế timeout 14s để tránh nghẽn)
+  const homeLoaded = await navigateTabAndWait(tabId, entryUrl, 14000);
   if (!homeLoaded) {
     console.warn(`[Web Live Inspector] Không thể tải trang: ${entryUrl}`);
   }
@@ -1466,9 +1466,9 @@ async function inspectWebsiteVisually(tabId, websiteUrl, leadName, leadEmail) {
   }
 
   // 3. NẾU CHƯA TÌM THẤY CHỦ TRẠI VÀ CÓ CÁC TRANG CON (/about, /contact, /meet, ...)
-  // CHUYỂN HƯỚNG TAB TRÌNH DUYỆT THẬT SỰ SANG TRANG CON ĐỂ NGƯỜI DÙNG XEM TỪNG TRANG VÀ CUỘN
+  // Thăm tối đa 1 trang con tiềm năng nhất để tiết kiệm thời gian, tránh nghẽn
   if ((!currentOwner || !isValidOwnerCandidate(currentOwner)) && subLinks.length > 0) {
-    const pagesToVisit = subLinks.slice(0, 2); // Thăm tối đa 2 trang con tiềm năng nhất
+    const pagesToVisit = subLinks.slice(0, 1);
     for (const subUrl of pagesToVisit) {
       let subTitle = 'Trang con';
       try {
@@ -1480,8 +1480,7 @@ async function inspectWebsiteVisually(tabId, websiteUrl, leadName, leadEmail) {
       } catch (_) {}
 
       console.log(`[Web Live Inspector] Chuyển tab sang trang con: ${subUrl} (${subTitle})`);
-      // CHUYỂN HƯỚNG TAB TRÌNH DUYỆT THẬT SỰ CHO USER XEM
-      await navigateTabAndWait(tabId, subUrl, 20000);
+      await navigateTabAndWait(tabId, subUrl, 10000);
 
       // Chạy agent cuộn từ từ và trích xuất trên trang con
       const subResults = await runScriptInTab(tabId, scrollAndExtractPageAgent, [{
@@ -1674,24 +1673,26 @@ async function scrollAndExtractPageAgent(options) {
     return s;
   };
 
-  // Cuộn mượt mà từ trên xuống dưới
+  // Cuộn mượt mà từ trên xuống dưới (khống chế tối đa 6 nấc hoặc 3000px để không bị nghẽn ở các trang web quá dài)
   let scrollY = 0;
   const viewH = window.innerHeight || 800;
-  const step = Math.max(300, Math.floor(viewH * 0.6));
+  const step = Math.max(350, Math.floor(viewH * 0.7));
   let docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, 1200);
+  let scrollCount = 0;
 
-  while (scrollY < docH) {
+  while (scrollY < docH && scrollCount < 6 && scrollY < 3200) {
+    scrollCount++;
     scrollY += step;
     window.scrollTo({ top: scrollY, behavior: 'smooth' });
     await sleep(350);
     docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, 1200);
-    const pct = Math.min(100, Math.round((scrollY / docH) * 100));
+    const pct = Math.min(100, Math.round((scrollY / Math.min(docH, 3200)) * 100));
     setStatus(`👀 Đang cuộn xem ${pageTitle} từ từ (${pct}%)...`, 'Đang cuộn...', '#b84f2e', pct);
     if (scrollY >= docH - 100) break;
   }
-  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-  setStatus(`📄 Đã cuộn đến đáy ${pageTitle}! Đang bóc tách thông tin liên hệ & chủ trại...`, 'Đáy trang', '#0284c7', 100);
-  await sleep(500);
+  window.scrollTo({ top: Math.min(docH, 3200), behavior: 'smooth' });
+  setStatus(`📄 Đã cuộn xong ${pageTitle}! Đang bóc tách thông tin liên hệ & chủ trại...`, 'Đáy trang', '#0284c7', 100);
+  await sleep(400);
 
   // Trích xuất từ DOM trang hiện tại
   let htmlStr = document.documentElement ? document.documentElement.innerHTML : '';

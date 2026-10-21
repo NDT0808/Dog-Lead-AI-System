@@ -55,3 +55,4 @@ video_frames/
 scratch_frames*
 data/raw/temp_*.json
 data/raw/extension_storage_*.json
+*.zip
