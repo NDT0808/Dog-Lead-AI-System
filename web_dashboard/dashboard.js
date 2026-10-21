@@ -1000,7 +1000,11 @@
         else if (level === 'success') color = '#4ade80'; // Bright green
         else if (level === 'err') color = '#f87171'; // Red
 
-        row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:${color}; font-weight:700;">[${escapeHtml(stage)}]</span> <span>${escapeHtml(text)}</span>`;
+        if (!rawStage || rawStage === 'TIẾN ĐỘ' || rawStage === 'WEBSITE' || rawText.startsWith('Đang mở dòng') || rawText.startsWith('[Dòng')) {
+          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:${color}; font-weight:600;">${escapeHtml(text)}</span>`;
+        } else {
+          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:${color}; font-weight:700;">[${escapeHtml(stage)}]</span> <span>${escapeHtml(text)}</span>`;
+        }
       }
     }
 
@@ -3600,13 +3604,13 @@
 
       appendTerminalLogStep2({
         stage: 'KHỞI ĐỘNG',
-        text: `🚀 Yêu cầu Chrome Extension mở Worker Tab chạy ngầm (active: false) để cào từ dòng ${startIdx + 1} đến ${endIdx + 1} (Tổng: ${totalRange} hồ sơ)...`,
+        text: `🚀 Kích hoạt bộ cào bóc tách trực tiếp: Từ dòng ${startIdx + 1} đến ${endIdx + 1} (Tổng: ${totalRange} hồ sơ)...`,
         level: 'info'
       });
 
       let bridgeTriggered = false;
 
-      // 1. Gửi qua Window PostMessage Bridge (Content Script lắng nghe trên http://127.0.0.1:8000)
+      // 1. Gửi qua Window PostMessage Bridge (Content Script fb_profile_funnel_scraper lắng nghe trên http://127.0.0.1:8000)
       window.postMessage({
         type: 'START_STEP2_SCAN_VIA_EXTENSION',
         links: urls,
@@ -3614,12 +3618,14 @@
       }, '*');
       bridgeTriggered = true;
 
-      // 2. Gửi qua Chrome Runtime API nếu đang mở trong tab extension
+      // 2. Gửi qua Chrome Runtime API nếu đang mở trong ngữ cảnh Extension
       if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.sendMessage === 'function') {
         try {
           chrome.runtime.sendMessage({
-            action: 'EXECUTE_STEP2_BROWSER_SCAN',
-            links: urls,
+            action: 'START_AUTO_FROM_DASHBOARD',
+            urls: urls,
+            startIndex: startIdx,
+            endIndex: endIdx,
             options: { startIndex: startIdx, endIndex: endIdx }
           }, (res) => {
             if (!chrome.runtime.lastError && res && res.status === 'started') {
@@ -3629,26 +3635,20 @@
         } catch (_) {}
       }
 
-      // 3. Nếu có quyền chrome.tabs trực tiếp (trong extension tab)
-      if (window.chrome && chrome.tabs && chrome.tabs.create) {
-        runDirectProfileScrapingLoop(urls, startIdx, endIdx);
-        bridgeTriggered = true;
-      }
-
-      // 4. Watchdog kiểm tra kết nối Extension sau 3.5 giây: Nếu Extension chưa bật -> Hướng dẫn rõ ràng
+      // 3. Watchdog kiểm tra kết nối Extension sau 4.5 giây: Nếu Extension chưa bật -> Hướng dẫn rõ ràng
       setTimeout(() => {
         const currentDone = parseInt(document.getElementById('lblScrapedCountStep2')?.textContent || '0', 10);
         if (currentDone === 0 && isDirectScrapingRunning && !isDirectScrapingPaused) {
           const checkStatus = document.getElementById('lblScanStatus')?.textContent || '';
           if (checkStatus.includes('Đang cào bóc tách') && document.querySelectorAll('#step2TerminalLogs div').length <= 2) {
             appendTerminalLogStep2({
-              stage: 'CẢNH BÁO',
-              text: '⚠️ Đang đợi Chrome Extension kết nối... Vui lòng đảm bảo tiện ích "FB Following Scraper" đã được BẬT trong chrome://extensions.',
-              level: 'err'
+              stage: 'HƯỚNG DẪN',
+              text: '💡 Đang kết nối tiện ích bóc tách trực quan... Vui lòng đảm bảo tiện ích "fb_profile_funnel_scraper" đã được nạp (Load unpacked) trong chrome://extensions và tải lại trang.',
+              level: 'info'
             });
           }
         }
-      }, 3500);
+      }, 4500);
     }
 
     function pauseDirectScraping() {
@@ -4980,26 +4980,31 @@
           ? (parsedPub ? parsedPub.activity_status : translateActivityStatusZh(item.activity_status || (item.latest_post && item.latest_post.activity_status) || ''))
           : (parsedPub ? parsedPub.activity_status : (item.activity_status || (item.latest_post && item.latest_post.activity_status) || ''));
 
-        const sttDisplay = item.stt || `LEAD-US-${String(index+1).padStart(5, '0')}`;
+        let rawStt = item.stt || item.lead_id || '';
+        let sttNum = index + 1;
+        const mStt = String(rawStt).match(/(\d+)/);
+        if (mStt) sttNum = parseInt(mStt[1], 10);
+        const sttDisplay = `LEAD-US-${String(sttNum).padStart(6, '0')}`;
+
         tr.innerHTML = `
           <td style="font-size:12px; font-weight:700; color:#0284c7; white-space:nowrap;">
-            <span style="background:#e0f2fe; border:1px solid #bae6fd; padding:3px 7px; border-radius:6px; font-family:var(--mono);">
+            <span style="background:#e0f2fe; border:1px solid #bae6fd; padding:3px 8px; border-radius:6px; font-family:var(--mono); font-size:11.5px; font-weight:750;">
               ${sttDisplay}
             </span>
           </td>
           <td>
-            <div class="circle-avatar-box" style="width:42px; height:42px; min-width:42px; cursor:pointer;" title="${currentLang === 'zh' ? '点击打开Facebook主页' : 'Mở trang Facebook cá nhân'}" onclick="window.open('${profileUrl}', '_blank')">
+            <div class="circle-avatar-box" style="width:40px; height:40px; min-width:40px; cursor:pointer;" title="${currentLang === 'zh' ? '点击打开Facebook主页' : 'Mở trang Facebook cá nhân'}" onclick="window.open('${profileUrl}', '_blank')">
               <img class="circle-avatar-img" src="${avatarUrl}" referrerpolicy="no-referrer" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='${defaultUiAvatar}'" />
             </div>
           </td>
-          <td>
-            <strong style="color:var(--text); font-size:13px; font-weight:750;">${escapeHtml(ownerDisplay)}</strong>
+          <td style="min-width:140px; max-width:200px;">
+            <div style="color:var(--text); font-size:12.5px; font-weight:750; line-height:1.35; word-break:break-word;">${escapeHtml(ownerDisplay)}</div>
+          </td>
+          <td style="min-width:150px; max-width:220px;">
+            <div style="font-weight:600; color:var(--text-muted); font-size:12px; line-height:1.35; word-break:break-word;">${escapeHtml(item.name || '---')}</div>
           </td>
           <td>
-            <div style="font-weight:650; color:var(--text); font-size:12.5px;">${escapeHtml(item.name || '---')}</div>
-          </td>
-          <td>
-            <span class="badge-fbid" onclick="copyText('${fbId}')" title="${currentLang === 'zh' ? '点击复制纯数字ID' : 'Sao chép ID số'}" style="cursor:pointer; font-weight:700; font-size:11.5px;">
+            <span class="badge-fbid" onclick="copyText('${fbId}')" title="${currentLang === 'zh' ? '点击复制纯数字ID' : 'Sao chép ID số'}" style="cursor:pointer; font-weight:700; font-size:11.5px; white-space:nowrap;">
               # ${fbId || '---'}
             </span>
           </td>
@@ -5396,15 +5401,15 @@
           const prevRow = document.getElementById('bulkLeadPreviewRow');
           if (prevRow) prevRow.style.display = 'flex';
           const bName = document.getElementById('bulkLeadName');
-          if (bName) bName.textContent = item.name || 'Dog Breeder';
+          if (bName) bName.textContent = item.name || 'Facebook User';
           const bOwner = document.getElementById('bulkLeadOwner');
-          if (bOwner) bOwner.textContent = `Chủ trại: ${item.owner || item.owner_name || 'Dog Breeder'}`;
+          if (bOwner) bOwner.textContent = `Chủ trại: ${item.owner || item.owner_name || 'Đang cập nhật'}`;
           const bFbid = document.getElementById('bulkLeadFbid');
           if (bFbid) bFbid.textContent = `ID: ${item.fb_id || item.profile_id || '---'}`;
           const bAv = document.getElementById('bulkLeadAvatar');
           if (bAv && item.avatar_url) bAv.src = item.avatar_url;
 
-          const exIdx = crmLeads.findIndex(l => (item.fb_id && l.fb_id === item.fb_id) || (item.url && l.url === item.url));
+          const exIdx = crmLeads.findIndex(l => (item.fb_id && l.fb_id && l.fb_id === item.fb_id) || (item.url && l.url === item.url));
           if (exIdx !== -1) {
             crmLeads[exIdx] = { ...crmLeads[exIdx], ...item, stt: crmLeads[exIdx].stt };
           } else {

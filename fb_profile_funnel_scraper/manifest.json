@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "FB Profile Funnel Scraper",
-  "version": "1.0",
-  "description": "Cào phễu 3 bước: Lấy Avatar, Cover, Quét bài đăng, Chấm điểm hoạt động cho Breeders.",
+  "version": "1.1",
+  "description": "Cào phễu 3 bước: Lấy Avatar, Cover, Quét bài đăng, Chấm điểm hoạt động cho Breeders, duyệt Website và kết nối trực tiếp sang Web Dashboard.",
   "permissions": [
     "activeTab",
     "<all_urls>",
@@ -19,7 +19,9 @@
     "*://*.gooddog.com/*",
     "<all_urls>",
     "http://127.0.0.1:8000/*",
-    "http://localhost:8000/*"
+    "http://localhost:8000/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
   ],
   "action": {
     "default_popup": "popup.html"
@@ -29,7 +31,13 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.facebook.com/*"],
+      "matches": [
+        "*://*.facebook.com/*",
+        "http://127.0.0.1:8000/*",
+        "http://localhost:8000/*",
+        "http://127.0.0.1/*",
+        "http://localhost/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_end"
     }
@@ -43,5 +51,13 @@
       ],
       "matches": ["*://*.facebook.com/*", "<all_urls>"]
     }
-  ]
+  ],
+  "externally_connectable": {
+    "matches": [
+      "http://127.0.0.1:8000/*",
+      "http://localhost:8000/*",
+      "http://127.0.0.1/*",
+      "http://localhost/*"
+    ]
+  }
 }

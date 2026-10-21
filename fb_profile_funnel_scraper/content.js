@@ -1,3 +1,35 @@
+if (window.location.origin.includes('127.0.0.1') || window.location.origin.includes('localhost')) {
+    const announceReady = () => {
+        window.postMessage({ type: 'PET_LEAD_EXT_READY', tool: 'fb_profile_funnel_scraper', version: '2.0.0' }, '*');
+    };
+    announceReady();
+    setInterval(announceReady, 1500);
+
+    // Relay scan requests from Web Dashboard to background.js
+    window.addEventListener('message', (event) => {
+        if (event.source !== window || !event.data) return;
+        if (event.data.type === 'START_STEP2_SCAN_VIA_EXTENSION') {
+            chrome.runtime.sendMessage({
+                action: 'START_AUTO_FROM_DASHBOARD',
+                urls: event.data.links,
+                options: event.data.options
+            });
+        } else if (event.data.type === 'STOP_STEP2_SCAN_VIA_EXTENSION') {
+            chrome.runtime.sendMessage({ action: 'STOP_AUTO' });
+        } else if (event.data.type === 'RESUME_STEP2_SCAN_VIA_EXTENSION') {
+            chrome.runtime.sendMessage({ action: 'RESUME_AUTO' });
+        }
+    });
+
+    // Relay scan events from background.js to Web Dashboard
+    chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+        if (msg && msg.action && (msg.action.startsWith('STEP2_') || msg.action === 'STATE_UPDATED')) {
+            window.postMessage({ type: 'PET_LEAD_STEP2_EVENT', payload: msg }, '*');
+        }
+        return true;
+    });
+}
+
 if (!window.__FB_SCRAPER_LOADED__) {
     window.__FB_SCRAPER_LOADED__ = true;
     let isCurrentlyScraping = false;

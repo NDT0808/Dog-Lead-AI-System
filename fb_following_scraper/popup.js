@@ -215,17 +215,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const btnOpenAi = document.getElementById('btnOpenAiDashboard');
   if (btnOpenAi) {
-    btnOpenAi.addEventListener('click', async () => {
-      let targetUrl = chrome.runtime.getURL('dashboard.html');
-      try {
-        const stored = await chrome.storage.local.get(['pet_lead_server_url']);
-        const serverUrl = (stored && stored.pet_lead_server_url) ? stored.pet_lead_server_url.trim().replace(/\/+$/, '') : 'http://127.0.0.1:8000';
-        const ping = await fetch(`${serverUrl}/api/system-status`, { method: 'GET', signal: AbortSignal.timeout(1200) });
-        if (ping.ok) {
-          targetUrl = `${serverUrl}/index.html`;
-        }
-      } catch (e) {}
-      chrome.tabs.create({ url: targetUrl });
+    btnOpenAi.addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
     });
   }
 });
@@ -496,6 +487,7 @@ async function clearData() {
     const tab = await getActiveTab();
     if (tab && tab.id) {
       chrome.tabs.sendMessage(tab.id, { action: 'PURGE_JUNK_DATA' });
+      chrome.tabs.sendMessage(tab.id, { action: 'RESET_HARVESTING' });
     }
   } catch (e) {}
 
@@ -518,14 +510,9 @@ async function syncDataToWebDashboard(data, desiredFilename) {
   if (!data || data.length === 0) return null;
   let finalFilename = desiredFilename || `step1_followers_raw_${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.json`;
   
-  // 1. Post to python server if active (supports custom IP/Server)
+  // 1. Post to local python server if active
   try {
-    let sUrl = 'http://127.0.0.1:8000';
-    if (chrome && chrome.storage && chrome.storage.local) {
-      const st = await chrome.storage.local.get(['pet_lead_server_url']);
-      if (st && st.pet_lead_server_url) sUrl = st.pet_lead_server_url.trim().replace(/\/+$/, '');
-    }
-    await fetch(`${sUrl}/api/upload-raw`, {
+    await fetch('http://127.0.0.1:8000/api/upload-raw', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

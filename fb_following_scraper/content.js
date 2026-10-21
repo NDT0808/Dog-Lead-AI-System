@@ -441,12 +441,13 @@
     return false;
   }
 
-  // TÌM ĐÚNG VÙNG CHỨA HỒ SƠ THEO DÕI (HERMETIC CONTAINER)
+  // TÌM ĐÚNG VÙNG CHỨA HỒ SƠ THEO DÕI (HERMETIC CONTAINER ONLY)
+  // Tuyệt đối KHÔNG fallback sang document.body hoặc div[role="main"] để tránh cào nhầm thanh bên!
   function getFollowerContainer() {
     // 1. Kiểm tra hộp thoại Popup Modal (Nếu mở popup từ Fanpage hoặc bấm xem người theo dõi)
     const dialogs = document.querySelectorAll('div[role="dialog"]');
     for (const d of dialogs) {
-      if (d.offsetWidth > 220 && d.offsetHeight > 180) {
+      if (d.offsetWidth > 250 && d.offsetHeight > 200) {
         const style = window.getComputedStyle(d);
         if (style.display === 'none' || style.visibility === 'hidden') continue;
 
@@ -454,33 +455,49 @@
         const isChat = !!d.querySelector('div[role="textbox"], [data-pagelet*="Chat"], [aria-label*="tin nhắn" i], [aria-label*="chat" i], [aria-label*="cuộc trò chuyện" i]');
         if (isChat) continue;
 
+        // Tiêu đề hoặc aria-label phải chứa chữ theo dõi / bạn bè / followers / following
         const dText = ((d.getAttribute('aria-label') || '') + ' ' + (d.innerText || '')).slice(0, 400).toLowerCase();
         if (dText.includes('đang theo dõi') || dText.includes('following') || 
             dText.includes('người theo dõi') || dText.includes('followers') || 
             dText.includes('bạn bè') || dText.includes('friends') ||
-            dText.includes('thành viên') || dText.includes('members') ||
-            d.querySelector('a[href*="/profile.php"], a[href*="facebook.com/"]')) {
+            dText.includes('thành viên') || dText.includes('members')) {
           return d;
         }
       }
     }
 
-    // 2. Tabpanel trang cá nhân hoặc ProfileAppSection (Tab Đang theo dõi / Người theo dõi / Bạn bè)
-    const tabpanels = document.querySelectorAll('div[role="tabpanel"], div[data-pagelet*="ProfileAppSection"], div[data-pagelet="ProfileTabs"]');
+    // 2. Tabpanel trang cá nhân (Tab Đang theo dõi / Người theo dõi / Bạn bè)
+    const tabpanels = document.querySelectorAll('div[role="tabpanel"]');
     for (const tp of tabpanels) {
-      if (tp.offsetWidth > 220 && tp.offsetHeight > 80) {
-        return tp;
+      if (tp.offsetWidth > 250 && tp.offsetHeight > 100) {
+        // Đảm bảo tabpanel KHÔNG phải là bảng tin bài viết (feed)
+        const isFeed = !!tp.querySelector('div[role="feed"], div[data-pagelet*="Feed"]');
+        if (!isFeed) {
+          return tp;
+        }
       }
     }
 
-    // 3. Khung nội dung chính div[role="main"] (An toàn vì đã có isInsideExcludedSection lọc thanh bên)
-    const main = document.querySelector('div[role="main"]');
-    if (main && main.offsetWidth > 250) {
-      return main;
+    // 3. Phần ProfileAppSection chứa danh sách lưới người theo dõi
+    const appSections = document.querySelectorAll('div[data-pagelet*="ProfileAppSection"]');
+    for (const sec of appSections) {
+      if (sec.offsetWidth > 250 && sec.offsetHeight > 150) {
+        const isFeed = !!sec.querySelector('div[role="feed"]');
+        if (!isFeed) return sec;
+      }
     }
 
-    // 4. Fallback an toàn sang document.body
-    return document.body;
+    // 4. Khung ProfileTabs
+    const profileTabs = document.querySelector('div[data-pagelet="ProfileTabs"]');
+    if (profileTabs && profileTabs.offsetWidth > 250) {
+      const innerTabpanel = profileTabs.querySelector('div[role="tabpanel"]');
+      if (innerTabpanel && !innerTabpanel.querySelector('div[role="feed"]')) {
+        return innerTabpanel;
+      }
+    }
+
+    // Nếu không có vùng chuyên biệt -> Trả về null (Không cào document.body!)
+    return null;
   }
 
   // Persist newly harvested items directly into chrome.storage.local
@@ -561,6 +578,19 @@
     if (viewer && viewer.name && nameText.toLowerCase() === viewer.name.toLowerCase()) return null;
     if (viewer && viewer.id && numericId && viewer.id === numericId) return null;
 
+    // Phải có nút hành động theo dõi/kết bạn hoặc role="listitem"
+    const hasFollowAction = !!card.querySelector(
+      '[aria-label*="Đang theo dõi" i], [aria-label*="Following" i], ' +
+      '[aria-label*="Theo dõi" i], [aria-label*="Follow" i], ' +
+      '[aria-label*="Bạn bè" i], [aria-label*="Friends" i], ' +
+      '[aria-label*="Thêm bạn bè" i], [aria-label*="Add Friend" i], ' +
+      '[aria-label*="Nhắn tin" i], [aria-label*="Message" i], ' +
+      '[aria-label*="Tùy chọn" i], [aria-label*="More options" i], ' +
+      'div[role="button"], button'
+    );
+    const isListItem = card.getAttribute('role') === 'listitem' || !!card.closest('div[role="listitem"]');
+    if (!hasFollowAction && !isListItem) return null;
+
     const rawHref = targetAnchor ? (targetAnchor.getAttribute('href') || targetAnchor.href || '') : '';
     const cleanUrl = sanitizeProfileUrl(rawHref, numericId);
 
@@ -611,42 +641,33 @@
 
   // Scrape visible follower cards strictly from the follower grid
   function harvestVisibleCards() {
-    const container = getFollowerContainer() || document.body;
+    const container = getFollowerContainer();
+    if (!container) {
+      // Nếu không tìm thấy vùng chuyên biệt chứa danh sách, kiểm tra tự động chuyển tab
+      console.log("🐾 [PetLead AI] Chưa phát hiện vùng danh sách Đang theo dõi. Đang kiểm tra điều hướng...");
+      autoNavigateToFollowingTab();
+      return 0;
+    }
+
     const newItems = [];
     const viewer = getViewerAccount();
     const hostInfo = getHostPageInfo();
 
-    // Thu thập ứng viên: các khối thẻ có avatar FB CDN và link trang cá nhân
-    const candidateCards = [];
-    const seen = new Set();
-
-    // Priority 1: Các listitem hoặc article trong container
-    const listItems = Array.from(container.querySelectorAll('div[role="listitem"], div[role="article"]'));
-    listItems.forEach(li => {
-      if (!isInsideExcludedSection(li) && !seen.has(li)) {
-        seen.add(li);
-        candidateCards.push(li);
-      }
-    });
-
-    // Priority 2: Các thẻ cha chứa ảnh đại diện avatar FB CDN
-    const imgs = Array.from(container.querySelectorAll('img[src*="fbcdn"], img[src*="scontent"], svg image'));
-    for (const im of imgs) {
-      if (isInsideExcludedSection(im)) continue;
-      let p = im.parentElement;
-      let d = 0;
-      while (p && p !== container && d < 8) {
-        const anchor = p.querySelector('a[href]');
-        if (anchor && p.innerText && p.innerText.trim().length > 1) {
-          if (!seen.has(p)) {
-            seen.add(p);
-            candidateCards.push(p);
-          }
-          break;
+    // 1. Quét theo các thẻ listitem hoặc grid cell chuẩn bên trong container
+    let candidateCards = Array.from(container.querySelectorAll('div[role="listitem"], div[role="article"]'));
+    if (candidateCards.length === 0) {
+      // Tìm các khối thẻ cha bao bọc ảnh đại diện
+      const imgs = Array.from(container.querySelectorAll('img[src*="fbcdn"], img[src*="scontent"]'));
+      candidateCards = imgs.map(im => {
+        let p = im.parentElement;
+        let d = 0;
+        while (p && p !== container && d < 7) {
+          if (p.clientHeight >= 40 && p.clientHeight <= 260 && p.clientWidth >= 180) return p;
+          p = p.parentElement;
+          d++;
         }
-        p = p.parentElement;
-        d++;
-      }
+        return im.parentElement?.parentElement || im;
+      });
     }
 
     for (const card of candidateCards) {
@@ -819,22 +840,6 @@
     }
     return true;
   });
-
-  // Auto-start if instructed by popup before navigation
-  try {
-    chrome.storage.local.get(['harvesterState', 'autoStartHarvestOnLoad'], (res) => {
-      if (res && res.autoStartHarvestOnLoad && res.harvesterState?.isRunning) {
-        chrome.storage.local.remove(['autoStartHarvestOnLoad']);
-        console.log("🐾 [PetLead AI] Tự động bắt đầu cào theo dõi sau khi tải trang...");
-        setTimeout(() => {
-          isHarvesting = true;
-          isPaused = false;
-          harvestVisibleCards();
-          runScrollLoop();
-        }, 2200);
-      }
-    });
-  } catch (e) {}
 
   console.log("🐾 Pet Lead AI - Follower Harvester Content Script Injected & Ready (v3.2 Production).");
 })();

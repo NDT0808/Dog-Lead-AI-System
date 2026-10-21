@@ -76,6 +76,23 @@ function broadcastState() {
   }).catch(() => {});
 }
 
+async function sendToDashboard(action, data) {
+  const payload = { action, ...data };
+  try {
+    const tabs = await chrome.tabs.query({});
+    for (const t of tabs) {
+      if (t.url && (t.url.includes('dashboard.html') || t.url.includes('8000') || t.url.includes('localhost'))) {
+        try {
+          await chrome.tabs.sendMessage(t.id, payload);
+        } catch (_) {}
+      }
+    }
+  } catch (_) {}
+  try {
+    chrome.runtime.sendMessage(payload).catch(() => {});
+  } catch (_) {}
+}
+
 const US_STATE_CODES = new Set([
   'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
   'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
@@ -468,6 +485,40 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       statusMessage
     });
   }
+  else if (msg.action === 'START_AUTO_FROM_DASHBOARD') {
+    clearNextTimer();
+    isProcessing = false;
+    currentTaskId = null;
+
+    urlList = msg.urls || [];
+    startIndex = (msg.options && msg.options.startIndex !== undefined) ? msg.options.startIndex : 0;
+    endIndex = (msg.options && msg.options.endIndex !== undefined && msg.options.endIndex >= 0 && msg.options.endIndex < urlList.length)
+      ? msg.options.endIndex
+      : (urlList.length - 1);
+
+    currentIndex = startIndex;
+    allData = [];
+    isAutoRunning = true;
+    isPaused = false;
+    statusMessage = `Đang bắt đầu cào từ dòng ${startIndex + 1} đến ${endIndex + 1}...`;
+    saveState();
+
+    sendToDashboard('STEP2_LOG', {
+      log: {
+        stage: 'KHỞI ĐỘNG',
+        text: `🚀 Kích hoạt bộ cào bóc tách trực tiếp: Từ dòng ${startIndex + 1} đến ${endIndex + 1} (Tổng: ${endIndex - startIndex + 1} hồ sơ)...`,
+        level: 'info'
+      }
+    });
+
+    // Mở worker tab bên cạnh để người dùng theo dõi trực quan và Facebook load DOM sống
+    chrome.tabs.create({ url: 'about:blank', active: true }, (newTab) => {
+      targetTabId = newTab ? newTab.id : null;
+      sendResponse({ status: 'started' });
+      processNext();
+    });
+    return true;
+  }
   else if (msg.action === 'START_AUTO') {
     clearNextTimer();
     isProcessing = false;
@@ -600,6 +651,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         statusMessage = `[Dòng ${currentIndex + 1}] Phát hiện Website ${rawWeb} -> Đang mở trình duyệt vào xem trực tiếp tìm chủ trại...`;
         saveState();
 
+        sendToDashboard('STEP2_LOG', {
+          log: {
+            stage: 'WEBSITE',
+            text: `[Dòng ${currentIndex + 1}] Phát hiện Website ${rawWeb} -> Đang mở trình duyệt vào xem trực tiếp tìm chủ trại...`,
+            level: 'web'
+          }
+        });
+
         (async () => {
           try {
             const inspectRes = await inspectWebsiteVisually(
@@ -612,6 +671,37 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             if (inspectRes && inspectRes.owner && isValidOwnerCandidate(inspectRes.owner)) {
               item.owner = inspectRes.owner;
               item.ownerConfidence = inspectRes.confidence || 'Tier 1 - Website Verified';
+              sendToDashboard('STEP2_LOG', {
+                log: {
+                  stage: 'CHỦ TRẠI WEB',
+                  text: `[Dòng ${currentIndex + 1}] 🎯 Đã tìm thấy chủ trại từ website: ${item.owner} (${item.ownerConfidence})`,
+                  level: 'success'
+                }
+              });
+            }
+            if (inspectRes && inspectRes.has_amazon) {
+              item.has_amazon = true;
+              item.amazon_url = inspectRes.amazon_url;
+              item.amazon_channel = inspectRes.amazon_channel || 'Selling on Amazon (Target)';
+              item.amz_cat = inspectRes.amz_cat || 'Pet Toys / Artificial Grass / Pet Toilets';
+              sendToDashboard('STEP2_LOG', {
+                log: {
+                  stage: 'KÊNH AMAZON',
+                  text: `[Dòng ${currentIndex + 1}] 🛒 Phát hiện gian hàng/sản phẩm Amazon: ${item.amazon_url}`,
+                  level: 'ai'
+                }
+              });
+            } else {
+              item.has_amazon = false;
+              item.amazon_channel = 'Amazon link not found';
+              item.amz_cat = 'Chưa phát hiện link Amazon';
+              sendToDashboard('STEP2_LOG', {
+                log: {
+                  stage: 'KÊNH AMAZON',
+                  text: `[Dòng ${currentIndex + 1}] 🛒 Kiểm tra kênh Amazon: Amazon link not found`,
+                  level: 'info'
+                }
+              });
             }
             if (inspectRes && inspectRes.phone && !item.phone) item.phone = inspectRes.phone;
             if (inspectRes && inspectRes.email && !item.email) item.email = inspectRes.email;
@@ -649,6 +739,14 @@ function processNext() {
     currentTaskId = null;
     statusMessage = `Đã hoàn thành! Đã cào xong ${allData.length} link.`;
     saveState();
+    sendToDashboard('STEP2_ALL_DONE', { total: allData.length });
+    sendToDashboard('STEP2_LOG', {
+      log: {
+        stage: 'HỆ THỐNG',
+        text: `🎉 TOÀN BỘ QUÁ TRÌNH BÓC TÁCH BƯỚC 2 ĐÃ HOÀN TẤT THÀNH CÔNG! Đã cập nhật đầy đủ 30 trường Meta CRM cho ${allData.length} hồ sơ.`,
+        level: 'success'
+      }
+    });
     exportCSV(false);
     return;
   }
@@ -666,6 +764,21 @@ function processNext() {
 
   statusMessage = `Đang mở dòng ${currentIndex + 1}/${endIndex + 1}: ${targetUrl}`;
   saveState();
+
+  sendToDashboard('STEP2_PROGRESS', {
+    current: currentIndex - startIndex + 1,
+    total: endIndex - startIndex + 1,
+    percent: Math.round(((currentIndex - startIndex) / Math.max(1, endIndex - startIndex + 1)) * 100),
+    status: `Đang mở dòng ${currentIndex + 1}/${endIndex + 1}: ${targetUrl}`
+  });
+
+  sendToDashboard('STEP2_LOG', {
+    log: {
+      stage: 'TIẾN ĐỘ',
+      text: `Đang mở dòng ${currentIndex + 1}/${endIndex + 1}: ${targetUrl}`,
+      level: 'info'
+    }
+  });
 
   (async () => {
     // Điều hướng tab tới profile Facebook và đợi nạp xong hoàn toàn (không dùng setTimeout bừa bãi)
@@ -994,6 +1107,65 @@ function finishProfileItem(item) {
   let contactPreview = [item.owner, item.phone, item.email, item.website].filter(Boolean).join(' | ');
   statusMessage = `[Dòng ${currentIndex + 1}] ${item.name || 'Profile'}: ${timePreview}${contactPreview ? ' | ' + contactPreview : ''}`;
 
+  // Tính điểm và xếp hạng cho hồ sơ
+  let score = 55;
+  if (item.owner && item.owner !== 'Facebook User' && !item.owner.includes('Manager')) score += 15;
+  if (item.phone) score += 10;
+  if (item.website) score += 10;
+  if (item.email) score += 5;
+  if (item.has_amazon) score += 10;
+  score = Math.min(score, 98);
+  const tier = score >= 75 ? 'Tier S' : (score >= 60 ? 'Tier A' : 'Tier B');
+
+  const leadNum = String(currentIndex + 1).padStart(5, '0');
+  const leadId = `LEAD-US-${leadNum}`;
+
+  const leadRecord = {
+    stt: leadId,
+    lead_id: leadId,
+    name: item.name || 'Facebook User',
+    owner: item.owner || item.name || 'Facebook User',
+    owner_confidence: item.ownerConfidence || 'Tier 3 - Facebook Page Fallback',
+    fb_id: item.fb_id || '',
+    phone: item.phone || '',
+    email: item.email || '',
+    website: item.website || '',
+    instagram: item.instagram || '',
+    city: item.city || '',
+    state: item.state || '',
+    zip: item.zip || '',
+    address: item.address || '',
+    country: item.country || 'United States',
+    bio: item.bio || '',
+    publish_time: item.publishTime || '',
+    publishTime: item.publishTime || '',
+    publish_human: item.publishTime || '',
+    publishTimestamp: item.publishTimestamp || '',
+    relative_time: item.relativeTime || '',
+    relativeTime: item.relativeTime || '',
+    url: item.url || '',
+    avatar_url: item.avatar_url || (item.fb_id ? `https://graph.facebook.com/${item.fb_id}/picture?type=large` : ''),
+    activity_status: item.activityStatus || '✓ TÍCH CỰC (Trại đang hoạt động)',
+    has_website: !!(item.website && item.website.startsWith('http') && !/facebook\.com|instagram\.com/i.test(item.website)),
+    has_amazon: !!(item.has_amazon || item.amazon_url),
+    amazon_url: item.amazon_url || '',
+    amazon_channel: item.amazon_channel || (item.has_amazon ? 'Selling on Amazon (Target)' : 'Amazon link not found'),
+    amz_cat: item.amz_cat || (item.has_amazon ? 'Pet Toys / Artificial Grass / Pet Toilets' : 'Chưa phát hiện link Amazon'),
+    score: score,
+    rank_tier: tier,
+    product_fit: item.has_amazon ? 'B2B Wholesale: Thảm Cỏ Huấn Luyện + Pet Potty + Toys Bundle' : 'Take-Home Puppy Starter Kit V2/V3',
+    sales_action: item.has_amazon ? 'Khai thác ngách phụ kiện/cỏ trên Amazon' : 'Telesale: Gửi catalogue cỏ nhân tạo & khay potty 3 lớp'
+  };
+
+  sendToDashboard('STEP2_LEAD_DONE', { lead: leadRecord });
+  sendToDashboard('STEP2_LOG', {
+    log: {
+      stage: 'HOÀN TẤT HỒ SƠ',
+      text: `🎉 [${leadId}] ${leadRecord.name} | Chủ: ${leadRecord.owner} | Ngày đăng: ${leadRecord.publish_time} (${leadRecord.relative_time}) | Điểm: ${score}đ ➔ ĐÃ CẬP NHẬT CRM`,
+      level: 'success'
+    }
+  });
+
   currentIndex++;
   saveState();
   scheduleNext(1500);
@@ -1139,6 +1311,8 @@ async function inspectWebsiteVisually(tabId, websiteUrl, leadName, leadEmail) {
   let currentState = homeResults?.state || '';
   let currentZip = homeResults?.zip || '';
   let currentCountry = homeResults?.country || 'United States';
+  let currentHasAmazon = homeResults?.has_amazon || false;
+  let currentAmazonUrl = homeResults?.amazon_url || '';
   let subLinks = homeResults?.subLinks || [];
 
   // 3. NẾU CHƯA TÌM THẤY CHỦ TRẠI VÀ CÓ CÁC TRANG CON (/about, /contact, /meet, ...)
@@ -1175,6 +1349,10 @@ async function inspectWebsiteVisually(tabId, websiteUrl, leadName, leadEmail) {
       if (subResults?.state && !currentState) currentState = subResults.state;
       if (subResults?.zip && !currentZip) currentZip = subResults.zip;
       if (subResults?.country && (!currentCountry || currentCountry === 'United States')) currentCountry = subResults.country;
+      if (subResults?.has_amazon && !currentHasAmazon) {
+        currentHasAmazon = true;
+        currentAmazonUrl = subResults.amazon_url;
+      }
 
       if (currentOwner && isValidOwnerCandidate(currentOwner)) {
         console.log(`[Web Live Inspector] Đã tìm thấy chủ trại tại ${subTitle}: ${currentOwner}`);
@@ -1212,7 +1390,11 @@ async function inspectWebsiteVisually(tabId, websiteUrl, leadName, leadEmail) {
     city: currentCity,
     state: currentState,
     zip: currentZip,
-    country: currentCountry
+    country: currentCountry,
+    has_amazon: currentHasAmazon,
+    amazon_url: currentAmazonUrl,
+    amazon_channel: currentHasAmazon ? 'Selling on Amazon (Target)' : 'Amazon link not found',
+    amz_cat: currentHasAmazon ? 'Pet Toys / Artificial Grass / Pet Toilets' : 'Chưa phát hiện link Amazon'
   };
 }
 
@@ -1477,6 +1659,30 @@ async function scrollAndExtractPageAgent(options) {
     address = cleanAddressTextLocal(mAddr[0]);
   }
 
+  // 6. Quét liên kết gian hàng hoặc sản phẩm Amazon (Amazon Storefront / Affiliate / Product)
+  let amazonUrl = '';
+  const amzElements = Array.from(document.querySelectorAll('a[href*="amazon.com"], a[href*="amzn.to"], a[href*="amazon.co"]'));
+  for (const a of amzElements) {
+    const href = (a.getAttribute('href') || '').trim();
+    if (href && !/signin|ap\/signin|help|privacy|preferences/i.test(href)) {
+      amazonUrl = href;
+      break;
+    }
+  }
+
+  // 7. Quét Thành phố & Bang trên Good Dog hoặc Website
+  let city = '';
+  let state = '';
+  let zip = '';
+  let country = 'United States';
+  const mLocGoodDog = bodyText.match(/([A-Za-z\s.-]+),\s*([A-Z]{2})\s*·\s*Drop-off/i) ||
+                      htmlStr.match(/breederCity:\s*['"]([^'"]+)['"]/i) ||
+                      bodyText.match(/\b([A-Za-z\s.-]+),\s*([A-Z]{2})\b/);
+  if (mLocGoodDog && mLocGoodDog[1] && mLocGoodDog[2]) {
+    city = mLocGoodDog[1].trim();
+    state = mLocGoodDog[2].trim().toUpperCase();
+  }
+
   // Nếu là trang chủ: Thu thập các link con nội bộ tiềm năng
   let subLinks = [];
   if (isHomePage) {
@@ -1513,6 +1719,14 @@ async function scrollAndExtractPageAgent(options) {
     phone: phone,
     email: email,
     address: address,
+    city: city,
+    state: state,
+    zip: zip,
+    country: country,
+    has_amazon: !!amazonUrl,
+    amazon_url: amazonUrl,
+    amazon_channel: amazonUrl ? 'Selling on Amazon (Target)' : 'Amazon link not found',
+    amz_cat: amazonUrl ? 'Pet Toys / Artificial Grass / Pet Toilets' : 'Chưa phát hiện link Amazon',
     subLinks: subLinks
   };
 }
