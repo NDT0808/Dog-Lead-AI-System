@@ -123,8 +123,24 @@ def clean_extracted_name(cand):
     if len(c) < 3 or len(c) > 35:
         return ""
     words = c.split()
-    if words and words[0].capitalize() in US_CENSUS_FIRST_NAMES:
+    if words and (words[0].capitalize() in US_CENSUS_FIRST_NAMES or len(words) >= 2):
         return c
+    return ""
+
+def extract_owner_from_text(text_content):
+    """Bóc tách Tên chủ trại từ ngữ cảnh trang web (Meet the breeder, Owned by, Hi I'm...)"""
+    if not text_content:
+        return ""
+    for pat in [
+        r'(?:meet the breeder|about the breeder|our founder|meet)\s*[:\-–]?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})',
+        r'(?:hi[,\s]+(?:i am|i\'m|my name is)|hello[,\s]+(?:i am|i\'m))\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})',
+        r'(?:owned and operated by|founded by|breeder\s*[:\-–]|owner\s*[:\-–])\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})'
+    ]:
+        m_owner = re.search(pat, text_content, re.IGNORECASE)
+        if m_owner:
+            cand = clean_extracted_name(m_owner.group(1))
+            if cand:
+                return cand
     return ""
 
 def crawl_website_details(website_url, timeout=8):

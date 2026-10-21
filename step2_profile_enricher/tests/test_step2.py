@@ -37,7 +37,7 @@ class TestStep2Pipeline(unittest.TestCase):
         """
         parsed = parse_google_ai_response(sample_ai_text)
         self.assertEqual(parsed.get('owner'), "Roleez Yorkies")
-        self.assertEqual(parsed.get('phone'), "4133173410")
+        self.assertEqual(parsed.get('phone'), "14133173410")
         self.assertEqual(parsed.get('state'), "MA")
         self.assertEqual(parsed.get('city'), "Wilbraham")
         self.assertEqual(parsed.get('zip'), "01095")
@@ -75,7 +75,8 @@ class TestStep2Pipeline(unittest.TestCase):
             "email": "toniroy40@gmail.com",
             "city": "Yuba City",
             "state": "CA",
-            "website": "http://www.familyLovedGoldenRetrievers.com/"
+            "website": "http://www.familyLovedGoldenRetrievers.com/",
+            "relativeTime": "2 giờ trước"
         }
         web_data = {
             "owner": "Toni Roy",

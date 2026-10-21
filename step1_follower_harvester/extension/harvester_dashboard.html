@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐾 Pet Lead AI - Tool 1: FB Multi-Link Harvester</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="harvester_styles.css">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand-box">
+        <div class="brand-icon">🐾</div>
+        <div>
+          <div class="brand-title">
+            <span id="txtBrandTitle">Pet Lead AI • Multi-Link Harvester</span>
+            <span class="badge-tool1">TOOL 1</span>
+          </div>
+          <div class="brand-desc" id="txtBrandDesc">Bộ cào người theo dõi Facebook đa liên kết & chuẩn hóa dữ liệu đầu vào</div>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <!-- Language Switcher VI / ZH -->
+        <div class="lang-toggle">
+          <button class="lang-btn active" id="btnLangVi">
+            <span>🇻🇳</span> Tiếng Việt
+          </button>
+          <button class="lang-btn" id="btnLangZh">
+            <span>🇨🇳</span> 中文
+          </button>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="ext-status-pill">
+          <div class="status-dot" id="liveStatusDot"></div>
+          <span id="txtExtStatus">Tiện ích đang sẵn sàng</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+  <main class="main-layout">
+    
+    <!-- 4 KPI Ribbon -->
+    <section class="kpi-ribbon">
+      <div class="kpi-card">
+        <div class="kpi-icon-box icon-blue">🔗</div>
+        <div>
+          <div class="kpi-val" id="kpiTotalLinks">0</div>
+          <div class="kpi-label" id="lblKpiLinks">Tổng link đã nạp</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-box icon-indigo">👥</div>
+        <div>
+          <div class="kpi-val" id="kpiTotalScraped">0</div>
+          <div class="kpi-label" id="lblKpiScraped">Đã cào được</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-box icon-emerald">🖼️</div>
+        <div>
+          <div class="kpi-val" id="kpiTotalAvatars">0</div>
+          <div class="kpi-label" id="lblKpiAvatars">Có Avatar HD</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-box icon-amber">🆔</div>
+        <div>
+          <div class="kpi-val" id="kpiTotalNumericId">0</div>
+          <div class="kpi-label" id="lblKpiNumeric">Có FB_ID số</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Work Area: 2 Columns -->
+    <div class="work-grid">
+      
+      <!-- Left Column: URL List & Control Panel -->
+      <aside class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>📋</span>
+            <span id="txtPanelLinksTitle">Danh sách Link Facebook</span>
+          </div>
+          <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);" id="txtUrlFormatHint">Đuôi /followers hoặc /following</span>
+        </div>
+
+        <!-- Textarea input -->
+        <textarea 
+          class="url-textarea" 
+          id="urlInputTextarea" 
+          placeholder="Dán danh sách link Facebook vào đây (Mỗi dòng 1 link)&#10;Ví dụ:&#10;https://www.facebook.com/officialgooddog/followers&#10;https://www.facebook.com/Cavicajunkennels/followers"></textarea>
+
+        <!-- Quick Sample Chips -->
+        <div class="quick-chips">
+          <span class="chip-label" id="lblQuickSample">Link mẫu:</span>
+          <button class="chip-btn" id="chipGooddog">+ officialgooddog/followers</button>
+          <button class="chip-btn" id="chipCavicajun">+ Cavicajunkennels</button>
+          <button class="chip-btn" id="chipClearInput">🧹 Xóa trắng</button>
+        </div>
+
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+          <div>
+            <div class="mode-info-title" id="txtModeTitle">Chế độ cào đa link</div>
+            <div class="mode-info-desc" id="txtModeDesc">Mở tuần tự từng tab hoặc cào song song</div>
+          </div>
+          <select class="mode-select" id="crawlModeSelect">
+            <option value="sequential">Tuần tự từng link (Khuyên dùng)</option>
+            <option value="multi2">Mở song song 2 tab</option>
+            <option value="multi3">Mở song song 3 tab</option>
+          </select>
+        </div>
+
+        <!-- Controls -->
+        <div class="action-buttons-grid">
+          <button class="btn-primary-action" id="btnStartHarvest">
+            <span>▶▶</span>
+            <span id="txtBtnStart">Bắt đầu cào tất cả link</span>
+          </button>
+          <div class="secondary-btns">
+            <button class="btn-pause" id="btnPauseHarvest" disabled>
+              <span>⏸</span>
+              <span id="txtBtnPause">Tạm dừng</span>
+            </button>
+            <button class="btn-stop" id="btnStopHarvest" disabled>
+              <span>⏹</span>
+              <span id="txtBtnStop">Dừng & Lưu</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Queue Progress -->
+        <div class="queue-box">
+          <div class="queue-header">
+            <span id="txtQueueHeader">HÀNG ĐỢI XỬ LÝ (QUEUE)</span>
+            <span id="txtQueueCount">0 link</span>
+          </div>
+          <div class="queue-list" id="queueListContainer">
+            <div style="text-align: center; color: var(--text-muted); font-size: 11px; padding: 12px;" id="txtQueueEmpty">
+              Chưa có link nào trong hàng đợi. Hãy dán link và bấm Bắt đầu.
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Column: Live Data Feed & Export -->
+      <section class="panel">
+        <div class="panel-header table-panel-header">
+          <div class="panel-title">
+            <span>🐾</span>
+            <span id="txtTableTitle">Danh sách Người theo dõi vừa cào</span>
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;" id="txtLiveCount">(0 hồ sơ)</span>
+          </div>
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="tableSearchInput" placeholder="Tìm theo tên, ID số, link...">
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">#</th>
+                <th style="width: 60px;" id="thAvatar">Avatar</th>
+                <th id="thName">Tên chủ nuôi / Trại chó</th>
+                <th id="thLink">Facebook Link</th>
+                <th id="thId">FB_ID Số</th>
+                <th id="thSource">Trang nguồn</th>
+                <th style="width: 120px;" id="thType">Phân loại</th>
+              </tr>
+            </thead>
+            <tbody id="harvesterTableBody">
+              <tr>
+                <td colspan="7" class="empty-table">
+                  <div class="empty-icon">📥</div>
+                  <div id="txtEmptyTableMsg">Chưa có dữ liệu. Dán danh sách link bên trái và bấm "Bắt đầu cào tất cả link".</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Export Ribbon Footer -->
+        <div class="export-ribbon">
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <!-- Button Export for Tool 2 -->
+            <button class="btn-export-tool2" id="btnExportForTool2">
+              <span>📥</span>
+              <span id="txtBtnExportTool2">Xuất file JSON cho Tool 2 (AI Vision)</span>
+            </button>
+            <button class="btn-export-excel" id="btnExportExcel">
+              <span>📊</span>
+              <span id="txtBtnExportExcel">Xuất Excel (XLSX)</span>
+            </button>
+          </div>
+
+          <div>
+            <button class="btn-clear-trash" id="btnClearTrash">
+              <span>🧹</span>
+              <span id="txtBtnClearTrash">Dọn sạch dữ liệu</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Toast Notification -->
+  <div class="toast-notice" id="toastNotice"></div>
+
+  <!-- ExcelJS -->
+  <script src="assets/exceljs.min.js"></script>
+  <!-- Harvester Logic -->
+  <script src="harvester_app.js"></script>
+</body>
+</html>

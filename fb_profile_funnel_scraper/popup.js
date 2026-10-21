@@ -13,6 +13,8 @@ const txtUrlListLabel = $('txtUrlListLabel');
 const linkCountText = $('linkCountText');
 const btnQuickPaste = $('btnQuickPaste');
 const txtBtnQuickPaste = $('txtBtnQuickPaste');
+const btnOpenDashboard = $('btnOpenDashboard');
+const txtBtnOpenDashboard = $('txtBtnOpenDashboard');
 const urlListText = $('urlList');
 
 const txtFromLine = $('txtFromLine');
@@ -50,6 +52,7 @@ const I18N = {
   vi: {
     appTitle: "🕒 FB Profile Funnel & Lead Scraper",
     modeBadge: "Full Intro + Chủ Trại + Ngày Đăng",
+    btnOpenDashboard: "🖥️ MỞ DASHBOARD BÓC TÁCH CRM TOÀN MÀN HÌNH",
     urlListLabel: "Danh sách link Facebook:",
     btnQuickPaste: "Dán từ Clipboard",
     urlPlaceholder: "Dán danh sách link vào đây (mỗi dòng 1 link, không giới hạn số lượng)\nhttps://www.facebook.com/page1\nhttps://www.facebook.com/profile2...",
@@ -98,6 +101,7 @@ const I18N = {
   zh: {
     appTitle: "🕒 FB 主页详情与潜客漏斗采集器",
     modeBadge: "完整简介 + 主理人 + 发帖时间",
+    btnOpenDashboard: "🖥️ 打开全屏漏斗与潜客CRM工作台",
     urlListLabel: "Facebook 链接列表:",
     btnQuickPaste: "从剪贴板粘贴",
     urlPlaceholder: "在此粘贴主页链接（每行一个链接，数量不限）\nhttps://www.facebook.com/page1\nhttps://www.facebook.com/profile2...",
@@ -177,6 +181,7 @@ function setLanguage(lang) {
   if (txtBtnExportJson) txtBtnExportJson.textContent = dict.btnExportJson;
   txtBtnExportCsv.textContent = dict.btnExportCsv;
   txtBtnClear.textContent = dict.btnClear;
+  if (txtBtnOpenDashboard) txtBtnOpenDashboard.textContent = dict.btnOpenDashboard;
   txtFooter.textContent = dict.footer;
 
   updateLinkCount();
@@ -353,6 +358,13 @@ btnQuickPaste.addEventListener('click', async () => {
     urlListText.focus();
   }
 });
+
+// ============================ MỞ DASHBOARD TOÀN MÀN HÌNH ============================
+if (btnOpenDashboard) {
+  btnOpenDashboard.addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
+  });
+}
 
 // ============================ BẮT ĐẦU CÀO MỚI ============================
 btnAutoStart.addEventListener('click', () => {

@@ -48,6 +48,9 @@
       "resources": [
         "dashboard.html",
         "dashboard.js",
+        "harvester_dashboard.html",
+        "harvester_styles.css",
+        "harvester_app.js",
         "assets/*"
       ],
       "matches": ["<all_urls>"]

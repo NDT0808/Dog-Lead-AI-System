@@ -773,9 +773,9 @@ async function executeStep2BrowserScan(links, options = {}) {
 
     emitLog('1. FACEBOOK', `[Dòng ${i+1}/${total}] Đang mở profile (${initialName || rawUrl}) ➔ Bóc tách Giới thiệu & Bài viết...`, 'info');
 
-    // 1. Điều hướng worker tab tới Profile Facebook
+    // 1. Điều hướng worker tab tới Profile Facebook (active: true để Comet React nạp DOM đầy đủ)
     try {
-      await chrome.tabs.update(currentWorkerTabId, { url: rawUrl, active: false });
+      await chrome.tabs.update(currentWorkerTabId, { url: rawUrl, active: true });
       await waitForTabLoaded(currentWorkerTabId, 12000);
     } catch (e) {}
 
@@ -930,11 +930,13 @@ async function executeStep2BrowserScan(links, options = {}) {
 
 // Lắng nghe messages từ content.js & dashboard.js
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'EXECUTE_STEP2_BROWSER_SCAN' || message.action === 'START_STEP2_DIRECT_SCAN') {
+  if (message.action === 'EXECUTE_STEP2_BROWSER_SCAN' || message.action === 'START_STEP2_DIRECT_SCAN' || message.action === 'START_AUTO_FROM_DASHBOARD') {
     if (sender && sender.tab) {
       currentDashboardTabId = sender.tab.id;
     }
-    executeStep2BrowserScan(message.links || [], message.options || {});
+    const links = message.links || message.urls || [];
+    const options = message.options || { startIndex: message.startIndex, endIndex: message.endIndex };
+    executeStep2BrowserScan(links, options);
     sendResponse({ status: 'started' });
     return true;
   } else if (message.action === 'STOP_STEP2_BROWSER_SCAN' || message.action === 'PAUSE_STEP2_DIRECT_SCAN') {

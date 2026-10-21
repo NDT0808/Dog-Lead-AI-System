@@ -169,6 +169,72 @@ function getProfileName() {
 }
 
 /**
+ * Trích xuất Facebook ID số từ URL hoặc DOM meta
+ */
+function extractFacebookID() {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const qId = urlParams.get('id');
+        if (qId && /^\d+$/.test(qId)) return qId;
+
+        const mProfile = document.querySelector('meta[property="al:android:url"], meta[property="al:ios:url"]');
+        if (mProfile && mProfile.content) {
+            const m = mProfile.content.match(/fb:\/\/profile\/(\d+)|fb:\/\/page\/(\d+)/);
+            if (m && (m[1] || m[2])) return m[1] || m[2];
+        }
+
+        const mUserId = document.querySelector('meta[property="fb:profile_id"], meta[property="fb:pages"]');
+        if (mUserId && mUserId.content && /^\d+$/.test(mUserId.content)) {
+            return mUserId.content;
+        }
+
+        const scripts = document.querySelectorAll('script');
+        for (const s of scripts) {
+            const t = s.textContent || '';
+            if (t.includes('userID') || t.includes('pageID') || t.includes('entity_id')) {
+                const m = t.match(/["'](?:userID|pageID|entity_id)["']\s*:\s*["']?(\d{8,20})["']?/);
+                if (m && m[1]) return m[1];
+            }
+        }
+    } catch (e) {
+        console.warn('[FB Scraper] Lỗi khi trích xuất FB ID:', e);
+    }
+    return '';
+}
+
+/**
+ * Trích xuất Avatar Profile/Fanpage Facebook thật từ DOM
+ */
+function extractProfileAvatar() {
+    try {
+        let ogImg = document.querySelector('meta[property="og:image"]');
+        if (ogImg && ogImg.content && !ogImg.content.includes('rsrc.php') && !ogImg.content.includes('blank_profile')) {
+            return ogImg.content;
+        }
+        let svgImgs = Array.from(document.querySelectorAll('svg image, image'));
+        for (let img of svgImgs) {
+            let href = img.getAttribute('xlink:href') || img.getAttribute('href') || '';
+            if (href && href.includes('fbcdn.net') && !href.includes('rsrc.php') && !href.includes('blank_profile')) {
+                return href;
+            }
+        }
+        let imgs = Array.from(document.querySelectorAll('img[src*="fbcdn.net"]'));
+        for (let img of imgs) {
+            let src = img.src || '';
+            let alt = (img.alt || '').toLowerCase();
+            if (src && !src.includes('rsrc.php') && !src.includes('blank_profile')) {
+                if (alt.includes('avatar') || alt.includes('ảnh đại diện') || alt.includes('profile') || alt.includes('头像') || img.width > 60) {
+                    return src;
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('[FB Scraper] Lỗi khi trích xuất avatar:', e);
+    }
+    return '';
+}
+
+/**
  * Trích xuất chuỗi thời gian từ một đoạn text hoặc thuộc tính aria-label (Đa ngôn ngữ VI, EN, ZH)
  */
 function extractTimeFromText(text) {
@@ -1465,6 +1531,57 @@ function extractOwnerRepresentative(leadName, email, html, webOwnerName) {
 }
 
 /**
+ * Trích xuất Avatar HD thực tế từ thẻ meta og:image, DOM element hoặc Relay GraphQL
+ */
+function extractProfileAvatar() {
+    let found = '';
+
+    // 1. Thử thẻ meta og:image (Facebook thường gắn ảnh đại diện chuẩn của Page/Profile)
+    try {
+        const ogImg = document.querySelector('meta[property="og:image"]')?.content || '';
+        if (ogImg && !ogImg.includes('blank_profile') && !ogImg.includes('rsrc.php')) {
+            found = ogImg.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
+        }
+    } catch (_) {}
+
+    // 2. Thử DOM SVG / Image element trong banner profile
+    if (!found) {
+        try {
+            const avImg = document.querySelector('svg image, image[preserveAspectRatio*="xMidYMid"], image[xlink\\:href], image[href], img[alt*="ảnh đại diện" i], img[alt*="profile picture" i], img[alt*="头像" i], img[alt*="头贴" i], img[alt*="avatar" i], img[src*="fbcdn.net"][src*="t39.30808-1"]');
+            if (avImg) {
+                const src = avImg.getAttribute('xlink:href') || avImg.getAttribute('href') || avImg.getAttribute('src') || '';
+                if (src && !src.startsWith('data:') && !src.includes('blank_profile') && !src.includes('rsrc.php')) {
+                    found = src.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
+                }
+            }
+        } catch (_) {}
+    }
+
+    // 3. Quét trong các thẻ script chứa Relay GraphQL profile_picture
+    if (!found) {
+        try {
+            const scripts = Array.from(document.querySelectorAll('script:not([src])'));
+            for (const sc of scripts) {
+                const txt = sc.textContent || '';
+                if (!txt.includes('profile_picture') && !txt.includes('profile_photo')) continue;
+                const m = txt.match(/"profile_picture"\s*:\s*\{\s*"uri"\s*:\s*"([^"]+)"/i) ||
+                          txt.match(/"profile_photo"\s*:\s*\{\s*"uri"\s*:\s*"([^"]+)"/i) ||
+                          txt.match(/"(https:\/\/[^"]*fbcdn\.net\/[^"]*t39\.30808-1[^"]*)"/i);
+                if (m && m[1]) {
+                    let uri = m[1].replace(/\\u00253A/gi, ':').replace(/\\u00252F/gi, '/').replace(/\\u002526/gi, '&').replace(/\\\//g, '/');
+                    if (!uri.includes('blank_profile') && !uri.includes('rsrc.php')) {
+                        found = uri.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
+                        break;
+                    }
+                }
+            }
+        } catch (_) {}
+    }
+
+    return found;
+}
+
+/**
  * Quy trình cào Toàn Diện: Publish Time + Toàn bộ Intro + Website Owner (Lisa Z.)
  */
 async function scrapePublishTime(targetUrl, stt, taskId) {
@@ -1508,9 +1625,10 @@ async function scrapePublishTime(targetUrl, stt, taskId) {
         if (el) { el.innerText = txt; el.style.background = color; }
     };
 
-    // 2. Lấy tên Profile / Fanpage & FB ID
+    // 2. Lấy tên Profile / Fanpage & FB ID & Avatar
     let name = getProfileName();
     let fb_id = extractFacebookID();
+    let avatarUrl = extractProfileAvatar();
 
     // 3. Cuộn sâu qua khỏi vùng header (khoảng 900px) để Facebook kích hoạt nạp bài đăng timeline
     window.scrollTo({ top: 900, behavior: 'smooth' });
@@ -1518,13 +1636,16 @@ async function scrapePublishTime(targetUrl, stt, taskId) {
     window.scrollBy({ top: 600, behavior: 'smooth' });
     await sleep(1200);
 
-    // Cập nhật lại tên nếu DOM vừa nạp xong
+    // Cập nhật lại tên & avatar nếu DOM vừa nạp xong
     let refinedName = getProfileName();
     if (refinedName && refinedName !== 'Facebook User' && !isGarbageName(refinedName)) {
         name = refinedName;
     }
     if (!fb_id) {
         fb_id = extractFacebookID();
+    }
+    if (!avatarUrl) {
+        avatarUrl = extractProfileAvatar();
     }
 
     updateBadge('Đang bóc tách Bài viết & Timestamps...', '#f59e0b');
@@ -1587,6 +1708,7 @@ async function scrapePublishTime(targetUrl, stt, taskId) {
             fb_id: fb_id,
             url: url,
             name: name,
+            avatar_url: avatarUrl,
             owner: ownerInfo.owner,
             ownerConfidence: ownerInfo.confidence,
             phone: contacts.phone,

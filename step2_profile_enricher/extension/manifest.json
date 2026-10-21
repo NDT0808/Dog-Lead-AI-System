@@ -1,36 +1,66 @@
 {
   "manifest_version": 3,
-  "name": "Pet Lead AI - Profile Data Enricher",
-  "version": "1.0.0",
-  "description": "Làm giàu hồ sơ người dùng Facebook: Cào thông tin Giới thiệu (About), Thông tin liên hệ, SĐT, Email, Website, Tên chủ trại cho Step 2.",
+  "name": "FB Profile Funnel Scraper",
+  "version": "1.1",
+  "description": "Cào phễu 3 bước: Lấy Avatar, Cover, Quét bài đăng, Chấm điểm hoạt động cho Breeders, duyệt Website và kết nối trực tiếp sang Web Dashboard.",
   "permissions": [
     "activeTab",
-    "tabs",
-    "scripting",
+    "<all_urls>",
     "storage",
-    "downloads"
+    "unlimitedStorage",
+    "scripting",
+    "downloads",
+    "tabs",
+    "clipboardRead",
+    "clipboardWrite"
   ],
   "host_permissions": [
-    "https://facebook.com/*",
-    "https://www.facebook.com/*",
-    "https://*.facebook.com/*"
+    "*://*.facebook.com/*",
+    "*://*.gooddog.com/*",
+    "<all_urls>",
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
   ],
+  "action": {
+    "default_popup": "popup.html"
+  },
   "background": {
     "service_worker": "background.js"
-  },
-  "action": {
-    "default_popup": "popup.html",
-    "default_title": "Pet Lead AI - Profile Data Enricher"
   },
   "content_scripts": [
     {
       "matches": [
-        "https://facebook.com/*",
-        "https://www.facebook.com/*",
-        "https://*.facebook.com/*"
+        "*://*.facebook.com/*",
+        "http://127.0.0.1:8000/*",
+        "http://localhost:8000/*",
+        "http://127.0.0.1/*",
+        "http://localhost/*"
       ],
-      "js": ["content_fb_about.js"],
-      "run_at": "document_idle"
+      "js": ["content.js"],
+      "run_at": "document_end"
     }
-  ]
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "dashboard.html",
+        "dashboard.js",
+        "dashboard.css",
+        "nlp_extractor.onnx",
+        "vocab.json",
+        "exceljs.min.js"
+      ],
+      "matches": ["*://*.facebook.com/*", "<all_urls>"]
+    }
+  ],
+  "externally_connectable": {
+    "matches": [
+      "http://127.0.0.1:8000/*",
+      "http://localhost:8000/*",
+      "http://127.0.0.1/*",
+      "http://localhost/*"
+    ]
+  }
 }

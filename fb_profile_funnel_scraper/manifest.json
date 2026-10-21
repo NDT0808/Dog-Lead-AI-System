@@ -45,6 +45,9 @@
   "web_accessible_resources": [
     {
       "resources": [
+        "dashboard.html",
+        "dashboard.js",
+        "dashboard.css",
         "nlp_extractor.onnx",
         "vocab.json",
         "exceljs.min.js"

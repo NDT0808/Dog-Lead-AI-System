@@ -878,7 +878,7 @@
     }
 
     function resolveAvatarFallback(fbId, url, currentAvatar) {
-      if (currentAvatar && (currentAvatar.startsWith('http') || currentAvatar.startsWith('data:')) && !currentAvatar.includes('ui-avatars.com')) {
+      if (currentAvatar && (currentAvatar.startsWith('http') || currentAvatar.startsWith('data:')) && !currentAvatar.includes('ui-avatars.com') && !currentAvatar.includes('unavatar.io')) {
         return currentAvatar;
       }
       const cleanId = fbId ? String(fbId).trim() : '';
@@ -894,7 +894,7 @@
       for (const item of pool) {
         if (!item) continue;
         const itemAv = item.avatar_url || item.avatar || item.photo || item.image || item.img || '';
-        if (!itemAv || itemAv.includes('ui-avatars.com') || (!itemAv.startsWith('http') && !itemAv.startsWith('data:'))) continue;
+        if (!itemAv || itemAv.includes('ui-avatars.com') || itemAv.includes('unavatar.io') || (!itemAv.startsWith('http') && !itemAv.startsWith('data:'))) continue;
 
         if (cleanId && item.fb_id && String(item.fb_id).trim() === cleanId) {
           return itemAv;
@@ -904,7 +904,7 @@
         }
       }
 
-      return currentAvatar || '';
+      return (currentAvatar && !currentAvatar.includes('unavatar.io')) ? currentAvatar : '';
     }
 
     function renderTerminalLogRow(row, entry, lang) {
@@ -1008,9 +1008,22 @@
       }
     }
 
+    let lastStep2LogSignature = '';
+    let lastStep2LogTime = 0;
+
     function appendTerminalLogStep2(entry) {
       const body = document.getElementById('terminalBodyStep2');
-      if (!body) return;
+      if (!body || !entry) return;
+
+      const rawText = typeof entry === 'string' ? entry : (entry.text || '');
+      const rawStage = (typeof entry === 'object' && entry.stage) || '';
+      const now = Date.now();
+      const sig = `${rawStage}|${rawText}`;
+      if (sig === lastStep2LogSignature && (now - lastStep2LogTime) < 800) {
+        return; // Triệt tiêu in trùng lặp log trong vòng 800ms
+      }
+      lastStep2LogSignature = sig;
+      lastStep2LogTime = now;
 
       const row = document.createElement('div');
       row.style.margin = '3px 0';
@@ -2504,6 +2517,83 @@
         return '';
       }
 
+      function isNotificationOrCommentGarbage(txt) {
+        if (!txt || typeof txt !== 'string') return false;
+        const t = txt.toLowerCase();
+        return (
+          t.includes('đã nhắc đến bạn') ||
+          t.includes('đã bình luận') ||
+          t.includes('đã thích') ||
+          t.includes('đã chia sẻ') ||
+          t.includes('mentioned you') ||
+          t.includes('commented on') ||
+          t.includes('reacted to') ||
+          t.includes('shared your') ||
+          t.includes('chưa đọc') ||
+          t.includes('unread') ||
+          t.includes('thông báo') ||
+          t.length > 50
+        );
+      }
+
+      function parsePublishTimestamp(rawVal) {
+        if (!rawVal) return null;
+        let ts = null;
+        if (typeof rawVal === 'number') {
+          let num = rawVal;
+          if (num > 10000000000) num = Math.floor(num / 1000);
+          if (num >= 1420070400 && num <= 2147483647) ts = num;
+        } else if (typeof rawVal === 'string') {
+          const trimmed = rawVal.trim();
+          if (/^\d{9,13}$/.test(trimmed)) {
+            let num = parseInt(trimmed, 10);
+            if (num > 10000000000) num = Math.floor(num / 1000);
+            if (num >= 1420070400 && num <= 2147483647) ts = num;
+          } else if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+            const parsedDate = new Date(trimmed);
+            if (!isNaN(parsedDate.getTime())) ts = Math.floor(parsedDate.getTime() / 1000);
+          } else {
+            const m = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+            if (m) {
+              const day = parseInt(m[1], 10);
+              const month = parseInt(m[2], 10) - 1;
+              const year = parseInt(m[3], 10);
+              const hours = m[4] ? parseInt(m[4], 10) : 12;
+              const minutes = m[5] ? parseInt(m[5], 10) : 0;
+              const seconds = m[6] ? parseInt(m[6], 10) : 0;
+              const parsedDate = new Date(year, month, day, hours, minutes, seconds);
+              if (!isNaN(parsedDate.getTime())) ts = Math.floor(parsedDate.getTime() / 1000);
+            }
+          }
+        }
+        if (!ts) return null;
+        const d = new Date(ts * 1000);
+        const now = new Date();
+        const diffSec = Math.max(0, Math.floor((now.getTime() - d.getTime()) / 1000));
+        const daysAgo = Math.floor(diffSec / (24 * 3600));
+        const pad = n => String(n).padStart(2, '0');
+        const publishHuman = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        let relVi = '';
+        if (diffSec < 3600) relVi = `${Math.max(1, Math.floor(diffSec / 60))} phút trước`;
+        else if (diffSec < 86400) relVi = `${Math.floor(diffSec / 3600)} giờ trước`;
+        else if (daysAgo < 30) relVi = `${daysAgo} ngày trước`;
+        else if (daysAgo < 365) relVi = `${Math.floor(daysAgo / 30)} tháng trước`;
+        else relVi = `${Math.floor(daysAgo / 365)} năm trước`;
+        let actVi = '';
+        if (daysAgo <= 14) actVi = "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)";
+        else if (daysAgo <= 45) actVi = "✓ TÍCH CỰC (Đăng trong 1.5 tháng qua)";
+        else if (daysAgo <= 90) actVi = "⚠️ TRUNG BÌNH (Đăng trong 3 tháng qua)";
+        else actVi = `❄️ ĐÓNG BĂNG (> ${Math.floor(daysAgo / 30)} tháng chưa có bài)`;
+        return {
+          timestamp: ts,
+          iso: d.toISOString(),
+          publish_human: publishHuman,
+          relative_time: relVi,
+          days_ago: daysAgo,
+          activity_status: actVi
+        };
+      }
+
       const SYSTEM_EXCLUDED_HOSTS = new Set([
         'facebook.com', 'www.facebook.com', 'm.facebook.com', 'fb.com', 'messenger.com',
         'instagram.com', 'www.instagram.com', 'threads.net', 'whatsapp.com', 'meta.com',
@@ -2659,8 +2749,8 @@
       if (!foundAvatar && initAvatar && (initAvatar.startsWith('http') || initAvatar.startsWith('data:'))) {
         foundAvatar = initAvatar;
       }
-      if (!foundAvatar) {
-        const s1Pool = (verifiedLeads || []).concat(rawFollowers || []).concat(window.DOG_GALLERY_DATA || []);
+      if (!foundAvatar && typeof verifiedLeads !== 'undefined') {
+        const s1Pool = (verifiedLeads || []).concat(typeof rawFollowers !== 'undefined' ? rawFollowers : []).concat(window.DOG_GALLERY_DATA || []);
         const m = s1Pool.find(x => (resolvedFbId && x.fb_id && x.fb_id === resolvedFbId) || (x.url && x.url === window.location.href) || (x.name && x.name === res.name));
         if (m && (m.avatar_url || m.avatar)) {
           foundAvatar = m.avatar_url || m.avatar;
@@ -3610,29 +3700,30 @@
 
       let bridgeTriggered = false;
 
-      // 1. Gửi qua Window PostMessage Bridge (Content Script fb_profile_funnel_scraper lắng nghe trên http://127.0.0.1:8000)
-      window.postMessage({
-        type: 'START_STEP2_SCAN_VIA_EXTENSION',
-        links: urls,
-        options: { startIndex: startIdx, endIndex: endIdx }
-      }, '*');
-      bridgeTriggered = true;
-
-      // 2. Gửi qua Chrome Runtime API nếu đang mở trong ngữ cảnh Extension
+      // 1. Nếu đang mở trong ngữ cảnh Chrome Extension: Gọi trực tiếp Background Service Worker
       if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.sendMessage === 'function') {
         try {
           chrome.runtime.sendMessage({
-            action: 'START_AUTO_FROM_DASHBOARD',
-            urls: urls,
-            startIndex: startIdx,
-            endIndex: endIdx,
+            action: 'EXECUTE_STEP2_BROWSER_SCAN',
+            links: urls,
             options: { startIndex: startIdx, endIndex: endIdx }
           }, (res) => {
             if (!chrome.runtime.lastError && res && res.status === 'started') {
               bridgeTriggered = true;
             }
           });
+          bridgeTriggered = true;
         } catch (_) {}
+      }
+
+      // 2. Nếu không gọi được extension trực tiếp (đang mở Web http://127.0.0.1:8000): Gửi qua Content Script Bridge
+      if (!bridgeTriggered) {
+        window.postMessage({
+          type: 'START_STEP2_SCAN_VIA_EXTENSION',
+          links: urls,
+          options: { startIndex: startIdx, endIndex: endIdx }
+        }, '*');
+        bridgeTriggered = true;
       }
 
       // 3. Watchdog kiểm tra kết nối Extension sau 4.5 giây: Nếu Extension chưa bật -> Hướng dẫn rõ ràng
@@ -4889,7 +4980,16 @@
       leads.forEach((item, index) => {
         const tr = document.createElement('tr');
         const fbId = item.fb_id || '';
-        const profileUrl = item.url || (fbId ? `https://www.facebook.com/profile.php?id=${fbId}` : '#');
+        let profileUrl = '';
+        if (item.url && item.url.includes('facebook.com')) {
+          profileUrl = item.url;
+        } else if (fbId) {
+          profileUrl = `https://www.facebook.com/profile.php?id=${fbId}`;
+        } else if (item.url && item.url.startsWith('http')) {
+          profileUrl = item.url;
+        } else {
+          profileUrl = '#';
+        }
         const fallbackInitials = encodeURIComponent((item.owner && item.owner !== '---') ? item.owner : (item.name || 'Dog Breeder'));
         const defaultUiAvatar = `https://ui-avatars.com/api/?name=${fallbackInitials}&background=0f172a&color=38bdf8&bold=true`;
         const rawAvatar = resolveAvatarFallback(fbId, profileUrl, item.avatar_url || item.avatar || '');
@@ -4985,6 +5085,7 @@
         const mStt = String(rawStt).match(/(\d+)/);
         if (mStt) sttNum = parseInt(mStt[1], 10);
         const sttDisplay = `LEAD-US-${String(sttNum).padStart(6, '0')}`;
+        const leadKey = item.stt || item.fb_id || String(index);
 
         tr.innerHTML = `
           <td style="font-size:12px; font-weight:700; color:#0284c7; white-space:nowrap;">
@@ -4992,16 +5093,20 @@
               ${sttDisplay}
             </span>
           </td>
-          <td>
-            <div class="circle-avatar-box" style="width:40px; height:40px; min-width:40px; cursor:pointer;" title="${currentLang === 'zh' ? '点击打开Facebook主页' : 'Mở trang Facebook cá nhân'}" onclick="window.open('${profileUrl}', '_blank')">
+          <td style="text-align:center; vertical-align:middle;">
+            <a href="${profileUrl}" target="_blank" rel="noopener noreferrer" class="circle-avatar-box" style="width:42px; height:42px; min-width:42px; display:inline-block; text-decoration:none; vertical-align:middle; cursor:pointer;" title="${currentLang === 'zh' ? '点击打开Facebook主页' : 'Mở trang Facebook cá nhân'}" onclick="if('${profileUrl}' && '${profileUrl}' !== '#'){ window.open('${profileUrl}', '_blank'); }">
               <img class="circle-avatar-img" src="${avatarUrl}" referrerpolicy="no-referrer" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='${defaultUiAvatar}'" />
-            </div>
+            </a>
           </td>
           <td style="min-width:140px; max-width:200px;">
-            <div style="color:var(--text); font-size:12.5px; font-weight:750; line-height:1.35; word-break:break-word;">${escapeHtml(ownerDisplay)}</div>
+            <div class="crm-editable-cell" onclick="openEditLeadModal('${leadKey}')" title="${currentLang === 'zh' ? '点击修改主理人' : 'Nhấn để sửa thông tin'}" style="color:var(--text); font-size:12.5px; font-weight:750; line-height:1.35; word-break:break-word; cursor:pointer;">
+              ${escapeHtml(ownerDisplay)} <span style="font-size:10px; color:#0284c7; opacity:0.7;">✏️</span>
+            </div>
           </td>
           <td style="min-width:150px; max-width:220px;">
-            <div style="font-weight:600; color:var(--text-muted); font-size:12px; line-height:1.35; word-break:break-word;">${escapeHtml(item.name || '---')}</div>
+            <div class="crm-editable-cell" onclick="openEditLeadModal('${leadKey}')" title="${currentLang === 'zh' ? '点击修改犬舍名称' : 'Nhấn để sửa thông tin'}" style="font-weight:600; color:var(--text-muted); font-size:12px; line-height:1.35; word-break:break-word; cursor:pointer;">
+              ${escapeHtml(item.name || '---')} <span style="font-size:10px; color:#0284c7; opacity:0.7;">✏️</span>
+            </div>
           </td>
           <td>
             <span class="badge-fbid" onclick="copyText('${fbId}')" title="${currentLang === 'zh' ? '点击复制纯数字ID' : 'Sao chép ID số'}" style="cursor:pointer; font-weight:700; font-size:11.5px; white-space:nowrap;">
@@ -5009,15 +5114,15 @@
             </span>
           </td>
           <td style="font-size:12px; font-weight:600; white-space:nowrap;">
-            ${(phone && phone !== '---') ? `<div style="font-family:var(--mono); color:#0369a1; font-weight:750; font-size:12px;">📞 ${escapeHtml(phone)}</div>` : ''}
-            ${email ? `<div style="font-family:var(--mono); color:#0f766e; font-size:11.5px; margin-top:2px;" title="${escapeHtml(email)}">✉️ ${escapeHtml(email)}</div>` : ''}
-            ${(!phone || phone === '---') && !email ? '<span style="color:var(--text-muted); font-size:12px;">---</span>' : ''}
+            ${(phone && phone !== '---') ? `<div style="font-family:var(--mono); color:#0369a1; font-weight:750; font-size:12px; cursor:pointer;" onclick="openEditLeadModal('${leadKey}')" title="Nhấn để sửa SĐT">📞 ${escapeHtml(phone)}</div>` : ''}
+            ${email ? `<div style="font-family:var(--mono); color:#0f766e; font-size:11.5px; margin-top:2px; cursor:pointer;" onclick="openEditLeadModal('${leadKey}')" title="Nhấn để sửa Email">✉️ ${escapeHtml(email)}</div>` : ''}
+            ${(!phone || phone === '---') && !email ? `<span style="color:var(--text-muted); font-size:12px; cursor:pointer;" onclick="openEditLeadModal('${leadKey}')" title="Nhấn để thêm SĐT">+ Thêm SĐT</span>` : ''}
           </td>
           <td>
-            ${cleanWeb ? `<a href="${cleanWeb}" target="_blank" rel="noopener noreferrer" style="color:#0284c7; text-decoration:none; font-weight:650; font-size:12px;">🌐 ${escapeHtml(cleanWeb.replace(/^https?:\/\//, '').split('/')[0])}</a>` : '<span style="color:var(--text-muted); font-size:12px;">---</span>'}
+            ${cleanWeb ? `<a href="${cleanWeb}" target="_blank" rel="noopener noreferrer" style="color:#0284c7; text-decoration:none; font-weight:650; font-size:12px;">🌐 ${escapeHtml(cleanWeb.replace(/^https?:\/\//, '').split('/')[0])}</a>` : `<span style="color:var(--text-muted); font-size:12px; cursor:pointer;" onclick="openEditLeadModal('${leadKey}')" title="Nhấn để thêm Website">+ Thêm Web</span>`}
           </td>
-          <td style="color:#334155; font-size:12px; font-weight:600;">
-            ${escapeHtml(location)}
+          <td style="color:#334155; font-size:12px; font-weight:600; cursor:pointer;" onclick="openEditLeadModal('${leadKey}')" title="Nhấn để sửa vị trí">
+            ${escapeHtml(location)} <span style="font-size:10px; color:#0284c7; opacity:0.7;">✏️</span>
           </td>
           <td>
             <div style="font-weight:750; color:#0284c7; font-size:12px;">${escapeHtml(pubTimeDisplay)}</div>
@@ -5040,12 +5145,15 @@
             <span class="badge-tier" style="color:${tierColor}; background:${tierBg}; border:1px solid ${tierBorder}; font-size:11.5px; font-weight:750;">${tier} (${score}đ)</span>
           </td>
           <td>
-            <div style="display:flex; gap:6px;">
-              <a href="${profileUrl}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="padding:4px 8px; font-size:11px; text-decoration:none;">
-                <span>FB</span>
+            <div style="display:flex; gap:5px; align-items:center;">
+              <button class="btn-action" onclick="openEditLeadModal('${leadKey}')" style="background:#e0f2fe; color:#0369a1; border:1px solid #7dd3fc; font-weight:750; font-size:11px; padding:4px 8px;" title="${currentLang === 'zh' ? '编辑档案' : 'Sửa trực tiếp hồ sơ'}">
+                <span>✏️ Sửa</span>
+              </button>
+              <a href="${profileUrl}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="padding:4px 8px; font-size:11px; text-decoration:none;" title="${currentLang === 'zh' ? '打开主页' : 'Mở Facebook'}">
+                <span>🔗 FB</span>
               </a>
               <button class="btn-action" onclick="copyText('${fbId}')" style="padding:4px 8px; font-size:11px;" title="${currentLang === 'zh' ? '复制ID' : 'Sao chép ID'}">
-                <span>ID</span>
+                <span>📋 ID</span>
               </button>
             </div>
           </td>
@@ -5053,6 +5161,75 @@
         tbody.appendChild(tr);
       });
     }
+
+    // =========================================================================
+    // EDIT LEAD MODAL CONTROLLER & PERSISTENCE
+    // =========================================================================
+    function openEditLeadModal(key) {
+      if (!crmLeads || crmLeads.length === 0) return;
+      const lead = crmLeads.find(l => (l.stt && l.stt === key) || (l.fb_id && l.fb_id === key) || (l.lead_id && l.lead_id === key));
+      if (!lead) return;
+
+      document.getElementById('editLeadKey').value = key;
+      document.getElementById('lblModalLeadId').textContent = lead.stt || lead.lead_id || lead.fb_id || 'LEAD';
+      document.getElementById('editLeadOwner').value = lead.owner || lead.owner_name || '';
+      document.getElementById('editLeadName').value = lead.name || '';
+      document.getElementById('editLeadPhone').value = lead.phone || '';
+      document.getElementById('editLeadEmail').value = lead.email || '';
+      document.getElementById('editLeadWebsite').value = lead.website || '';
+      document.getElementById('editLeadCity').value = lead.city || '';
+      document.getElementById('editLeadState').value = lead.state || '';
+      document.getElementById('editLeadTier').value = lead.rank_tier || lead.tier || 'Tier B';
+      document.getElementById('editLeadProduct').value = lead.product_fit || lead.recommended_product || 'Puppy Starter Kit V3';
+      document.getElementById('editLeadSalesAction').value = lead.sales_action || '';
+
+      const modal = document.getElementById('modalEditLead');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeEditLeadModal() {
+      const modal = document.getElementById('modalEditLead');
+      if (modal) modal.style.display = 'none';
+    }
+
+    document.getElementById('formEditLead')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const key = document.getElementById('editLeadKey').value;
+      const idx = crmLeads.findIndex(l => (l.stt && l.stt === key) || (l.fb_id && l.fb_id === key) || (l.lead_id && l.lead_id === key));
+      if (idx !== -1) {
+        const updated = {
+          ...crmLeads[idx],
+          owner: document.getElementById('editLeadOwner').value.trim(),
+          owner_name: document.getElementById('editLeadOwner').value.trim(),
+          name: document.getElementById('editLeadName').value.trim(),
+          phone: document.getElementById('editLeadPhone').value.trim(),
+          email: document.getElementById('editLeadEmail').value.trim(),
+          website: document.getElementById('editLeadWebsite').value.trim(),
+          has_website: !!document.getElementById('editLeadWebsite').value.trim(),
+          city: document.getElementById('editLeadCity').value.trim(),
+          state: document.getElementById('editLeadState').value.trim().toUpperCase(),
+          rank_tier: document.getElementById('editLeadTier').value,
+          tier: document.getElementById('editLeadTier').value,
+          product_fit: document.getElementById('editLeadProduct').value.trim(),
+          sales_action: document.getElementById('editLeadSalesAction').value.trim()
+        };
+
+        crmLeads[idx] = updated;
+        renderCrmTable(crmLeads);
+        updateCrmKpis(crmLeads);
+        syncFunnelFromCrmLeads();
+
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+          chrome.storage.local.set({ crmLeads: crmLeads }).catch(() => {});
+        }
+
+        closeEditLeadModal();
+        showToast(currentLang === 'zh' ? '✓ 已成功更新档案！' : '✓ Đã cập nhật thông tin hồ sơ thành công!');
+      }
+    });
+
+    window.openEditLeadModal = openEditLeadModal;
+    window.closeEditLeadModal = closeEditLeadModal;
 
     // Export Step 2 CRM Excel
     document.getElementById('btnExportCrmExcel').addEventListener('click', async () => {
@@ -5357,115 +5534,6 @@
     // Nhận sự kiện từ Content Script Bridge (khi trang chạy từ http://127.0.0.1:8000)
     window.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'PET_LEAD_STEP2_EVENT' && event.data.payload) {
-        handleStep2DirectMessage(event.data.payload);
+        handleStep2RemoteEvent(event.data.payload);
       }
     });
-
-    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
-      chrome.runtime.onMessage.addListener((msg) => {
-        if (msg && msg.action && msg.action.startsWith('STEP2_')) {
-          handleStep2DirectMessage(msg);
-        }
-      });
-    }
-
-    function handleStep2DirectMessage(msg) {
-      if (!msg || !msg.action) return;
-
-      if (msg.action === 'STEP2_LOG') {
-        const l = msg.log || {};
-        appendTerminalLogStep2({
-          stage: l.stage || 'TIẾN ĐỘ',
-          text: l.text || '',
-          level: l.level || 'info'
-        });
-      }
-      else if (msg.action === 'STEP2_PROGRESS') {
-        const cur = msg.current || 0;
-        const tot = msg.total || 0;
-        const pct = msg.percent !== undefined ? msg.percent : Math.round((cur / Math.max(1, tot)) * 100);
-        const fill = document.getElementById('bulkProgressFill');
-        if (fill) fill.style.width = `${pct}%`;
-        const lblPct = document.getElementById('lblScanPercent');
-        if (lblPct) lblPct.textContent = `${pct}%`;
-        const lblCnt = document.getElementById('lblScrapedCountStep2');
-        if (lblCnt) lblCnt.textContent = cur;
-        const lblTot = document.getElementById('lblTotalQueueStep2');
-        if (lblTot) lblTot.textContent = tot;
-        const lblStat = document.getElementById('lblScanStatus');
-        if (lblStat && msg.status) lblStat.textContent = msg.status;
-      }
-      else if (msg.action === 'STEP2_LEAD_DONE') {
-        const item = msg.lead || {};
-        if (item && (item.fb_id || item.url || item.name)) {
-          const prevRow = document.getElementById('bulkLeadPreviewRow');
-          if (prevRow) prevRow.style.display = 'flex';
-          const bName = document.getElementById('bulkLeadName');
-          if (bName) bName.textContent = item.name || 'Facebook User';
-          const bOwner = document.getElementById('bulkLeadOwner');
-          if (bOwner) bOwner.textContent = `Chủ trại: ${item.owner || item.owner_name || 'Đang cập nhật'}`;
-          const bFbid = document.getElementById('bulkLeadFbid');
-          if (bFbid) bFbid.textContent = `ID: ${item.fb_id || item.profile_id || '---'}`;
-          const bAv = document.getElementById('bulkLeadAvatar');
-          if (bAv && item.avatar_url) bAv.src = item.avatar_url;
-
-          const exIdx = crmLeads.findIndex(l => (item.fb_id && l.fb_id && l.fb_id === item.fb_id) || (item.url && l.url === item.url));
-          if (exIdx !== -1) {
-            crmLeads[exIdx] = { ...crmLeads[exIdx], ...item, stt: crmLeads[exIdx].stt };
-          } else {
-            crmLeads.unshift(item);
-          }
-
-          renderCrmTable(crmLeads);
-          updateCrmKpis(crmLeads);
-          syncFunnelFromCrmLeads();
-        }
-      }
-      else if (msg.action === 'STEP2_ALL_DONE') {
-        isDirectScrapingRunning = false;
-        isDirectScrapingPaused = false;
-        const btnStart = document.getElementById('btnStartDirectScrape');
-        const btnPause = document.getElementById('btnPauseDirectScrape');
-        const btnResume = document.getElementById('btnResumeDirectScrape');
-        if (btnStart) btnStart.style.display = 'inline-flex';
-        if (btnPause) btnPause.style.display = 'none';
-        if (btnResume) btnResume.style.display = 'none';
-
-        const txtBulk = document.getElementById('txtBulkLinks');
-        const fromInp = document.getElementById('fromLineStep2');
-        const toInp = document.getElementById('toLineStep2');
-        if (txtBulk) txtBulk.disabled = false;
-        if (fromInp) fromInp.disabled = false;
-        if (toInp) toInp.disabled = false;
-
-        const fill = document.getElementById('bulkProgressFill');
-        if (fill) fill.style.width = '100%';
-        const lblPct = document.getElementById('lblScanPercent');
-        if (lblPct) lblPct.textContent = '100%';
-
-        const doneMsg = currentLang === 'zh' ? '🎉 采集完成！' : `🎉 HOÀN TẤT BƯỚC 2: Đã bóc tách thành công toàn bộ hồ sơ!`;
-        const lblStat = document.getElementById('lblScanStatus');
-        if (lblStat) lblStat.textContent = doneMsg;
-
-        appendTerminalLogStep2({
-          stage: 'HỆ THỐNG',
-          text: `🎉 HOÀN TẤT BƯỚC 2: ĐÃ BÓC TÁCH HOÀN TOÀN CÁC HỒ SƠ!`,
-          level: 'success'
-        });
-
-        playCompletionChime();
-        showToast(doneMsg);
-      }
-      else if (msg.action === 'STEP2_PAUSED') {
-        isDirectScrapingRunning = false;
-        isDirectScrapingPaused = true;
-        const btnPause = document.getElementById('btnPauseDirectScrape');
-        const btnResume = document.getElementById('btnResumeDirectScrape');
-        if (btnPause) btnPause.style.display = 'none';
-        if (btnResume) {
-          btnResume.style.display = 'inline-flex';
-          const cur = msg.currentIndex || (directScrapeCurrentIdx + 1);
-          btnResume.querySelector('span:last-child').textContent = `TIẾP TỤC CÀO (Dòng ${cur})`;
-        }
-      }
-    }

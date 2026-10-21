@@ -1,4 +1,4 @@
-// Pet Lead AI - Step 1 Popup Controller (Production Enhanced v3.2)
+// Pet Lead AI - Step 1 Popup Controller (Production Enhanced v3.3)
 let currentLang = 'vi';
 let isRunning = false;
 let isPaused = false;
@@ -20,6 +20,7 @@ const I18N = {
     btnResume: "Tiếp tục",
     btnStop: "Dừng & Lưu",
     btnExport: "Xuất dữ liệu cho Python Pipeline (JSON)",
+    btnOpenHarvesterDashboard: "Mở Bảng Cào Đa Link (Tool 1 UI Trắng)",
     btnOpenAiDashboard: "Mở UI Lọc AI Thị Giác & Gallery",
     previewTitle: "Danh sách vừa quét gần đây",
     clearData: "🧹 Dọn sạch dữ liệu rác",
@@ -44,6 +45,7 @@ const I18N = {
     btnResume: "继续",
     btnStop: "停止并保存",
     btnExport: "导出数据给 Python Pipeline (JSON)",
+    btnOpenHarvesterDashboard: "打开多链接采集台 (Tool 1 白天版)",
     btnOpenAiDashboard: "打开 AI视觉筛选 & 画廊",
     previewTitle: "最近采集列表",
     clearData: "🧹 清除无效垃圾档案",
@@ -84,11 +86,9 @@ function isJunkFollowerRecord(item) {
     return true;
   }
 
-  // Loại bỏ các bản ghi không có ID số VÀ không có ảnh thật (avatar trống hoặc ui-avatars)
-  if (!item.fb_id || !/^\d{8,}$/.test(item.fb_id)) {
-    if (!item.avatar_url || item.avatar_url.includes('ui-avatars.com') || item.avatar_url.includes('rsrc.php')) {
-      return true;
-    }
+  // Phải có URL profile hoặc UID hợp lệ
+  if (!item.fb_id && (!item.url || !item.url.includes('facebook.com/'))) {
+    return true;
   }
 
   return false;
@@ -108,6 +108,8 @@ function updateLangUI() {
   document.getElementById('txtBtnPause').textContent = isPaused ? t.btnResume : t.btnPause;
   document.getElementById('txtBtnStop').textContent = t.btnStop;
   document.getElementById('txtBtnExport').textContent = t.btnExport;
+  const btnHarvester = document.getElementById('txtBtnOpenHarvesterDashboard');
+  if (btnHarvester) btnHarvester.textContent = t.btnOpenHarvesterDashboard;
   const btnOpen = document.getElementById('txtBtnOpenAiDashboard');
   if (btnOpen) btnOpen.textContent = t.btnOpenAiDashboard;
   document.getElementById('txtPreviewTitle').textContent = t.previewTitle;
@@ -135,14 +137,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById(currentLang === 'vi' ? 'btnLangVi' : 'btnLangZh').classList.add('active');
   }
 
-  // 2. Load and sanitize stored follower data (auto-purge non-follower sidebar artifacts)
+  // 2. Load stored follower data
   if (storage.scrapedFollowers && Array.isArray(storage.scrapedFollowers)) {
     const cleaned = storage.scrapedFollowers.filter(isValidFollowerRecord);
     scrapedData = cleaned;
-    if (cleaned.length !== storage.scrapedFollowers.length) {
-      console.log(`🐾 [PetLead AI] Đã loại bỏ ${storage.scrapedFollowers.length - cleaned.length} bản ghi rác khỏi bộ nhớ.`);
-      chrome.storage.local.set({ scrapedFollowers: cleaned });
-    }
     renderStats();
     renderPreview();
   }
@@ -213,11 +211,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  const btnOpenHarvester = document.getElementById('btnOpenHarvesterDashboard');
+  if (btnOpenHarvester) {
+    btnOpenHarvester.addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('harvester_dashboard.html') });
+    });
+  }
+
   const btnOpenAi = document.getElementById('btnOpenAiDashboard');
   if (btnOpenAi) {
     btnOpenAi.addEventListener('click', () => {
       chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
     });
+  }
+});
+
+// Realtime sync from Chrome Storage changes
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local') {
+    if (changes.scrapedFollowers) {
+      scrapedData = (changes.scrapedFollowers.newValue || []).filter(isValidFollowerRecord);
+      renderStats();
+      renderPreview();
+    }
+    if (changes.harvesterState) {
+      const st = changes.harvesterState.newValue;
+      if (st) {
+        isRunning = st.isRunning;
+        isPaused = st.isPaused;
+        updateControlButtons();
+        setStatus(isRunning ? (isPaused ? 'paused' : 'running') : 'ready');
+      }
+    }
   }
 });
 
@@ -301,7 +326,6 @@ async function startHarvesting() {
 
       await chrome.tabs.update(tab.id, { url: targetUrl });
 
-      // Đợi trang load xong và thử gửi tin nhắn bổ trợ
       setTimeout(() => {
         chrome.tabs.sendMessage(tab.id, { action: 'START_HARVESTING' }, () => {
           if (chrome.runtime.lastError) {
@@ -403,7 +427,7 @@ function setStatus(state) {
   }
 }
 
-// Receive continuous data from Content Script
+// Continuous real-time updates from Content Script
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === 'NEW_FOLLOWERS_BATCH') {
     const newItems = msg.data || [];
@@ -413,14 +437,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 function mergeScrapedData(newItems) {
   const map = new Map();
-  // Preserve existing (filtered)
   scrapedData.forEach(item => {
     if (isValidFollowerRecord(item)) {
       const key = item.fb_id || item.url;
       map.set(key, item);
     }
   });
-  // Add new
   newItems.forEach(item => {
     if (isValidFollowerRecord(item)) {
       const key = item.fb_id || item.url;
@@ -441,7 +463,7 @@ function mergeScrapedData(newItems) {
 
 function renderStats() {
   const total = scrapedData.length;
-  const withAvatars = scrapedData.filter(i => i.avatar_url && i.avatar_url.startsWith('http')).length;
+  const withAvatars = scrapedData.filter(i => i.avatar_url && (i.avatar_url.includes('fbcdn.net') || i.avatar_url.includes('scontent') || i.avatar_url.startsWith('http'))).length;
   const withNumericId = scrapedData.filter(i => i.fb_id && /^\d+$/.test(i.fb_id)).length;
 
   document.getElementById('countScraped').textContent = total;
@@ -476,13 +498,11 @@ async function clearData() {
   isRunning = false;
   isPaused = false;
   
-  // Clear storage and state
   await chrome.storage.local.remove('scrapedFollowers');
   await chrome.storage.local.set({
     harvesterState: { isRunning: false, isPaused: false }
   });
 
-  // Notify content script to reset loop and processedKeys
   try {
     const tab = await getActiveTab();
     if (tab && tab.id) {
@@ -510,7 +530,6 @@ async function syncDataToWebDashboard(data, desiredFilename) {
   if (!data || data.length === 0) return null;
   let finalFilename = desiredFilename || `step1_followers_raw_${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.json`;
   
-  // 1. Post to local python server if active
   try {
     await fetch('http://127.0.0.1:8000/api/upload-raw', {
       method: 'POST',
@@ -522,7 +541,6 @@ async function syncDataToWebDashboard(data, desiredFilename) {
     });
   } catch (e) {}
 
-  // 2. Broadcast via BroadcastChannel
   try {
     const bc = new BroadcastChannel('PET_LEAD_CHANNEL');
     bc.postMessage({
@@ -537,7 +555,6 @@ async function syncDataToWebDashboard(data, desiredFilename) {
   return finalFilename;
 }
 
-// Clean Facebook URL
 function cleanFacebookUrl(rawUrl, numericId) {
   if (!rawUrl) return numericId ? `https://www.facebook.com/profile.php?id=${numericId}` : '';
   try {

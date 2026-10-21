@@ -225,6 +225,8 @@ def merge_lead_profile(base_lead, fb_data=None, web_data=None, ai_data=None, ind
     state = web_data.get('state') or fb_data.get('state') or ai_data.get('state') or base_lead.get('state') or ""
     zip_code = web_data.get('zip') or fb_data.get('zip') or ai_data.get('zip') or base_lead.get('zip') or ""
     address = fb_data.get('address') or ai_data.get('address') or base_lead.get('address') or ""
+    if address == '5.0(100+)' or '5.0(' in address:
+        address = ""
     if not address:
         parts = [p for p in [city, state, "United States", zip_code] if p]
         address = ", ".join(parts) if parts else "United States"

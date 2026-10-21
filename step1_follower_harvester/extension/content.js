@@ -1,5 +1,6 @@
-// Pet Lead AI - Follower Harvester Content Script (Production Enhanced v3.2)
-// Chuyên trách cào chính xác 100% tệp "Đang theo dõi" (Following) & "Người theo dõi" (Followers)
+// Pet Lead AI - Follower Harvester Content Script (Production Enhanced v3.3)
+// Chuyên trách cào chính xác 100% tệp "Đang theo dõi" (Following) & "Người theo dõi" (Followers) trên cả Trang cá nhân & Fanpage
+// Hỗ trợ triệt để Facebook New Page Experience (NPE), Modal dialog và Profile tabpanel
 // Triệt tiêu 100% rác: Chat Messenger, Lối tắt thanh bên trái, Người liên hệ thanh bên phải, Gợi ý kết bạn
 (() => {
   // 1. Web Dashboard Bridge (Khi chạy từ http://127.0.0.1:* hoặc http://localhost:*)
@@ -13,7 +14,7 @@
     } catch (e) {}
 
     const announceReady = () => {
-      window.postMessage({ type: 'PET_LEAD_EXT_READY', version: '3.2.0' }, '*');
+      window.postMessage({ type: 'PET_LEAD_EXT_READY', version: '3.3.0' }, '*');
     };
     announceReady();
     setInterval(announceReady, 1500);
@@ -164,7 +165,7 @@
     'dog training', 'k9 training', 'dog boarding', 'pet resort', 'dog daycare', 'grooming'
   ];
 
-  // Kiểm tra hồ sơ rác (shortcuts, sidebar contacts, suggestions, missing avatar + no id)
+  // Kiểm tra hồ sơ rác (shortcuts, sidebar contacts, suggestions, không có link cá nhân)
   function isJunkFollowerRecord(item) {
     if (!item || !item.name) return true;
     const clean = item.name.trim();
@@ -181,11 +182,9 @@
       return true;
     }
 
-    // Records with NO fb_id AND missing or placeholder avatar
-    if (!item.fb_id) {
-      if (!item.avatar_url || item.avatar_url.includes('ui-avatars.com') || item.avatar_url.includes('rsrc.php')) {
-        return true;
-      }
+    // Phải có URL profile hoặc UID hợp lệ
+    if (!item.fb_id && (!item.url || !item.url.includes('facebook.com/'))) {
+      return true;
     }
 
     return false;
@@ -226,14 +225,26 @@
   }
 
   // Kiểm tra nghiêm ngặt phần tử có nằm trong các thanh bên / menu / chat / gợi ý không
+  // TUYỆT ĐỐI KHÔNG loại trừ div[role="feed"] hoặc article vì danh sách followers trên Fanpage nằm trong feed!
   function isInsideExcludedSection(el) {
     if (!el || !el.closest) return false;
     
+    // Nếu phần tử đang nằm trong Modal dialog người theo dõi -> CHỈ loại bỏ ô tìm kiếm hoặc khung chat
+    const insideDialog = el.closest('div[role="dialog"]');
+    if (insideDialog) {
+      if (el.getAttribute && el.getAttribute('role') === 'tab') return true;
+      return !!el.closest(
+        'form[role="search"], div[role="search"], ' +
+        'div[data-pagelet*="Chat"], div[aria-label*="tin nhắn" i], div[aria-label*="chat" i], div[aria-label*="cuộc trò chuyện" i]'
+      );
+    }
+
     // Tab header buttons
     if (el.getAttribute && (el.getAttribute('role') === 'tab' || el.closest('div[role="tablist"]'))) {
       return true;
     }
 
+    // LOẠI TRỪ THANH BÊN / CHAT / ĐIỀU HƯỚNG / GỢI Ý
     return !!el.closest(
       'header, ' +
       'div[role="banner"], ' +
@@ -243,15 +254,13 @@
       'div[role="complementary"], ' +
       'div[data-pagelet*="LeftRail"], ' +
       'div[data-pagelet*="RightRail"], ' +
+      'div[data-pagelet*="LeftCol"], ' +
+      'div[data-pagelet*="RightCol"], ' +
       'div[data-pagelet*="Left"], ' +
       'div[data-pagelet*="Right"], ' +
       'div[data-pagelet*="Chat"], ' +
       'div[data-pagelet*="Dock"], ' +
       'div[data-pagelet="ProfileHeader"], ' +
-      'div[data-pagelet*="Feed"], ' +
-      'div[role="feed"], ' +
-      'article, ' +
-      'div[role="article"], ' +
       'div[aria-label*="Người liên hệ" i], ' +
       'div[aria-label*="Contacts" i], ' +
       'div[aria-label*="Cuộc trò chuyện" i], ' +
@@ -263,8 +272,6 @@
       'div[aria-label*="Gợi ý" i], ' +
       'div[aria-label*="Suggestions" i], ' +
       'div[aria-label*="Khám phá" i], ' +
-      'div[aria-label*="Trang bạn thích" i], ' +
-      'div[aria-label*="Giới thiệu" i], ' +
       'form[role="search"], ' +
       'div[role="search"]'
     );
@@ -324,7 +331,6 @@
     if (!text) return true;
     const clean = text.trim();
     if (clean.length < 2 || clean.length > 90) return true;
-    // Pure numbers or symbols
     if (/^[\d\s.,#@!$%^&*()_+=\-[\]{}|;:'"<>?\/~`]+$/.test(clean)) return true;
     if (TRANSLATION_REGEX.test(clean)) return true;
     if (ACTION_BTN_REGEX.test(clean)) return true;
@@ -339,7 +345,6 @@
 
   // Parse numeric Facebook ID
   function parseNumericFbId(url, card) {
-    // 1. Inspect data-hovercard attribute (Rất chuẩn xác trên Facebook Comet)
     if (card) {
       const hovercard = card.getAttribute('data-hovercard') || card.querySelector('[data-hovercard]')?.getAttribute('data-hovercard') || '';
       const mHover = hovercard.match(/[?&]id=(\d{8,})/);
@@ -359,7 +364,6 @@
       if (mSlug) return mSlug[1];
     }
 
-    // Inspect anchors strictly inside card
     if (card && card.querySelectorAll) {
       const cardAnchors = Array.from(card.querySelectorAll('a')).slice(0, 8);
       for (const a of cardAnchors) {
@@ -441,12 +445,13 @@
     return false;
   }
 
-  // TÌM ĐÚNG VÙNG CHỨA HỒ SƠ THEO DÕI (HERMETIC CONTAINER)
+  // TÌM ĐÚNG VÙNG CHỨA HỒ SƠ THEO DÕI
+  // Hỗ trợ cả Modal Popup, Profile Tabpanel, ProfileAppSection và Fanpage Followers Grid
   function getFollowerContainer() {
-    // 1. Kiểm tra hộp thoại Popup Modal (Nếu mở popup từ Fanpage hoặc bấm xem người theo dõi)
+    // 1. Kiểm tra hộp thoại Popup Modal (Nếu mở popup từ Fanpage hoặc bấm xem người theo dõi trên trang cá nhân)
     const dialogs = document.querySelectorAll('div[role="dialog"]');
     for (const d of dialogs) {
-      if (d.offsetWidth > 220 && d.offsetHeight > 180) {
+      if (d.offsetWidth > 200 && d.offsetHeight > 150) {
         const style = window.getComputedStyle(d);
         if (style.display === 'none' || style.visibility === 'hidden') continue;
 
@@ -454,33 +459,52 @@
         const isChat = !!d.querySelector('div[role="textbox"], [data-pagelet*="Chat"], [aria-label*="tin nhắn" i], [aria-label*="chat" i], [aria-label*="cuộc trò chuyện" i]');
         if (isChat) continue;
 
-        const dText = ((d.getAttribute('aria-label') || '') + ' ' + (d.innerText || '')).slice(0, 400).toLowerCase();
+        // Tiêu đề hoặc aria-label hoặc các tab chuyển đổi trong dialog
+        const dText = ((d.getAttribute('aria-label') || '') + ' ' + (d.innerText || '')).slice(0, 500).toLowerCase();
         if (dText.includes('đang theo dõi') || dText.includes('following') || 
             dText.includes('người theo dõi') || dText.includes('followers') || 
             dText.includes('bạn bè') || dText.includes('friends') ||
             dText.includes('thành viên') || dText.includes('members') ||
-            d.querySelector('a[href*="/profile.php"], a[href*="facebook.com/"]')) {
+            d.querySelector('[aria-label*="theo dõi" i], [aria-label*="following" i], [aria-label*="followers" i], div[role="tablist"]')) {
           return d;
         }
       }
     }
 
-    // 2. Tabpanel trang cá nhân hoặc ProfileAppSection (Tab Đang theo dõi / Người theo dõi / Bạn bè)
-    const tabpanels = document.querySelectorAll('div[role="tabpanel"], div[data-pagelet*="ProfileAppSection"], div[data-pagelet="ProfileTabs"]');
+    // 2. Tabpanel trang cá nhân (Tab Đang theo dõi / Người theo dõi / Bạn bè)
+    const tabpanels = document.querySelectorAll('div[role="tabpanel"]');
     for (const tp of tabpanels) {
-      if (tp.offsetWidth > 220 && tp.offsetHeight > 80) {
+      if (tp.offsetWidth > 250 && tp.offsetHeight > 100) {
         return tp;
       }
     }
 
-    // 3. Khung nội dung chính div[role="main"] (An toàn vì đã có isInsideExcludedSection lọc thanh bên)
-    const main = document.querySelector('div[role="main"]');
-    if (main && main.offsetWidth > 250) {
-      return main;
+    // 3. Phần ProfileAppSection chứa danh sách lưới người theo dõi
+    const appSections = document.querySelectorAll('div[data-pagelet*="ProfileAppSection"]');
+    for (const sec of appSections) {
+      if (sec.offsetWidth > 250 && sec.offsetHeight > 150) {
+        return sec;
+      }
     }
 
-    // 4. Fallback an toàn sang document.body
-    return document.body;
+    // 4. Khung ProfileTabs
+    const profileTabs = document.querySelector('div[data-pagelet="ProfileTabs"]');
+    if (profileTabs && profileTabs.offsetWidth > 250) {
+      const innerTabpanel = profileTabs.querySelector('div[role="tabpanel"]');
+      if (innerTabpanel) return innerTabpanel;
+      return profileTabs;
+    }
+
+    // 5. Fanpage hoặc Trang cá nhân khi đang ở URL followers / following:
+    // Tuyệt đối hỗ trợ trang Fanpage như facebook.com/officialgooddog/followers
+    const href = window.location.href;
+    if (href.includes('followers') || href.includes('following') || href.includes('sk=followers') || href.includes('sk=following')) {
+      const main = document.querySelector('div[role="main"], main, div[data-pagelet*="MainFeed"], div[data-pagelet="ProfileAppSection_0"]');
+      if (main && main.offsetWidth > 300) return main;
+      return document.body;
+    }
+
+    return null;
   }
 
   // Persist newly harvested items directly into chrome.storage.local
@@ -520,23 +544,32 @@
     if (!card) return null;
     if (isInsideExcludedSection(card)) return null;
 
-    // Phải có ảnh đại diện từ CDN Facebook
+    // 1. Phải có ảnh đại diện từ CDN Facebook (img hoặc svg image)
     let avatarUrl = '';
     const imgs = Array.from(card.querySelectorAll('img, image'));
     for (const imgEl of imgs) {
       const src = imgEl.getAttribute('src') || imgEl.getAttribute('href') || imgEl.getAttribute('xlink:href') || '';
-      if (src && (src.includes('fbcdn.net') || src.includes('scontent')) && 
+      if (src && (src.includes('fbcdn.net') || src.includes('scontent') || src.startsWith('data:image')) && 
           !src.includes('rsrc.php') && !src.includes('emoji.php') && !src.includes('/static/')) {
         avatarUrl = src;
         break;
       }
     }
-    if (!avatarUrl) return null; // Thẻ người theo dõi thật luôn có ảnh đại diện
+    // Mở rộng tìm thẻ cha nếu avatar nằm ngang hàng
+    if (!avatarUrl && card.parentElement) {
+      const parentImgs = Array.from(card.parentElement.querySelectorAll('img, image'));
+      for (const imgEl of parentImgs) {
+        const src = imgEl.getAttribute('src') || imgEl.getAttribute('href') || imgEl.getAttribute('xlink:href') || '';
+        if (src && (src.includes('fbcdn.net') || src.includes('scontent') || src.startsWith('data:image')) && 
+            !src.includes('rsrc.php') && !src.includes('emoji.php') && !src.includes('/static/')) {
+          avatarUrl = src;
+          break;
+        }
+      }
+    }
 
-    // Tìm link cá nhân và họ tên
+    // 2. Tìm link cá nhân và họ tên
     const anchors = Array.from(card.querySelectorAll('a[role="link"], a[href]'));
-    if (anchors.length === 0) return null;
-
     let targetAnchor = null;
     let nameText = '';
     let numericId = '';
@@ -554,25 +587,61 @@
       }
     }
 
+    // Fallback tìm tên từ text node nếu anchor là wrapper không text
+    if (!nameText) {
+      const textNodes = Array.from(card.querySelectorAll('span[dir="auto"], strong'));
+      for (const node of textNodes) {
+        const t = (node.innerText || '').trim().split('\n')[0].trim();
+        if (t && !isExcludedName(t)) {
+          nameText = t;
+          for (const a of anchors) {
+            const href = a.getAttribute('href') || a.href || '';
+            if (!isExcludedUrl(href)) {
+              targetAnchor = a;
+              numericId = parseNumericFbId(href, card);
+              break;
+            }
+          }
+          break;
+        }
+      }
+    }
+
     if (!nameText || isExcludedName(nameText)) return null;
 
     // Loại trừ trang nguồn và tài khoản của chính người quét
-    if (hostInfo.hostName && nameText.toLowerCase().includes(hostInfo.hostName.toLowerCase())) return null;
-    if (viewer && viewer.name && nameText.toLowerCase() === viewer.name.toLowerCase()) return null;
+    if (hostInfo.hostName && nameText.toLowerCase().trim() === hostInfo.hostName.toLowerCase().trim()) return null;
+    if (viewer && viewer.name && nameText.toLowerCase().trim() === viewer.name.toLowerCase().trim()) return null;
     if (viewer && viewer.id && numericId && viewer.id === numericId) return null;
 
     const rawHref = targetAnchor ? (targetAnchor.getAttribute('href') || targetAnchor.href || '') : '';
+    if (!rawHref && !numericId) return null;
+
+    // Loại trừ nếu link trùng với trang nguồn chính (officialgooddog)
+    if (hostInfo.cleanHref && rawHref) {
+      try {
+        const uRaw = new URL(rawHref, window.location.href);
+        const uHost = new URL(hostInfo.cleanHref, window.location.href);
+        if (uRaw.pathname.toLowerCase().replace(/\/$/, '') === uHost.pathname.toLowerCase().replace(/\/$/, '')) {
+          return null;
+        }
+      } catch (e) {}
+    }
+
     const cleanUrl = sanitizeProfileUrl(rawHref, numericId);
 
-    // Bổ sung ID số từ avatar nếu chưa có
-    let finalFbId = numericId;
+    // Bổ sung ID số từ avatar hoặc hovercard nếu chưa có
+    let finalFbId = numericId || parseNumericFbId(cleanUrl, card);
     if (!finalFbId && avatarUrl) {
-      const m = avatarUrl.match(/_(\d{10,20})_\d+_n\./);
+      const m = avatarUrl.match(/_(\d{8,25})_\d+_n\./) || avatarUrl.match(/\/(\d{8,25})_/);
       if (m) finalFbId = m[1];
     }
 
-    // Nâng cấp Avatar HD
-    if (avatarUrl && avatarUrl.includes('fbcdn.net')) {
+    // Nếu không có avatar thật nhưng có SVG placeholder (như chữ cái "S"), đặt fallback avatar
+    if (!avatarUrl) {
+      avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(nameText)}&background=2563eb&color=fff&size=200`;
+    } else if (avatarUrl.includes('fbcdn.net')) {
+      // Nâng cấp Avatar HD
       avatarUrl = avatarUrl.replace(/([?&])ctp=[sp]\d+x\d+(&|$)/, '$1').replace(/\?&/, '?').replace(/[?&]$/, '');
     }
 
@@ -609,47 +678,98 @@
     };
   }
 
-  // Scrape visible follower cards strictly from the follower grid
+  // Scrape visible follower cards strictly from the follower grid / dialog / fanpage feed
   function harvestVisibleCards() {
-    const container = getFollowerContainer() || document.body;
+    const container = getFollowerContainer() || document.querySelector('div[role="main"]') || document.body;
+    if (!container) {
+      console.log("🐾 [PetLead AI] Chưa phát hiện vùng danh sách Đang theo dõi. Đang kiểm tra điều hướng...");
+      autoNavigateToFollowingTab();
+      return 0;
+    }
+
     const newItems = [];
     const viewer = getViewerAccount();
     const hostInfo = getHostPageInfo();
+    const candidateCardsSet = new Set();
 
-    // Thu thập ứng viên: các khối thẻ có avatar FB CDN và link trang cá nhân
-    const candidateCards = [];
-    const seen = new Set();
-
-    // Priority 1: Các listitem hoặc article trong container
-    const listItems = Array.from(container.querySelectorAll('div[role="listitem"], div[role="article"]'));
-    listItems.forEach(li => {
-      if (!isInsideExcludedSection(li) && !seen.has(li)) {
-        seen.add(li);
-        candidateCards.push(li);
+    // Strategy 1: Quét từ tất cả nút bấm hành động (Theo dõi, Đang theo dõi, Bạn bè, Thêm bạn bè, Nhắn tin...)
+    const actionBtns = Array.from(container.querySelectorAll(
+      'div[role="button"], button, [aria-label*="theo dõi" i], [aria-label*="following" i], [aria-label*="follow" i], [aria-label*="bạn bè" i], [aria-label*="friends" i], [aria-label*="thêm bạn bè" i], [aria-label*="nhắn tin" i]'
+    ));
+    for (const btn of actionBtns) {
+      if (isInsideExcludedSection(btn)) continue;
+      const btnText = (btn.innerText || btn.getAttribute('aria-label') || '').trim();
+      if (ACTION_BTN_REGEX.test(btnText) || /theo dõi|following|bạn bè|friends/i.test(btnText)) {
+        let p = btn.parentElement;
+        let d = 0;
+        while (p && p !== container && d < 9) {
+          if (p.querySelector('a[role="link"], a[href]')) {
+            if (p.clientHeight >= 30 && p.clientWidth >= 160) {
+              candidateCardsSet.add(p);
+              break;
+            }
+          }
+          p = p.parentElement;
+          d++;
+        }
       }
-    });
+    }
 
-    // Priority 2: Các thẻ cha chứa ảnh đại diện avatar FB CDN
-    const imgs = Array.from(container.querySelectorAll('img[src*="fbcdn"], img[src*="scontent"], svg image'));
-    for (const im of imgs) {
+    // Strategy 2: Quét từ tất cả link hồ sơ hợp lệ bên trong container
+    const profileAnchors = Array.from(container.querySelectorAll('a[role="link"], a[href]')).filter(a => {
+      if (isInsideExcludedSection(a)) return false;
+      const h = a.getAttribute('href') || a.href || '';
+      if (!h || isExcludedUrl(h)) return false;
+      const t = (a.innerText || a.textContent || '').trim().split('\n')[0].trim();
+      return t && !isExcludedName(t);
+    });
+    for (const a of profileAnchors) {
+      let row = a.closest('div[role="listitem"]') || a.closest('div[role="article"]');
+      if (!row) {
+        let p = a.parentElement;
+        let d = 0;
+        while (p && p !== container && d < 8) {
+          if (p.clientHeight >= 30 && p.clientHeight <= 350 && p.clientWidth >= 160) {
+            row = p;
+            break;
+          }
+          p = p.parentElement;
+          d++;
+        }
+      }
+      if (row && !isInsideExcludedSection(row)) {
+        candidateCardsSet.add(row);
+      } else if (!isInsideExcludedSection(a)) {
+        candidateCardsSet.add(a.parentElement?.parentElement || a);
+      }
+    }
+
+    // Strategy 3: Quét div[role="listitem"]
+    const listItems = Array.from(container.querySelectorAll('div[role="listitem"]'));
+    for (const li of listItems) {
+      if (!isInsideExcludedSection(li)) candidateCardsSet.add(li);
+    }
+
+    // Strategy 4: Quét từ tất cả ảnh avatar / ảnh đại diện bên trong container
+    const avatarImgs = Array.from(container.querySelectorAll('img[src*="fbcdn"], img[src*="scontent"], svg image[href*="fbcdn"], svg image[href*="scontent"], svg image[xlink\\:href*="fbcdn"], svg image[xlink\\:href*="scontent"]'));
+    for (const im of avatarImgs) {
       if (isInsideExcludedSection(im)) continue;
       let p = im.parentElement;
       let d = 0;
       while (p && p !== container && d < 8) {
-        const anchor = p.querySelector('a[href]');
-        if (anchor && p.innerText && p.innerText.trim().length > 1) {
-          if (!seen.has(p)) {
-            seen.add(p);
-            candidateCards.push(p);
+        if (p.querySelector('a[role="link"], a[href]')) {
+          if (p.clientHeight >= 30 && p.clientWidth >= 160) {
+            candidateCardsSet.add(p);
+            break;
           }
-          break;
         }
         p = p.parentElement;
         d++;
       }
     }
 
-    for (const card of candidateCards) {
+    // Tiến hành bóc tách từng card
+    for (const card of candidateCardsSet) {
       const record = extractFollowerRecordFromCard(card, viewer, hostInfo);
       if (!record || isJunkFollowerRecord(record)) continue;
 
@@ -700,16 +820,31 @@
     const scrollStep = Math.floor(Math.random() * 250) + 550;
 
     // Cuộn đúng vùng container
-    const container = getFollowerContainer();
+    const container = getFollowerContainer() || document.querySelector('div[role="main"]') || document.body;
     if (container) {
-      if (container.getAttribute('role') === 'dialog') {
-        container.scrollTop += scrollStep;
-        const scrollables = container.querySelectorAll('div');
-        for (const s of scrollables) {
-          if (s.scrollHeight > s.clientHeight + 20) {
+      const dialog = (container.getAttribute('role') === 'dialog') ? container : container.closest('div[role="dialog"]');
+      if (dialog) {
+        let scrollableTarget = null;
+        const allDivs = Array.from(dialog.querySelectorAll('div'));
+        for (const s of allDivs) {
+          if (s.scrollHeight > s.clientHeight + 25) {
             const overflowY = window.getComputedStyle(s).overflowY;
             if (overflowY === 'auto' || overflowY === 'scroll') {
+              scrollableTarget = s;
+              break;
+            }
+          }
+        }
+        if (!scrollableTarget) scrollableTarget = dialog;
+
+        if (scrollableTarget) {
+          scrollableTarget.scrollTop += scrollStep;
+          scrollableTarget.dispatchEvent(new Event('scroll', { bubbles: true }));
+        } else {
+          for (const s of allDivs) {
+            if (s.scrollHeight > s.clientHeight + 20) {
               s.scrollTop += scrollStep;
+              s.dispatchEvent(new Event('scroll', { bubbles: true }));
             }
           }
         }
@@ -718,23 +853,44 @@
         if (document.scrollingElement) {
           document.scrollingElement.scrollBy({ top: scrollStep, left: 0, behavior: 'smooth' });
         }
+        const feedScroll = document.querySelector('div[role="feed"], div[data-pagelet*="ProfileAppSection"]');
+        if (feedScroll && feedScroll.scrollHeight > feedScroll.clientHeight + 30) {
+          feedScroll.scrollTop += scrollStep;
+          feedScroll.dispatchEvent(new Event('scroll', { bubbles: true }));
+        }
       }
     } else {
-      autoNavigateToFollowingTab();
+      window.scrollBy({ top: scrollStep, left: 0, behavior: 'smooth' });
     }
 
     window.dispatchEvent(new Event('scroll'));
 
-    // Đánh thức Facebook Comet lazy load nếu dừng
-    if (consecutiveNoNewCount >= 4 && consecutiveNoNewCount % 3 === 1) {
-      window.scrollBy({ top: -200, behavior: 'smooth' });
-      setTimeout(() => {
-        window.scrollBy({ top: 800, behavior: 'smooth' });
-        window.dispatchEvent(new Event('scroll'));
-      }, 300);
+    // Đánh thức Facebook Comet lazy load nếu tạm dừng nạp dữ liệu
+    if (consecutiveNoNewCount >= 3) {
+      const dialog = container ? ((container.getAttribute('role') === 'dialog') ? container : container.closest('div[role="dialog"]')) : null;
+      if (dialog) {
+        const allDivs = Array.from(dialog.querySelectorAll('div'));
+        for (const s of allDivs) {
+          if (s.scrollHeight > s.clientHeight + 15) {
+            s.scrollTop -= 80;
+            s.dispatchEvent(new Event('scroll', { bubbles: true }));
+            setTimeout(() => {
+              s.scrollTop += 250;
+              s.dispatchEvent(new Event('scroll', { bubbles: true }));
+            }, 150);
+            break;
+          }
+        }
+      } else {
+        window.scrollBy({ top: -100, behavior: 'smooth' });
+        setTimeout(() => {
+          window.scrollBy({ top: 350, behavior: 'smooth' });
+          window.dispatchEvent(new Event('scroll'));
+        }, 150);
+      }
     }
 
-    const delay = Math.floor(Math.random() * 450) + 850;
+    const delay = Math.floor(Math.random() * 400) + 750;
     scrollTimer = setTimeout(runScrollLoop, delay);
   }
 
@@ -769,7 +925,6 @@
       isPaused = false;
       chrome.storage.local.set({ harvesterState: { isRunning: true, isPaused: false } });
       
-      // Kiểm tra xem đã ở đúng tab Đang theo dõi / Người theo dõi chưa
       const container = getFollowerContainer();
       if (!container) {
         autoNavigateToFollowingTab();
@@ -820,21 +975,5 @@
     return true;
   });
 
-  // Auto-start if instructed by popup before navigation
-  try {
-    chrome.storage.local.get(['harvesterState', 'autoStartHarvestOnLoad'], (res) => {
-      if (res && res.autoStartHarvestOnLoad && res.harvesterState?.isRunning) {
-        chrome.storage.local.remove(['autoStartHarvestOnLoad']);
-        console.log("🐾 [PetLead AI] Tự động bắt đầu cào theo dõi sau khi tải trang...");
-        setTimeout(() => {
-          isHarvesting = true;
-          isPaused = false;
-          harvestVisibleCards();
-          runScrollLoop();
-        }, 2200);
-      }
-    });
-  } catch (e) {}
-
-  console.log("🐾 Pet Lead AI - Follower Harvester Content Script Injected & Ready (v3.2 Production).");
+  console.log("🐾 Pet Lead AI - Follower Harvester Content Script Injected & Ready (v3.3 Production).");
 })();

@@ -511,8 +511,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
     });
 
-    // Mở worker tab bên cạnh để người dùng theo dõi trực quan và Facebook load DOM sống
-    chrome.tabs.create({ url: 'about:blank', active: true }, (newTab) => {
+    // Mở worker tab ngầm (active: false) để Facebook load DOM sống mà không chiếm tab Dashboard
+    chrome.tabs.create({ url: 'about:blank', active: false }, (newTab) => {
       targetTabId = newTab ? newTab.id : null;
       sendResponse({ status: 'started' });
       processNext();
@@ -532,13 +532,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     currentIndex = startIndex;
     allData = []; // Bắt đầu mới, reset dữ liệu
-    targetTabId = msg.tabId;
     isAutoRunning = true;
     isPaused = false;
     statusMessage = `Đang bắt đầu cào từ dòng ${startIndex + 1} đến ${endIndex + 1}...`;
     saveState();
     sendResponse({ status: 'ok' });
-    processNext();
+
+    (async () => {
+      await ensureWorkerTab();
+      processNext();
+    })();
+    return true;
   }
   else if (msg.action === 'RESUME_AUTO') {
     clearNextTimer();
@@ -558,13 +562,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return;
     }
 
-    if (msg.tabId) targetTabId = msg.tabId;
     isAutoRunning = true;
     isPaused = false;
     statusMessage = `Tiếp tục chạy từ dòng ${currentIndex + 1} đến ${endIndex + 1}...`;
     saveState();
     sendResponse({ status: 'ok' });
-    processNext();
+
+    (async () => {
+      await ensureWorkerTab();
+      processNext();
+    })();
+    return true;
   }
   else if (msg.action === 'STOP_AUTO') {
     clearNextTimer();
@@ -601,6 +609,43 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   else if (msg.action === 'EXPORT_JSON_LEAD_US') {
     exportJsonLeadUs();
     sendResponse({ status: 'ok' });
+  }
+  else if (msg.action === 'UPDATE_LEAD') {
+    const updated = msg.lead;
+    if (updated) {
+      const idx = allData.findIndex(x => (x.stt && x.stt === updated.stt) || (x.lead_id && x.lead_id === updated.lead_id) || (x.fb_id && x.fb_id === updated.fb_id) || (x.url && x.url === updated.url));
+      if (idx !== -1) {
+        allData[idx] = { ...allData[idx], ...updated };
+      } else {
+        allData.push(updated);
+      }
+      saveState();
+      sendResponse({ status: 'ok', allData });
+    } else {
+      sendResponse({ status: 'error', message: 'No lead provided' });
+    }
+    return true;
+  }
+  else if (msg.action === 'DELETE_LEAD') {
+    const key = msg.key;
+    if (key !== undefined) {
+      allData = allData.filter((x, i) => x.stt !== key && x.lead_id !== key && x.fb_id !== key && String(i) !== String(key));
+      saveState();
+      sendResponse({ status: 'ok', allData });
+    } else {
+      sendResponse({ status: 'error' });
+    }
+    return true;
+  }
+  else if (msg.action === 'SET_ALL_DATA') {
+    if (Array.isArray(msg.allData)) {
+      allData = msg.allData;
+      saveState();
+      sendResponse({ status: 'ok', count: allData.length });
+    } else {
+      sendResponse({ status: 'error' });
+    }
+    return true;
   }
   else if (msg.action === 'FETCH_EXTERNAL_URL') {
     const targetUrl = msg.url;
@@ -781,7 +826,9 @@ function processNext() {
   });
 
   (async () => {
-    // Điều hướng tab tới profile Facebook và đợi nạp xong hoàn toàn (không dùng setTimeout bừa bãi)
+    // Đảm bảo targetTabId là một tab ngầm (active: false), không bao giờ dùng tab Dashboard
+    await ensureWorkerTab();
+    // Điều hướng tab tới profile Facebook và đợi nạp xong hoàn toàn (luôn chạy ngầm, không cướp tab)
     await navigateTabAndWait(targetTabId, targetUrl, 30000);
 
     if (!isAutoRunning || currentTaskId !== taskId) {
@@ -1025,9 +1072,11 @@ function exportJsonLeadUs() {
     }
 
     const name = row.name || 'Facebook User';
-    const avatarUrl = row.avatar || row.avatar_url || (fbId
-      ? `https://unavatar.io/facebook/${fbId}?fallback=https%3A%2F%2Fui-avatars.com%2Fapi%2F%3Fname%3D${encodeURIComponent(name)}%26background%3Drandom%26color%3Dfff%26size%3D128%26bold%3Dtrue`
-      : '');
+    let avatarUrl = row.avatar || row.avatar_url || '';
+    if (!avatarUrl || avatarUrl.includes('unavatar.io') || avatarUrl.includes('blank_profile')) {
+      const fallbackName = encodeURIComponent(row.owner || name);
+      avatarUrl = `https://ui-avatars.com/api/?name=${fallbackName}&background=0284c7&color=fff&size=128&bold=true`;
+    }
 
     return {
       stt: stt,
@@ -1037,7 +1086,7 @@ function exportJsonLeadUs() {
       website: row.website || '',
       phone: cleanPhone(row.phone || ''),
       email: row.email || '',
-      address: row.address || '5.0(100+)',
+      address: (row.address && row.address !== '5.0(100+)') ? row.address : ([row.city, row.state].filter(Boolean).join(', ') || row.country || ''),
       city: row.city || '',
       state: row.state || '',
       zip: row.zip || '',
@@ -1120,6 +1169,24 @@ function finishProfileItem(item) {
   const leadNum = String(currentIndex + 1).padStart(5, '0');
   const leadId = `LEAD-US-${leadNum}`;
 
+  const cleanId = item.fb_id ? String(item.fb_id).trim() : '';
+  const cleanUrl = item.url ? String(item.url).trim().toLowerCase() : '';
+  let resolvedAvatar = '';
+
+  // 1. Kiểm tra nếu avatar từ DOM hợp lệ và không phải rác
+  if (item.avatar_url && !item.avatar_url.includes('unavatar.io') && !item.avatar_url.includes('blank_profile') && !item.avatar_url.includes('graph.facebook.com') && !item.avatar_url.includes('rsrc.php')) {
+    resolvedAvatar = item.avatar_url;
+  }
+
+  // 2. Fallback UI Avatars
+  if (!resolvedAvatar) {
+    const fallbackInitials = encodeURIComponent((item.owner && item.owner !== 'Facebook User') ? item.owner : (item.name || 'Dog Breeder'));
+    resolvedAvatar = `https://ui-avatars.com/api/?name=${fallbackInitials}&background=0284c7&color=fff&size=128&bold=true`;
+  }
+
+  item.avatar_url = resolvedAvatar;
+  item.avatar = resolvedAvatar;
+
   const leadRecord = {
     stt: leadId,
     lead_id: leadId,
@@ -1144,7 +1211,8 @@ function finishProfileItem(item) {
     relative_time: item.relativeTime || '',
     relativeTime: item.relativeTime || '',
     url: item.url || '',
-    avatar_url: item.avatar_url || (item.fb_id ? `https://graph.facebook.com/${item.fb_id}/picture?type=large` : ''),
+    avatar_url: resolvedAvatar,
+    avatar: resolvedAvatar,
     activity_status: item.activityStatus || '✓ TÍCH CỰC (Trại đang hoạt động)',
     has_website: !!(item.website && item.website.startsWith('http') && !/facebook\.com|instagram\.com/i.test(item.website)),
     has_amazon: !!(item.has_amazon || item.amazon_url),
@@ -1258,10 +1326,32 @@ function waitForTabComplete(tabId, timeoutMs = 25000) {
   });
 }
 
+async function ensureWorkerTab() {
+  if (targetTabId) {
+    try {
+      const t = await chrome.tabs.get(targetTabId);
+      if (t && t.id) {
+        const u = (t.url || '').toLowerCase();
+        if (!u.includes('dashboard.html') && !u.includes('popup.html') && !u.includes(':8000') && !u.includes('localhost')) {
+          return targetTabId;
+        }
+      }
+    } catch (_) {}
+  }
+  try {
+    const newTab = await chrome.tabs.create({ url: 'about:blank', active: false });
+    targetTabId = newTab ? newTab.id : null;
+  } catch (e) {
+    console.warn('[BG] Lỗi tạo worker tab ngầm:', e);
+  }
+  return targetTabId;
+}
+
 async function navigateTabAndWait(tabId, url, timeoutMs = 25000) {
   const waitPromise = waitForTabComplete(tabId, timeoutMs);
   try {
-    await chrome.tabs.update(tabId, { url: url, active: true });
+    // Luôn luôn active: false để không chuyển tab, giữ nguyên tab UI của người dùng
+    await chrome.tabs.update(tabId, { url: url, active: false });
   } catch (err) {
     console.warn('[Navigate] Lỗi chrome.tabs.update:', err);
   }
