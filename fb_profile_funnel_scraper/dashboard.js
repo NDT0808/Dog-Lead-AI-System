@@ -786,7 +786,21 @@ const STEP1_AVATAR_LOOKUP = {
 
     saveLeadsToStorage();
     renderCrmTable();
+    updateKpiCards();
     closeEditLeadModal();
+
+    // Tự động lưu và xuất JSON + Excel ngay lập tức theo yêu cầu người dùng
+    try {
+      exportJsonLeadUs(true);
+      exportExcelPriority8(true);
+    } catch (e) {
+      console.warn('Lỗi tự động xuất file:', e);
+    }
+
+    const toastMsg = currentLang === 'zh'
+      ? `✅ 档案修改已保存！已自动同步到UI并更新导出JSON与Excel！`
+      : `✅ Đã lưu thay đổi hồ sơ! Đã tự động đồng bộ trên UI và cập nhật JSON, Excel thành công!`;
+    showSaveToast(toastMsg);
   });
 
   // =========================================================================
@@ -828,9 +842,10 @@ const STEP1_AVATAR_LOOKUP = {
   // =========================================================================
   // XUẤT EXCEL 37 CỘT (PRIORITY DATA 8) DÙNG EXCELJS TRỰC TIẾP
   // =========================================================================
-  async function exportExcelPriority8() {
+  async function exportExcelPriority8(silent = false) {
     if (!allLeads || allLeads.length === 0) {
-      return alert(currentLang === 'zh' ? '暂无数据可导出！' : 'Chưa có dữ liệu để xuất file Excel!');
+      if (!silent) alert(currentLang === 'zh' ? '暂无数据可导出！' : 'Chưa có dữ liệu để xuất file Excel!');
+      return;
     }
 
     appendTerminalLog('📊 Đang khởi tạo workbook Excel 37 cột chuẩn Priority Data 8...', 'info');
@@ -952,9 +967,10 @@ const STEP1_AVATAR_LOOKUP = {
   // =========================================================================
   // XUẤT JSON LEAD-US CHUẨN META RAG
   // =========================================================================
-  function exportJsonLeadUs() {
+  function exportJsonLeadUs(silent = false) {
     if (!allLeads || allLeads.length === 0) {
-      return alert('Chưa có dữ liệu để xuất file JSON!');
+      if (!silent) alert('Chưa có dữ liệu để xuất file JSON!');
+      return;
     }
 
     const blob = new Blob([JSON.stringify(allLeads, null, 2)], { type: 'application/json' });
@@ -1459,9 +1475,22 @@ const STEP1_AVATAR_LOOKUP = {
   ];
 
   function loadInitialData() {
+    // 1. Đọc từ localStorage trước tiên (Bộ nhớ an toàn bền vững, chống mất dữ liệu khi F5 reload)
+    let localLeads = null;
+    try {
+      const cached = localStorage.getItem('pet_crm_all_leads');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          localLeads = parsed;
+        }
+      }
+    } catch (_) {}
+
     if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) {
-      allLeads = DEFAULT_LEADS_FALLBACK;
+      allLeads = localLeads || DEFAULT_LEADS_FALLBACK;
       renderCrmTable();
+      updateKpiCards();
       return;
     }
 
@@ -1470,12 +1499,24 @@ const STEP1_AVATAR_LOOKUP = {
         setLanguage(res.fb_funnel_lang);
       }
 
-      if (res.allData && Array.isArray(res.allData) && res.allData.length > 0) {
-        allLeads = res.allData;
+      let storageLeads = null;
+      if (res.crm_leads_step2 && Array.isArray(res.crm_leads_step2) && res.crm_leads_step2.length > 0) {
+        storageLeads = res.crm_leads_step2;
+      } else if (res.allData && Array.isArray(res.allData) && res.allData.length > 0) {
+        storageLeads = res.allData;
       } else if (res.fb_publish_state && Array.isArray(res.fb_publish_state.allData) && res.fb_publish_state.allData.length > 0) {
-        allLeads = res.fb_publish_state.allData;
-      } else if (res.crm_leads_step2 && Array.isArray(res.crm_leads_step2) && res.crm_leads_step2.length > 0) {
-        allLeads = res.crm_leads_step2;
+        storageLeads = res.fb_publish_state.allData;
+      }
+
+      // Ưu tiên tập dữ liệu người dùng đã chỉnh sửa trong localStorage, bảo toàn toàn bộ hồ sơ
+      if (localLeads && localLeads.length > 0) {
+        if (!storageLeads || storageLeads.length <= localLeads.length) {
+          allLeads = localLeads;
+        } else {
+          allLeads = storageLeads;
+        }
+      } else if (storageLeads && storageLeads.length > 0) {
+        allLeads = storageLeads;
       } else {
         allLeads = DEFAULT_LEADS_FALLBACK;
       }

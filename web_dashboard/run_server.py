@@ -370,6 +370,53 @@ class DashboardApiHandler(http.server.SimpleHTTPRequestHandler):
             })
             return
 
+        # API: Tự động lưu cập nhật CRM vào file JSON và Excel trên ổ cứng
+        if path == '/api/save-crm':
+            leads_data = req_data.get('data', []) or req_data.get('leads', [])
+            if not isinstance(leads_data, list):
+                self.send_json_response({'status': 'error', 'message': 'Dữ liệu không phải là danh sách hồ sơ!'}, status=400)
+                return
+
+            saved_files = []
+            # 1. Lưu vào lead2.json
+            try:
+                lead2_path = os.path.join(SYSTEM_DIR, "lead2.json")
+                with open(lead2_path, 'w', encoding='utf-8') as f:
+                    json.dump(leads_data, f, ensure_ascii=False, indent=2)
+                saved_files.append("lead2.json")
+            except Exception as e:
+                print(f"[!] Lỗi ghi lead2.json: {e}")
+
+            # 2. Lưu vào data/enriched_step2/step2_enriched_crm_latest.json
+            try:
+                enr_dir = os.path.join(SYSTEM_DIR, "data", "enriched_step2")
+                os.makedirs(enr_dir, exist_ok=True)
+                enr_path = os.path.join(enr_dir, "step2_enriched_crm_latest.json")
+                with open(enr_path, 'w', encoding='utf-8') as f:
+                    json.dump(leads_data, f, ensure_ascii=False, indent=2)
+                saved_files.append("step2_enriched_crm_latest.json")
+            except Exception as e:
+                print(f"[!] Lỗi ghi step2_enriched_crm_latest.json: {e}")
+
+            # 3. Tự động xuất file Excel Priority Data 8 / Step 2 nếu có pandas / openpyxl
+            excel_path = None
+            try:
+                import pandas as pd
+                df = pd.DataFrame(leads_data)
+                excel_path = os.path.join(enr_dir, "step2_enriched_crm_latest.xlsx")
+                df.to_excel(excel_path, index=False)
+                saved_files.append("step2_enriched_crm_latest.xlsx")
+            except Exception as e:
+                print(f"[!] Không thể xuất Excel bằng pandas: {e}")
+
+            self.send_json_response({
+                'status': 'ok',
+                'message': f'Đã tự động lưu thành công {len(leads_data)} hồ sơ vào các tệp: {", ".join(saved_files)}',
+                'count': len(leads_data),
+                'saved_files': saved_files
+            })
+            return
+
         # API: Khởi chạy Lọc AI Bước 1 với Threshold nghiêm ngặt & Live Logging
         if path == '/api/run-step1-filter':
             if STEP1_STATE["is_running"]:

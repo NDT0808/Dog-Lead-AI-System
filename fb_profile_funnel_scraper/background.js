@@ -533,7 +533,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       : (urlList.length - 1);
 
     currentIndex = startIndex;
-    allData = [];
+    if (msg.options && msg.options.resetData === true) {
+      allData = [];
+    }
     isAutoRunning = true;
     isPaused = false;
     statusMessage = `Đang bắt đầu cào từ dòng ${startIndex + 1} đến ${endIndex + 1}...`;
@@ -567,7 +569,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       : (urlList.length - 1);
 
     currentIndex = startIndex;
-    allData = []; // Bắt đầu mới, reset dữ liệu
+    if (msg.resetData === true) {
+      allData = []; // Chỉ reset khi được yêu cầu rõ ràng
+    }
     isAutoRunning = true;
     isPaused = false;
     statusMessage = `Đang bắt đầu cào từ dòng ${startIndex + 1} đến ${endIndex + 1}...`;
@@ -1184,7 +1188,16 @@ function finishProfileItem(item) {
   item.address = cleanAddressText(item.address || '');
 
   item.stt = currentIndex + 1;
-  allData.push(item);
+  const existingIdx = allData.findIndex(x => 
+    (item.fb_id && x.fb_id && String(x.fb_id).trim() === String(item.fb_id).trim()) ||
+    (item.url && x.url && String(x.url).trim().toLowerCase() === String(item.url).trim().toLowerCase()) ||
+    (x.stt && item.stt && String(x.stt) === String(item.stt))
+  );
+  if (existingIdx !== -1) {
+    allData[existingIdx] = { ...allData[existingIdx], ...item };
+  } else {
+    allData.push(item);
+  }
 
   let timePreview = item.publishTime
     ? `${item.publishTime} (${item.relativeTime || ''})`
