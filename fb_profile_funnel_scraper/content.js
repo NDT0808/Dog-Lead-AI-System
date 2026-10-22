@@ -258,124 +258,62 @@ function extractTimeFromText(text) {
 /**
  * Chuyển đổi chuỗi thời gian sang Unix Timestamp (giây) - Hỗ trợ chuẩn xác VI, EN, ZH
  */
-function parseRelativeTimeToTimestamp(relStr) {
-    if (!relStr) return null;
-    let s = relStr.trim();
-    let sLower = s.toLowerCase();
-    let now = new Date();
-    let nowSec = Math.floor(now.getTime() / 1000);
+function parseRelativeTimeToTimestamp(str) {
+    if (!str) return null;
+    const s = str.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
 
-    // 1. Vừa xong / Just now / 刚刚
-    if (sLower.includes('vừa xong') || sLower.includes('just now') || s.includes('刚刚')) {
-        return nowSec;
+    // Vừa xong / Just now
+    if (/^(vừa xong|just now|now|1 phút|1m)$/.test(s)) {
+        return nowSec - 30;
     }
 
-    // 2. Hôm qua / Yesterday / 昨天
-    let yestM = sLower.match(/(?:hôm qua|yesterday|昨天)\s*(?:lúc|at)?\s*(\d{1,2}):(\d{2})(?:\s*(am|pm))?/i);
-    if (yestM) {
-        let d = new Date(now);
-        d.setDate(d.getDate() - 1);
-        let hour = parseInt(yestM[1], 10);
-        let min = parseInt(yestM[2], 10);
-        if (yestM[3] && yestM[3].toLowerCase() === 'pm' && hour < 12) hour += 12;
-        if (yestM[3] && yestM[3].toLowerCase() === 'am' && hour === 12) hour = 0;
-        d.setHours(hour, min, 0, 0);
-        return Math.floor(d.getTime() / 1000);
-    }
-    if (sLower.includes('hôm qua') || sLower.includes('yesterday') || s.includes('昨天')) {
-        return nowSec - 86400;
-    }
-
-    // 3. Hôm nay / Today / 今天
-    let todayM = sLower.match(/(?:hôm nay|today|今天)\s*(?:lúc|at)?\s*(\d{1,2}):(\d{2})(?:\s*(am|pm))?/i);
-    if (todayM) {
-        let d = new Date(now);
-        let hour = parseInt(todayM[1], 10);
-        let min = parseInt(todayM[2], 10);
-        if (todayM[3] && todayM[3].toLowerCase() === 'pm' && hour < 12) hour += 12;
-        if (todayM[3] && todayM[3].toLowerCase() === 'am' && hour === 12) hour = 0;
-        d.setHours(hour, min, 0, 0);
-        return Math.floor(d.getTime() / 1000);
-    }
-
-    // 4. Trung: 2025年8月15日 hoặc 10月14日 14:30
-    let cnDateM = s.match(/(?:(\d{4})年)?\s*(\d{1,2})月(\d{1,2})日(?:\s*(\d{1,2}):(\d{2}))?/);
-    if (cnDateM) {
-        let year = cnDateM[1] ? parseInt(cnDateM[1], 10) : now.getFullYear();
-        let month = parseInt(cnDateM[2], 10) - 1;
-        let day = parseInt(cnDateM[3], 10);
-        let hour = cnDateM[4] ? parseInt(cnDateM[4], 10) : 12;
-        let min = cnDateM[5] ? parseInt(cnDateM[5], 10) : 0;
-        let d = new Date(year, month, day, hour, min, 0);
-        return Math.floor(d.getTime() / 1000);
-    }
-
-    // 5. Việt: 14 tháng 10 lúc 14:30 hoặc 19 thg 10 hoặc 15 tháng 8, 2025 hoặc 15 tháng 9
-    let viDateM = sLower.match(/(\d{1,2})\s+(?:tháng|thg)\s+(\d{1,2})(?:,?\s*(\d{4}))?(?:\s+lúc\s+(\d{1,2}):(\d{2}))?/i);
-    if (viDateM) {
-        let day = parseInt(viDateM[1], 10);
-        let month = parseInt(viDateM[2], 10) - 1;
-        let year = viDateM[3] ? parseInt(viDateM[3], 10) : now.getFullYear();
-        let hour = viDateM[4] ? parseInt(viDateM[4], 10) : 12;
-        let min = viDateM[5] ? parseInt(viDateM[5], 10) : 0;
-        // Nếu không ghi năm và tháng trong bài viết lớn hơn tháng hiện tại, lùi 1 năm
-        if (!viDateM[3] && month > now.getMonth()) {
-            year -= 1;
+    // "Hôm qua" hoặc "Hôm qua lúc 00:15" / "Yesterday at 12:15 AM"
+    const yesterdayMatch = s.match(/^(?:hôm qua|yesterday)(?:\s+(?:lúc|at)\s+(\d{1,2}):(\d{2})(?:\s*(am|pm|sa|ch))?)?$/i);
+    if (yesterdayMatch) {
+        const yDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+        if (yesterdayMatch[1] !== undefined) {
+            let h = parseInt(yesterdayMatch[1], 10);
+            const m = parseInt(yesterdayMatch[2], 10);
+            const ampm = (yesterdayMatch[3] || '').toLowerCase();
+            if ((ampm === 'pm' || ampm === 'ch') && h < 12) h += 12;
+            if ((ampm === 'am' || ampm === 'sa') && h === 12) h = 0;
+            yDate.setHours(h, m, 0, 0);
+        } else {
+            yDate.setHours(12, 0, 0, 0);
         }
-        let d = new Date(year, month, day, hour, min, 0);
-        return Math.floor(d.getTime() / 1000);
+        return Math.floor(yDate.getTime() / 1000);
     }
 
-    // 6. Anh: October 14 at 2:30 PM hoặc Oct 14, 2025
-    let enDateM1 = sLower.match(/([a-z]+)\s+(\d{1,2})(?:,?\s*(\d{4}))?(?:\s+at\s+(\d{1,2}):(\d{2}))?(?:\s*(am|pm))?/i);
-    if (enDateM1 && MONTH_MAP[enDateM1[1]] !== undefined) {
-        let month = MONTH_MAP[enDateM1[1]];
-        let day = parseInt(enDateM1[2], 10);
-        let year = enDateM1[3] ? parseInt(enDateM1[3], 10) : now.getFullYear();
-        let hour = enDateM1[4] ? parseInt(enDateM1[4], 10) : 12;
-        let min = enDateM1[5] ? parseInt(enDateM1[5], 10) : 0;
-        if (enDateM1[6] && enDateM1[6].toLowerCase() === 'pm' && hour < 12) hour += 12;
-        if (enDateM1[6] && enDateM1[6].toLowerCase() === 'am' && hour === 12) hour = 0;
-        let d = new Date(year, month, day, hour, min, 0);
-        return Math.floor(d.getTime() / 1000);
+    // "Hôm nay lúc 08:30" / "Today at 8:30 AM"
+    const todayMatch = s.match(/^(?:hôm nay|today)\s+(?:lúc|at)\s+(\d{1,2}):(\d{2})(?:\s*(am|pm|sa|ch))?$/i);
+    if (todayMatch) {
+        let h = parseInt(todayMatch[1], 10);
+        const m = parseInt(todayMatch[2], 10);
+        const ampm = (todayMatch[3] || '').toLowerCase();
+        if ((ampm === 'pm' || ampm === 'ch') && h < 12) h += 12;
+        if ((ampm === 'am' || ampm === 'sa') && h === 12) h = 0;
+        const tDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+        return Math.floor(tDate.getTime() / 1000);
     }
 
-    let enDateM2 = sLower.match(/(\d{1,2})\s+([a-z]+)(?:,?\s*(\d{4}))?(?:\s+at\s+(\d{1,2}):(\d{2}))?(?:\s*(am|pm))?/i);
-    if (enDateM2 && MONTH_MAP[enDateM2[2]] !== undefined) {
-        let day = parseInt(enDateM2[1], 10);
-        let month = MONTH_MAP[enDateM2[2]];
-        let year = enDateM2[3] ? parseInt(enDateM2[3], 10) : now.getFullYear();
-        let hour = enDateM2[4] ? parseInt(enDateM2[4], 10) : 12;
-        let min = enDateM2[5] ? parseInt(enDateM2[5], 10) : 0;
-        if (enDateM2[6] && enDateM2[6].toLowerCase() === 'pm' && hour < 12) hour += 12;
-        if (enDateM2[6] && enDateM2[6].toLowerCase() === 'am' && hour === 12) hour = 0;
-        let d = new Date(year, month, day, hour, min, 0);
-        return Math.floor(d.getTime() / 1000);
-    }
+    // Phút / Giờ / Ngày / Tuần / Tháng / Năm trước (Tránh đụng '16 tháng 10')
+    let m = s.match(/^(\d+)\s*(?:phút|p|min|mins|minute|minutes|m)(?:[\s·•\-_,]|\b|trước|ago|$)/i);
+    if (m) return nowSec - parseInt(m[1], 10) * 60;
 
-    // 7. Tương đối: Phút
-    let minM = s.match(/(\d+)\s*(?:phút|min|mins|m|分钟)(?:[\s·•\-_,]|trước|ago|前|$)/i);
-    if (minM) return nowSec - parseInt(minM[1], 10) * 60;
+    m = s.match(/^(\d+)\s*(?:giờ|g|h|hr|hrs|hour|hours)(?:[\s·•\-_,]|\b|trước|ago|$)/i);
+    if (m) return nowSec - parseInt(m[1], 10) * 3600;
 
-    // Giờ
-    let hrM = s.match(/(\d+)\s*(?:giờ|hour|hours|hr|hrs|h|小时)(?:[\s·•\-_,]|trước|ago|前|$)/i);
-    if (hrM) return nowSec - parseInt(hrM[1], 10) * 3600;
+    m = s.match(/^(\d+)\s*(?:ngày|ng|d|day|days)(?:[\s·•\-_,]|\b|trước|ago|$)/i);
+    if (m) return nowSec - parseInt(m[1], 10) * 86400;
 
-    // Ngày
-    let dayM = s.match(/(\d+)\s*(?:ngày|day|days|d|天)(?:[\s·•\-_,]|trước|ago|前|$)/i);
-    if (dayM) return nowSec - parseInt(dayM[1], 10) * 86400;
+    m = s.match(/^(\d+)\s*(?:tuần|t|w|wk|wks|week|weeks)(?:[\s·•\-_,]|\b|trước|ago|$)/i);
+    if (m) return nowSec - parseInt(m[1], 10) * 604800;
 
-    // Tuần
-    let wkM = s.match(/(\d+)\s*(?:tuần|week|weeks|w|周|星期)(?:[\s·•\-_,]|trước|ago|前|$)/i);
-    if (wkM) return nowSec - parseInt(wkM[1], 10) * 7 * 86400;
+    m = s.match(/^(\d+)\s*(?:tháng\s+trước|months?\s+ago|mos?\s+ago|mos\b)/i);
+    if (m) return nowSec - parseInt(m[1], 10) * 2592000;
 
-    // Tháng
-    let moM = s.match(/(\d+)\s*(?:tháng|month|months|mo|mos|个月)(?:[\s·•\-_,]|trước|ago|前|$)/i);
-    if (moM) return nowSec - parseInt(moM[1], 10) * 30 * 86400;
-
-    // Năm
-    let yrM = s.match(/(\d+)\s*(?:năm|year|years|yr|yrs|y|年)(?:[\s·•\-_,]|trước|ago|前|$)/i);
-    if (yrM) return nowSec - parseInt(yrM[1], 10) * 365 * 86400;
+    m = s.match(/^(\d+)\s*(?:năm\s+trước|years?\s+ago|yrs?\s+ago|yrs\b)/i);
+    if (m) return nowSec - parseInt(m[1], 10) * 31536000;
 
     return null;
 }
@@ -460,16 +398,19 @@ function isNotificationOrGarbageElement(el) {
  */
 function parseTimeFromString(str) {
     if (!str) return null;
-    const clean = str.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
-    if (clean.length < 2 || clean.length > 55) return null;
+    const clean = str
+        .replace(/[\u200B-\u200D\uFEFF\u00a0]/g, ' ')
+        .replace(/[·•|]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 
-    // 1. Thử parse thời gian tương đối ('8 giờ', '3 ngày trước', 'Hôm qua lúc 14:20'...)
+    if (clean.length < 2 || clean.length > 60) return null;
+
+    // Bước 1: Kiểm tra thời gian tương đối
     const rel = parseRelativeTimeToTimestamp(clean);
     if (rel) return rel;
 
-    const now = new Date();
-
-    // Tách phần giờ:phút (nếu chuỗi có dạng '16 tháng 10 lúc 16:03' hoặc 'Oct 16 at 4:03 PM')
+    // Tách giờ:phút nếu có ("lúc 16:03", "at 4:03 PM")
     let hour = 12, minute = 0;
     const timeMatch = clean.match(/(?:lúc|at|,|\s)\s*(\d{1,2}):(\d{2})(?:\s*(AM|PM|SA|CH))?/i);
     if (timeMatch) {
@@ -480,8 +421,8 @@ function parseTimeFromString(str) {
         if ((ampm === 'AM' || ampm === 'SA') && hour === 12) hour = 0;
     }
 
-    // 2. Tiếng Việt: '16 tháng 10', '16 tháng 10 lúc 16:03', '16 tháng 10, 2025 lúc 16:03', '28 Tháng 9'
-    let m = clean.match(/(?:ngày\s+)?(\d{1,2})\s+th(?:áng|g)\s+(\d{1,2})(?:(?:\s*,\s*|\s+năm\s+|\s+)(\d{4}))?(?:\s+lúc\s+\d{1,2}:\d{2}.*)?$/i);
+    // Bước 2: Tiếng Việt ("16 tháng 10", "16 tháng 10 lúc 16:03", "16 tháng 10, 2025 lúc 16:03", "8 Tháng 10", "28 Tháng 9", "15 tháng 9")
+    let m = clean.match(/^(?:ngày\s+)?(\d{1,2})\s+th(?:áng|g)\s+(\d{1,2})(?:(?:\s*,\s*|\s+năm\s+|\s+)(\d{4}))?(?:\s+lúc\s+\d{1,2}:\d{2}(?:\s*(?:AM|PM|SA|CH))?)?$/i);
     if (m) {
         const day = parseInt(m[1], 10);
         const month = parseInt(m[2], 10) - 1;
@@ -494,7 +435,7 @@ function parseTimeFromString(str) {
         return Math.floor(dt.getTime() / 1000);
     }
 
-    // 3. Định dạng DD/MM/YYYY hoặc DD-MM-YYYY (có thể kèm giờ)
+    // Bước 3: Định dạng DD/MM/YYYY hoặc DD-MM-YYYY
     m = clean.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+\d{1,2}:\d{2}.*)?$/);
     if (m) {
         const d = parseInt(m[1], 10);
@@ -505,7 +446,7 @@ function parseTimeFromString(str) {
         if (!isNaN(dt.getTime())) return Math.floor(dt.getTime() / 1000);
     }
 
-    // 4. Tiếng Anh: 'October 16', 'Oct 16 at 4:03 PM', '16 October 2025'
+    // Bước 4: Tiếng Anh ("October 16", "Oct 16 at 4:03 PM", "16 October 2025")
     const months = {
         jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
         may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7,
@@ -558,102 +499,80 @@ function decodeGHLScrambledText(container) {
 
 function extractTimeFromArticleElement(article) {
     if (!article) return null;
+    const articleRect = article.getBoundingClientRect();
 
     // 0. ƯU TIÊN SỐ 1 TRÊN DOM: Giải mã trực tiếp chuỗi thời gian bị Facebook xáo trộn (GHL Scrambled Label)
-    // Ví dụ: Ghép các span theo CSS order thành "15 tháng 9"
     const decodedLabels = decodeGHLScrambledText(article);
     for (const lbl of decodedLabels) {
-        const timeStr = extractTimeFromText(lbl);
-        if (timeStr) {
-            const ts = parseRelativeTimeToTimestamp(timeStr);
-            if (ts && ts > 1577836800) {
-                return { timestamp: ts, raw: lbl, publishTime: formatTimestampToDate(ts), relativeTime: formatRelativeTime(ts) };
-            }
+        const ts = parseTimeFromString(lbl);
+        if (ts) {
+            return {
+                timestamp: ts,
+                raw: lbl,
+                publishTime: formatTimestampToDate(ts),
+                relativeTime: formatRelativeTime(ts)
+            };
         }
     }
 
-    // 1. Quét aria-label, data-tooltip-content, title
-    // TUYỆT ĐỐI KHÔNG QUÉT [alt] HOẶC THẺ <img> VÌ ẢNH CHỤP MÀN HÌNH TRONG BÀI VIẾT CHỨA CHỮ "8h", "13m" DO AI FACEBOOK ĐỌC RA!
-    const ariaNodes = article.querySelectorAll('[aria-label], [data-tooltip-content], [title]');
-    for (const el of ariaNodes) {
-        if (el.tagName === 'IMG') continue; // Bỏ qua thẻ ảnh triệt để
-        if (el.closest('ul, div[role="article"] div[role="article"], div[aria-label*="Bình luận" i], div[aria-label*="Comment" i]')) continue;
-        const label = el.getAttribute('aria-label') || el.getAttribute('data-tooltip-content') || el.getAttribute('title') || '';
-        if (label.length > 0 && label.length < 50) {
-            if (/bình luận|comment|reaction|cảm xúc|thích|like|chia sẻ|share|ảnh|photo|video/i.test(label)) continue;
-            const timeStr = extractTimeFromText(label);
-            if (timeStr) {
-                const ts = parseRelativeTimeToTimestamp(timeStr);
-                if (ts && ts > 1577836800) {
-                    return { timestamp: ts, raw: label, publishTime: formatTimestampToDate(ts), relativeTime: formatRelativeTime(ts) };
-                }
-            }
+    // Chỉ xét các thẻ nằm ở vùng Header trên cùng của bài viết (cách đỉnh bài viết tối đa 130px)
+    // để KHÔNG BAO GIỜ chạm tới ngày tháng của Video/Reel được Share nằm bên dưới!
+    const isInsideHeaderZone = (el) => {
+        try {
+            const r = el.getBoundingClientRect();
+            if (r.height === 0 && r.width === 0) return true;
+            return (r.top - articleRect.top) <= 130;
+        } catch (_) {
+            return true;
         }
-    }
+    };
 
-    // 2. Tìm trong các thẻ <a> dẫn tới bài viết (permalink) ở phần Header của bài đăng
-    const links = Array.from(article.querySelectorAll('a[href*="/posts/"], a[href*="/videos/"], a[href*="/photo"], a[href*="story_fbid"], a[href*="pfbid"], a[role="link"]'))
-        .filter(a => !a.closest('ul, div[role="article"] div[role="article"], div[aria-label*="Bình luận" i], div[aria-label*="Comment" i]'));
-
+    const links = article.querySelectorAll('a[href*="/posts/"], a[href*="/videos/"], a[href*="/reel/"], a[href*="permalink"], a[href*="story_fbid"], a[role="link"]');
     for (const a of links) {
-        // Giải mã GHL bên trong thẻ <a> nếu có
-        const ghlInLink = decodeGHLScrambledText(a);
-        for (const lbl of ghlInLink) {
-            const timeStr = extractTimeFromText(lbl);
-            if (timeStr) {
-                const ts = parseRelativeTimeToTimestamp(timeStr);
-                if (ts && ts > 1577836800) {
-                    return { timestamp: ts, raw: lbl, publishTime: formatTimestampToDate(ts), relativeTime: formatRelativeTime(ts) };
-                }
+        if (!isInsideHeaderZone(a)) continue;
+        const label = a.getAttribute('aria-label') || '';
+        if (label) {
+            const ts = parseTimeFromString(label);
+            if (ts) {
+                return {
+                    timestamp: ts,
+                    raw: label,
+                    publishTime: formatTimestampToDate(ts),
+                    relativeTime: formatRelativeTime(ts)
+                };
             }
         }
-
         const text = (a.innerText || a.textContent || '').trim();
-        if (text.length > 0 && text.length < 35 && !isNotificationOrCommentGarbage(text)) {
-            const timeStr = extractTimeFromText(text);
-            if (timeStr) {
-                const ts = parseRelativeTimeToTimestamp(timeStr);
-                if (ts && ts > 1577836800) {
-                    return { timestamp: ts, raw: text, publishTime: formatTimestampToDate(ts), relativeTime: formatRelativeTime(ts) };
-                }
-            }
-        }
-        const aria = a.getAttribute('aria-label') || '';
-        if (aria.length > 0 && aria.length < 50 && !isNotificationOrCommentGarbage(aria)) {
-            const timeStr = extractTimeFromText(aria);
-            if (timeStr) {
-                const ts = parseRelativeTimeToTimestamp(timeStr);
-                if (ts && ts > 1577836800) {
-                    return { timestamp: ts, raw: aria, publishTime: formatTimestampToDate(ts), relativeTime: formatRelativeTime(ts) };
-                }
+        if (text && text.length <= 45) {
+            const ts = parseTimeFromString(text);
+            if (ts) {
+                return {
+                    timestamp: ts,
+                    raw: text,
+                    publishTime: formatTimestampToDate(ts),
+                    relativeTime: formatRelativeTime(ts)
+                };
             }
         }
     }
 
-    // 3. Quét các thẻ span trong 220px đầu của Header (bỏ qua thẻ rác GHL checksum/position:absolute)
-    const artTop = article.getBoundingClientRect().top;
-    const spans = Array.from(article.querySelectorAll('abbr, span[dir="auto"], span'))
-        .filter(s => {
-            if (s.hasAttribute('checksum') || /position\s*:\s*absolute/i.test(s.getAttribute('style') || '')) return false;
-            if (s.closest('ul, div[role="article"] div[role="article"], div[aria-label*="Bình luận" i], div[aria-label*="Comment" i]')) return false;
-            const r = s.getBoundingClientRect();
-            return (r.top - artTop) < 220;
-        })
-        .slice(0, 20);
-
-    for (const s of spans) {
-        const text = (s.innerText || s.textContent || '').trim();
-        if (text.length >= 2 && text.length <= 35 && !isNotificationOrCommentGarbage(text)) {
-            const timeStr = extractTimeFromText(text);
-            if (timeStr) {
-                const ts = parseRelativeTimeToTimestamp(timeStr);
-                if (ts && ts > 1577836800) {
-                    return { timestamp: ts, raw: text, publishTime: formatTimestampToDate(ts), relativeTime: formatRelativeTime(ts) };
-                }
+    const spans = article.querySelectorAll('span, abbr');
+    for (const sp of spans) {
+        if (!isInsideHeaderZone(sp)) continue;
+        // Chỉ lấy span lá (hoặc span ngắn) ở vùng Header
+        const text = (sp.innerText || sp.textContent || '').trim();
+        if (text && text.length >= 2 && text.length <= 40) {
+            const ts = parseTimeFromString(text);
+            if (ts) {
+                return {
+                    timestamp: ts,
+                    raw: text,
+                    publishTime: formatTimestampToDate(ts),
+                    relativeTime: formatRelativeTime(ts)
+                };
             }
         }
     }
-
     return null;
 }
 
