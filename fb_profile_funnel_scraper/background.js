@@ -93,6 +93,66 @@ async function sendToDashboard(action, data) {
   } catch (_) {}
 }
 
+
+// =========================================================================
+// THẨM ĐỊNH LINK AMAZON CHUẨN XÁC & LOẠI TRỪ 100% LINK HỆ THỐNG RÁC
+// =========================================================================
+function sanitizeAndValidateAmazonUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
+  let url = rawUrl.trim();
+
+  // Giải mã link redirect nếu có l.facebook.com hoặc tương tự
+  if (url.includes('facebook.com/l.php?u=') || url.includes('/flx/warn/?u=') || url.includes('u=')) {
+    try {
+      const u = new URL(url);
+      const real = u.searchParams.get('u');
+      if (real) url = decodeURIComponent(real);
+    } catch (_) {}
+  }
+
+  // Kiểm tra domain Amazon
+  if (!/(?:amazon\.[a-z.]+|amzn\.to|a\.co)/i.test(url)) {
+    return null;
+  }
+
+  // YÊU CẦU 3: Loại bỏ các URL hệ thống rác của Amazon:
+  // /ap/register, /ap/signin, /gp/cart, /cart/, /gp/help/, /gp/navigation, /customer-preferences, privacy, preferences
+  const garbagePatterns = [
+    /\/ap\/(?:signin|register|forgotpassword)/i,
+    /\/gp\/(?:cart|help|navigation|css|your-account)/i,
+    /\/(?:cart|sign-in|register|account-status)\b/i,
+    /\/customer-preferences\b/i,
+    /\b(?:privacy|preferences|help)\b/i
+  ];
+  for (const pat of garbagePatterns) {
+    if (pat.test(url)) return null;
+  }
+
+  try {
+    const parsed = new URL(url.startsWith('http') ? url : 'https://' + url);
+    const host = parsed.hostname.toLowerCase();
+    if (!host.includes('amazon') && !host.includes('amzn') && !host.includes('a.co')) return null;
+    const path = parsed.pathname.replace(/\/+$/, '');
+
+    // Nếu là a.co hoặc amzn.to short link hợp lệ
+    if (host === 'a.co' || host.endsWith('.a.co') || host === 'amzn.to' || host.endsWith('.amzn.to')) {
+      if (path && path.length > 1) return parsed.toString();
+      return null;
+    }
+
+    // Nếu là amazon.com / amazon các nước: Loại bỏ trang chủ chung không có shop/store/product
+    if (!path || path === '' || path === '/') {
+      if (!parsed.searchParams.has('tag') && !parsed.searchParams.has('k')) {
+        return null;
+      }
+    }
+
+    return parsed.toString();
+  } catch (_) {
+    return null;
+  }
+}
+
 const US_STATE_CODES = new Set([
   'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
   'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
@@ -247,6 +307,8 @@ async function handleDeepWebsiteScrape(targetUrl) {
     state: '',
     zip: '',
     country: '',
+    has_amazon: false,
+    amazon_url: '',
     subpagesVisited: []
   };
 
@@ -337,6 +399,30 @@ async function handleDeepWebsiteScrape(targetUrl) {
       }
 
       if (pageHtml) {
+        // Quét tìm link Amazon trên trang web hoặc trang Bio aggregator (linktr.ee, hoo.be, direct.me)
+        if (!result.amazon_url) {
+          const amzHrefMatches = pageHtml.matchAll(/href=["']([^"']*(?:amazon\.[a-z.]+|amzn\.to|a\.co)[^"']*)["']/gi);
+          for (const am of amzHrefMatches) {
+            const cleanA = sanitizeAndValidateAmazonUrl(am[1]);
+            if (cleanA) {
+              result.amazon_url = cleanA;
+              result.has_amazon = true;
+              break;
+            }
+          }
+          if (!result.amazon_url) {
+            const rawAmzInText = pageHtml.match(/(?:https?:)?\/\/(?:www\.)?(?:amazon\.[a-z.]+|amzn\.to|a\.co)\/[^\s"'>]+/gi) || [];
+            for (const rf of rawAmzInText) {
+              const cleanA = sanitizeAndValidateAmazonUrl(rf);
+              if (cleanA) {
+                result.amazon_url = cleanA;
+                result.has_amazon = true;
+                break;
+              }
+            }
+          }
+        }
+
         const cfMatches = pageHtml.matchAll(/data-cfemail=["']([a-f0-9]+)["']/gi);
         for (const cf of cfMatches) {
           const dec = decodeCfEmail(cf[1]);
@@ -707,6 +793,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           state: res.state,
           zip: res.zip,
           country: res.country,
+          has_amazon: Boolean(res.has_amazon),
+          amazon_url: res.amazon_url || '',
           subpagesVisited: res.subpagesVisited
         });
       })
@@ -728,6 +816,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
       currentTaskId = null;
       isProcessing = false;
+
+      // YÊU CẦU 2 & 4: LÀM SẠCH VÀ CHUẨN HÓA CÁC BIẾN AMAZON Ở ĐẦU MỖI TASKID ĐỂ TRÁNH BLEED DATA (STT 68 -> STT 69)
+      const sanitizedAmz = sanitizeAndValidateAmazonUrl(item.amazon_url);
+      item.amazon_url = sanitizedAmz || '';
+      item.has_amazon = Boolean(sanitizedAmz);
+      item.amazon_channel = item.has_amazon ? 'Selling on Amazon (Target)' : 'Amazon link not found';
+      item.amz_cat = item.has_amazon ? 'Pet Toys / Artificial Grass / Pet Toilets' : 'Chưa phát hiện link Amazon';
+
       const rawWeb = (item.website || '').trim();
       const hasExternalWebsite = rawWeb.startsWith('http') && !/facebook\.com|fb\.com|instagram\.com/i.test(rawWeb);
 
@@ -750,7 +846,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
               targetTabId,
               rawWeb,
               item.name,
-              item.email
+              item.email,
+              item.amazon_url
             );
 
             if (inspectRes && inspectRes.owner && isValidOwnerCandidate(inspectRes.owner)) {
@@ -764,20 +861,23 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
                 }
               });
             }
-            if (inspectRes && inspectRes.has_amazon) {
+            const checkedInspectAmz = sanitizeAndValidateAmazonUrl(inspectRes?.amazon_url);
+            if (checkedInspectAmz) {
               item.has_amazon = true;
-              item.amazon_url = inspectRes.amazon_url;
-              item.amazon_channel = inspectRes.amazon_channel || 'Selling on Amazon (Target)';
+              item.amazon_url = checkedInspectAmz;
+              item.amazon_channel = 'Selling on Amazon (Target)';
               item.amz_cat = inspectRes.amz_cat || 'Pet Toys / Artificial Grass / Pet Toilets';
               sendToDashboard('STEP2_LOG', {
                 log: {
                   stage: 'KÊNH AMAZON',
-                  text: `[Dòng ${currentIndex + 1}] 🛒 Phát hiện gian hàng/sản phẩm Amazon: ${item.amazon_url}`,
+                  text: `[Dòng ${currentIndex + 1}] 🛒 Phát hiện gian hàng/sản phẩm Amazon từ Website: ${item.amazon_url}`,
                   level: 'ai'
                 }
               });
-            } else {
+            } else if (!item.amazon_url) {
+              // Chỉ đặt về false khi cả website và Facebook Bio đều không có link Amazon
               item.has_amazon = false;
+              item.amazon_url = '';
               item.amazon_channel = 'Amazon link not found';
               item.amz_cat = 'Chưa phát hiện link Amazon';
               sendToDashboard('STEP2_LOG', {
@@ -1264,10 +1364,10 @@ function finishProfileItem(item) {
     avatar: resolvedAvatar,
     activity_status: item.activityStatus || '✓ TÍCH CỰC (Trại đang hoạt động)',
     has_website: !!(item.website && item.website.startsWith('http') && !/facebook\.com|instagram\.com/i.test(item.website)),
-    has_amazon: !!(item.has_amazon || item.amazon_url),
+    has_amazon: Boolean(item.has_amazon && item.amazon_url),
     amazon_url: item.amazon_url || '',
-    amazon_channel: item.amazon_channel || (item.has_amazon ? 'Selling on Amazon (Target)' : 'Amazon link not found'),
-    amz_cat: item.amz_cat || (item.has_amazon ? 'Pet Toys / Artificial Grass / Pet Toilets' : 'Chưa phát hiện link Amazon'),
+    amazon_channel: (item.has_amazon && item.amazon_url) ? 'Selling on Amazon (Target)' : 'Amazon link not found',
+    amz_cat: (item.has_amazon && item.amazon_url) ? 'Pet Toys / Artificial Grass / Pet Toilets' : 'Chưa phát hiện link Amazon',
     score: score,
     rank_tier: tier,
     product_fit: item.has_amazon ? 'B2B Wholesale: Thảm Cỏ Huấn Luyện + Pet Potty + Toys Bundle' : 'Take-Home Puppy Starter Kit V2/V3',
@@ -1427,7 +1527,7 @@ function runScriptInTab(tabId, func, args = []) {
 }
 
 // Hàm điều phối duyệt website trực quan đa trang: Trang chủ -> Trang con (/about, /contact)
-async function inspectWebsiteVisually(tabId, websiteUrl, leadName, leadEmail) {
+async function inspectWebsiteVisually(tabId, websiteUrl, leadName, leadEmail, initialAmazonUrl = '') {
   let entryUrl = websiteUrl;
   let rootHomepage = '';
   const isFormService = isThirdPartyFormService(websiteUrl);
@@ -1467,8 +1567,12 @@ async function inspectWebsiteVisually(tabId, websiteUrl, leadName, leadEmail) {
   let currentState = homeResults?.state || '';
   let currentZip = homeResults?.zip || '';
   let currentCountry = homeResults?.country || 'United States';
-  let currentHasAmazon = homeResults?.has_amazon || false;
-  let currentAmazonUrl = homeResults?.amazon_url || '';
+
+  // Khởi tạo biến Amazon rõ ràng từ initialAmazonUrl (từ Bio Facebook) hoặc từ trang chủ
+  const validInitAmz = sanitizeAndValidateAmazonUrl(initialAmazonUrl);
+  const validHomeAmz = sanitizeAndValidateAmazonUrl(homeResults?.amazon_url);
+  let currentAmazonUrl = validHomeAmz || validInitAmz || '';
+  let currentHasAmazon = Boolean(currentAmazonUrl);
   let subLinks = isFormService ? [] : (homeResults?.subLinks || []);
 
   // Nếu link ban đầu là trang con (/contact) và khác trang chủ, đảm bảo sẽ ghé thăm trang con này
@@ -1511,9 +1615,10 @@ async function inspectWebsiteVisually(tabId, websiteUrl, leadName, leadEmail) {
       if (subResults?.state && !currentState) currentState = subResults.state;
       if (subResults?.zip && !currentZip) currentZip = subResults.zip;
       if (subResults?.country && (!currentCountry || currentCountry === 'United States')) currentCountry = subResults.country;
-      if (subResults?.has_amazon && !currentHasAmazon) {
+      const validSubAmz = sanitizeAndValidateAmazonUrl(subResults?.amazon_url);
+      if (validSubAmz && !currentAmazonUrl) {
         currentHasAmazon = true;
-        currentAmazonUrl = subResults.amazon_url;
+        currentAmazonUrl = validSubAmz;
       }
 
       if (currentOwner && isValidOwnerCandidate(currentOwner)) {
@@ -1837,12 +1942,22 @@ async function scrollAndExtractPageAgent(options) {
 
   // 6. Quét liên kết gian hàng hoặc sản phẩm Amazon (Amazon Storefront / Affiliate / Product)
   let amazonUrl = '';
-  const amzElements = Array.from(document.querySelectorAll('a[href*="amazon.com"], a[href*="amzn.to"], a[href*="amazon.co"]'));
+  const amzElements = Array.from(document.querySelectorAll('a[href*="amazon."], a[href*="amzn.to"], a[href*="a.co"]'));
   for (const a of amzElements) {
-    const href = (a.getAttribute('href') || '').trim();
-    if (href && !/signin|ap\/signin|help|privacy|preferences/i.test(href)) {
-      amazonUrl = href;
-      break;
+    const href = (a.getAttribute('href') || a.href || '').trim();
+    // Áp dụng bộ lọc loại trừ rác nghiêm ngặt (/ap/register, /ap/signin, /gp/cart...)
+    if (href && !/\/ap\/(?:signin|register)|\/gp\/(?:cart|help)|\/cart\/|privacy|preferences/i.test(href)) {
+      try {
+        const u = new URL(href, window.location.origin);
+        const p = u.pathname.replace(/\/+$/, '');
+        // Chấp nhận Storefront, Wishlist, Author, Shortlink a.co, Product /dp/
+        if (p.length > 1 && !/^(?:\/ref|\/gp)$/i.test(p)) {
+          amazonUrl = u.toString();
+          break;
+        }
+      } catch (_) {
+        if (!amazonUrl) amazonUrl = href;
+      }
     }
   }
 

@@ -68,6 +68,73 @@ if (!window.__FB_SCRAPER_LOADED__) {
 
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
+
+// =========================================================================
+// THẨM ĐỊNH LINK AMAZON CHUẨN VÀ PHÁT HIỆN LINK BIO TỔNG HỢP (DEEP BIO SCRAPING)
+// =========================================================================
+const BIO_LINK_REGEX = /https?:\/\/(?:www\.)?(linktr\.ee|hoo\.be|direct\.me|msha\.ke|beacons\.ai|stan\.store|taplink\.cc|campsite\.bio|lnk\.bio)\/[a-zA-Z0-9_.-]+/gi;
+
+function extractBioAggregatorLinks(str) {
+  if (!str || typeof str !== 'string') return [];
+  const matches = str.match(BIO_LINK_REGEX) || [];
+  return Array.from(new Set(matches.map(m => m.trim())));
+}
+
+function sanitizeAndValidateAmazonUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
+  let url = rawUrl.trim();
+
+  // Giải mã link shim Facebook nếu có
+  if (url.includes('facebook.com/l.php?u=') || url.includes('/flx/warn/?u=') || url.includes('u=')) {
+    try {
+      const u = new URL(url, window.location.origin);
+      const real = u.searchParams.get('u');
+      if (real) url = decodeURIComponent(real);
+    } catch (_) {}
+  }
+
+  // Kiểm tra tên miền Amazon
+  if (!/(?:amazon\.[a-z.]+|amzn\.to|a\.co)/i.test(url)) {
+    return null;
+  }
+
+  // Loại bỏ các đường dẫn hệ thống rác của Amazon (đăng nhập, đăng ký, giỏ hàng, trợ giúp, điều khoản)
+  const garbagePatterns = [
+    /\/ap\/(?:signin|register|forgotpassword)/i,
+    /\/gp\/(?:cart|help|navigation|css|your-account)/i,
+    /\/(?:cart|sign-in|register|account-status)\b/i,
+    /\/customer-preferences\b/i,
+    /\b(?:privacy|preferences|help)\b/i
+  ];
+  for (const pat of garbagePatterns) {
+    if (pat.test(url)) return null;
+  }
+
+  try {
+    const parsed = new URL(url.startsWith('http') ? url : 'https://' + url);
+    const host = parsed.hostname.toLowerCase();
+    if (!host.includes('amazon') && !host.includes('amzn') && !host.includes('a.co')) return null;
+    const path = parsed.pathname.replace(/\/+$/, '');
+
+    // Nếu là short link a.co hoặc amzn.to
+    if (host === 'a.co' || host.endsWith('.a.co') || host === 'amzn.to' || host.endsWith('.amzn.to')) {
+      if (path && path.length > 1) return parsed.toString();
+      return null;
+    }
+
+    // Nếu là amazon.com / amazon các nước: Loại bỏ trang chủ chung không có shop/store/product
+    if (!path || path === '' || path === '/') {
+      if (!parsed.searchParams.has('tag') && !parsed.searchParams.has('k')) {
+        return null;
+      }
+    }
+
+    return parsed.toString();
+  } catch (_) {
+    return null;
+  }
+}
+
 const MONTH_MAP = {
   january: 0, jan: 0, february: 1, feb: 1, march: 2, mar: 2, april: 3, apr: 3,
   may: 4, june: 5, jun: 5, july: 6, jul: 6, august: 7, aug: 7, september: 8,
@@ -1115,6 +1182,9 @@ function extractIntroAndContacts(leadName) {
   let address = '';
   let bio = '';
   let category = '';
+  let amazon_url = '';
+  let has_amazon = false;
+  let bio_links = [];
 
   // Thu thập nội dung script từ HTML của profile hiện tại để tránh lẫn lộn dữ liệu các profile trước
   const scriptSources = [fullHtml];
@@ -1298,6 +1368,23 @@ function extractIntroAndContacts(leadName) {
         const real = u.searchParams.get('u');
         if (real) href = decodeURIComponent(real);
       } catch (_) {}
+    }
+
+    // 1. Kiểm tra nếu là liên kết Amazon Storefront / Wishlist / Product
+    const checkedAmz = sanitizeAndValidateAmazonUrl(href);
+    if (checkedAmz) {
+      if (!amazon_url) {
+        amazon_url = checkedAmz;
+        has_amazon = true;
+      }
+    }
+
+    // 2. Kiểm tra nếu là liên kết tổng hợp Bio (linktr.ee, hoo.be, direct.me, msha.ke...)
+    const bioMatches = extractBioAggregatorLinks(href);
+    if (bioMatches && bioMatches.length > 0) {
+      for (const bm of bioMatches) {
+        if (!bio_links.includes(bm)) bio_links.push(bm);
+      }
     }
 
     if (/instagram\.com\/([a-zA-Z0-9_.-]+)/i.test(href)) {
@@ -1572,7 +1659,78 @@ function extractIntroAndContacts(leadName) {
               fullHtml.match(/["\\]*category_name["\\]*\s*:\s*"([^"]+)"/i);
   if (mCat) category = mCat[1].trim();
 
-  return { phone, email, website, instagram, city, state, zip, address: cleanAddressText(address), bio, category, country };
+  // =========================================================================
+  // 7. DEEP BIO SCRAPING: QUÉT SÂU BIO, INTRO VÀ BÀI ĐĂNG GẦN NHẤT TÌM BIO & AMAZON
+  // =========================================================================
+  const targetScanTexts = [
+    bio,
+    introContainer ? introContainer.innerText : '',
+    text
+  ];
+  for (const st of targetScanTexts) {
+    if (!st) continue;
+    // Tìm các đường dẫn bio tổng hợp (linktr.ee, hoo.be, direct.me, msha.ke...)
+    const bFound = extractBioAggregatorLinks(st);
+    for (const b of bFound) {
+      if (!bio_links.includes(b)) bio_links.push(b);
+    }
+    // Tìm trực tiếp link Amazon trong text
+    if (!amazon_url) {
+      const amzInText = st.match(/https?:\/\/(?:www\.)?(?:amazon\.[a-z.]+|amzn\.to|a\.co)\/[^\s"'>]+/gi);
+      if (amzInText) {
+        for (const rawA of amzInText) {
+          const validA = sanitizeAndValidateAmazonUrl(rawA);
+          if (validA) {
+            amazon_url = validA;
+            has_amazon = true;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // Quét bài viết đầu tiên trên feed (tìm link Amazon hoặc Linktree đính kèm bài đăng)
+  const firstArticle = document.querySelector('div[role="article"]');
+  if (firstArticle) {
+    const artLinks = Array.from(firstArticle.querySelectorAll('a[href]'));
+    for (const al of artLinks) {
+      let aHref = al.getAttribute('href') || al.href || '';
+      if (/(?:l|lm)\.facebook\.com\/l\.php/i.test(aHref) || aHref.includes('/l.php?u=')) {
+        try {
+          const u = new URL(aHref, window.location.origin);
+          const real = u.searchParams.get('u');
+          if (real) aHref = decodeURIComponent(real);
+        } catch (_) {}
+      }
+      const vAmz = sanitizeAndValidateAmazonUrl(aHref);
+      if (vAmz && !amazon_url) {
+        amazon_url = vAmz;
+        has_amazon = true;
+      }
+      const bArt = extractBioAggregatorLinks(aHref);
+      for (const b of bArt) {
+        if (!bio_links.includes(b)) bio_links.push(b);
+      }
+    }
+  }
+
+  return {
+    phone,
+    email,
+    website,
+    instagram,
+    city,
+    state,
+    zip,
+    address: cleanAddressText(address),
+    bio,
+    category,
+    country,
+    amazon_url,
+    has_amazon,
+    bio_links
+  };
 }
 
 /**
@@ -2164,6 +2322,10 @@ async function scrapePublishTime(targetUrl, stt, taskId) {
                 if (webRes.state && !contacts.state) contacts.state = webRes.state;
                 if (webRes.zip && !contacts.zip) contacts.zip = webRes.zip;
                 if (webRes.country && (!contacts.country || contacts.country === 'United States')) contacts.country = webRes.country;
+                if (webRes.has_amazon && webRes.amazon_url && !contacts.amazon_url) {
+                    contacts.amazon_url = webRes.amazon_url;
+                    contacts.has_amazon = true;
+                }
             } else if (webRes && webRes.breederName) {
                 webOwnerName = webRes.breederName;
                 if (!contacts.city && webRes.city) contacts.city = webRes.city;
@@ -2172,6 +2334,32 @@ async function scrapePublishTime(targetUrl, stt, taskId) {
             }
         } catch (e) {
             console.warn('[FB Scraper] Lỗi khi fetch external website:', e);
+        }
+    }
+
+    // 5.1 DEEP BIO SCRAPING: Nếu chưa tìm thấy Amazon và phát hiện link Bio (linktr.ee, hoo.be, direct.me, msha.ke)
+    if (!contacts.amazon_url && contacts.bio_links && contacts.bio_links.length > 0) {
+        const bioToVisit = contacts.bio_links.slice(0, 2);
+        for (const bUrl of bioToVisit) {
+            try {
+                const bioRes = await new Promise(resolve => {
+                    chrome.runtime.sendMessage({
+                        action: 'FETCH_EXTERNAL_URL',
+                        url: bUrl,
+                        isBioAggregator: true
+                    }, (response) => {
+                        resolve(response || {});
+                    });
+                });
+                if (bioRes && bioRes.has_amazon && bioRes.amazon_url) {
+                    contacts.amazon_url = bioRes.amazon_url;
+                    contacts.has_amazon = true;
+                    console.log(`[FB Scraper] 🎯 Đã tìm thấy link Amazon từ Bio aggregator (${bUrl}): ${contacts.amazon_url}`);
+                    break;
+                }
+            } catch (errBio) {
+                console.warn('[FB Scraper] Lỗi fetch bio link:', errBio);
+            }
         }
     }
 
@@ -2198,6 +2386,9 @@ async function scrapePublishTime(targetUrl, stt, taskId) {
             state: contacts.state,
             zip: contacts.zip,
             address: contacts.address,
+            has_amazon: Boolean(contacts.has_amazon),
+            amazon_url: contacts.amazon_url || '',
+            bio_links: contacts.bio_links || [],
             country: contacts.country || (contacts.state ? 'United States' : 'United States'),
             bio: contacts.bio,
             publishTime: publishTime,
