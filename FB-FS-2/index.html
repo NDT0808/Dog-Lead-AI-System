@@ -1,3037 +1,911 @@
 <!DOCTYPE html>
-<html lang="zh">
-
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pet & Grass 潜客智能 CRM - 美国本土市场专案</title>
+  <title>🐾 Pet Lead AI — Cổng Điều Hành Trung Tâm | Master Command & Intelligence Portal 2026</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap"
-    rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --bg: #f4f6fb;
+      --bg: #f8fafc;
       --surface: #ffffff;
-      --surface-2: #f8fafc;
-      --surface-3: #f1f5f9;
-      --border: #e4e9f2;
-      --border-strong: #cfd8e6;
-      --text: #0f172a;
-      --text-2: #475569;
-      --text-3: #94a3b8;
+      --surface-2: #f1f5f9;
+      --surface-card: #ffffff;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
       --primary: #4f46e5;
-      --primary-soft: #eef2ff;
+      --primary-hover: #4338ca;
+      --primary-glow: rgba(79, 70, 229, 0.22);
       --emerald: #059669;
-      --emerald-soft: #ecfdf5;
+      --emerald-glow: rgba(5, 150, 105, 0.22);
       --amber: #d97706;
-      --amber-soft: #fffbeb;
-      --rose: #e11d48;
-      --rose-soft: #fff1f2;
+      --amber-glow: rgba(217, 119, 6, 0.22);
       --sky: #0284c7;
-      --sky-soft: #f0f9ff;
-      --violet: #7c3aed;
-      --violet-soft: #f5f3ff;
-      --slate-soft: #f1f5f9;
-      --shadow-sm: 0 1px 2px rgba(15, 23, 42, .05);
-      --shadow: 0 1px 3px rgba(15, 23, 42, .06), 0 10px 28px -14px rgba(15, 23, 42, .18);
-      --shadow-lg: 0 8px 40px -12px rgba(15, 23, 42, .22);
-      --radius: 16px;
-      --font: 'Inter', 'Plus Jakarta Sans', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
-      --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+      --sky-glow: rgba(2, 132, 199, 0.22);
+      --purple: #7c3aed;
+      --purple-glow: rgba(124, 58, 237, 0.22);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+      --shadow-lg: 0 16px 36px -8px rgba(15, 23, 42, 0.12), 0 6px 16px -4px rgba(15, 23, 42, 0.06);
+      --font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --mono: 'JetBrains Mono', Consolas, monospace;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0
+    [data-theme="dark"] {
+      --bg: #090d16;
+      --surface: #111827;
+      --surface-2: #1e293b;
+      --surface-card: #151e32;
+      --border: #283548;
+      --border-strong: #374761;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+      --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.65);
     }
 
-    html {
-      scroll-behavior: smooth
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: var(--bg);
-      background-image: radial-gradient(1100px 520px at 8% -6%, #e8edff 0%, transparent 60%),
-        radial-gradient(900px 460px at 100% 0%, #e6fbf4 0%, transparent 58%),
-        radial-gradient(800px 460px at 50% 110%, #fff4e6 0%, transparent 60%);
+      background-image: 
+        radial-gradient(1200px 600px at 10% -8%, rgba(79, 70, 229, 0.08) 0%, transparent 60%),
+        radial-gradient(1000px 500px at 90% 0%, rgba(5, 150, 105, 0.07) 0%, transparent 55%),
+        radial-gradient(900px 500px at 50% 100%, rgba(217, 119, 6, 0.06) 0%, transparent 60%);
       background-attachment: fixed;
       color: var(--text);
       font-family: var(--font);
-      line-height: 1.65;
-      -webkit-font-smoothing: antialiased;
-      padding: 1.5rem 1.25rem 3.5rem;
-    }
-
-    .container {
-      max-width: 1880px;
-      width: 98%;
-      margin: 0 auto;
-      transition: max-width 0.25s ease, padding 0.25s ease;
-    }
-
-    .container.is-fullwidth {
-      max-width: 100% !important;
-      width: 100% !important;
-      padding-left: 0.75rem !important;
-      padding-right: 0.75rem !important;
-    }
-
-    code {
-      font-family: var(--mono);
-      font-size: .82em;
-      background: var(--surface-3);
-      border: 1px solid var(--border);
-      padding: .1em .4em;
-      border-radius: 6px;
-      color: var(--primary)
-    }
-
-    a {
-      color: var(--primary)
-    }
-
-    /* ---------- 通用组件 ---------- */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow)
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: .45rem;
-      border: 1px solid var(--border-strong);
-      background: var(--surface);
-      color: var(--text-2);
-      padding: .5rem .95rem;
-      border-radius: 10px;
-      font-size: .85rem;
-      font-weight: 600;
-      font-family: var(--font);
-      cursor: pointer;
-      transition: .16s ease;
-      white-space: nowrap;
-    }
-
-    .btn:hover {
-      background: var(--surface-3);
-      color: var(--text);
-      border-color: var(--border-strong);
-      transform: translateY(-1px)
-    }
-
-    .btn:active {
-      transform: none
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
-      box-shadow: 0 6px 16px -6px rgba(79, 70, 229, .55)
-    }
-
-    .btn-primary:hover {
-      background: #4338ca;
-      border-color: #4338ca;
-      color: #fff
-    }
-
-    .btn-sky {
-      background: var(--sky);
-      border-color: var(--sky);
-      color: #fff
-    }
-
-    .btn-sky:hover {
-      background: #0369a1;
-      border-color: #0369a1;
-      color: #fff
-    }
-
-    .btn-sm {
-      padding: .32rem .7rem;
-      font-size: .78rem;
-      border-radius: 8px
-    }
-
-    .btn:disabled {
-      opacity: .45;
-      cursor: not-allowed;
-      transform: none
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: .3rem;
-      padding: .22rem .6rem;
-      border-radius: 999px;
-      font-size: .72rem;
-      font-weight: 700;
-      line-height: 1.5;
-      white-space: nowrap
-    }
-
-    .badge-s {
-      background: var(--amber-soft);
-      color: #b45309;
-      border: 1px solid #fde68a
-    }
-
-    .badge-a {
-      background: var(--primary-soft);
-      color: #4338ca;
-      border: 1px solid #c7d2fe
-    }
-
-    .badge-b {
-      background: var(--emerald-soft);
-      color: #047857;
-      border: 1px solid #a7f3d0
-    }
-
-    .badge-c {
-      background: var(--slate-soft);
-      color: #475569;
-      border: 1px solid var(--border-strong)
-    }
-
-    .badge-d {
-      background: var(--rose-soft);
-      color: #be123c;
-      border: 1px solid #fecdd3
-    }
-
-    /* ---------- 顶部 ---------- */
-    header {
+      line-height: 1.55;
+      min-height: 100vh;
       display: flex;
+      flex-direction: column;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Top Nav */
+    .header-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 28px;
+      transition: all 0.3s ease;
+    }
+    [data-theme="dark"] .header-nav {
+      background: rgba(17, 24, 39, 0.88);
+    }
+    .nav-inner {
+      max-width: 1380px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      gap: 1.25rem;
-      background: var(--surface);
+      gap: 16px;
+    }
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #4f46e5, #059669);
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+    .brand-text h1 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-text p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .lang-switcher, .theme-switcher {
+      display: flex;
+      background: var(--surface-2);
       border: 1px solid var(--border);
+      padding: 3px;
+      border-radius: 10px;
+      gap: 3px;
+    }
+    .lang-btn, .theme-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      font-weight: 750;
+      border-radius: 7px;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all 0.2s;
+    }
+    .lang-btn.active, .theme-btn.active {
+      background: var(--surface);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .system-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      padding: 5px 12px;
       border-radius: 20px;
-      box-shadow: var(--shadow);
-      padding: 1.6rem 1.75rem;
+      font-size: 0.75rem;
+      font-weight: 750;
+    }
+    [data-theme="dark"] .system-status-pill {
+      background: rgba(5, 150, 105, 0.2);
+      color: #34d399;
+      border-color: rgba(52, 211, 153, 0.3);
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* Container */
+    .container {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 2.2rem 1.5rem 3.5rem;
+      flex: 1;
+      width: 100%;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      max-width: 860px;
+      margin: 0 auto 3rem;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(79, 70, 229, 0.08);
+      color: var(--primary);
+      border: 1px solid rgba(79, 70, 229, 0.2);
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 750;
+      margin-bottom: 1rem;
+    }
+    .hero-title {
+      font-size: 2.45rem;
+      font-weight: 850;
+      letter-spacing: -0.03em;
+      line-height: 1.25;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--text) 30%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+      font-size: 1rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin-bottom: 1.8rem;
+    }
+
+    /* 4 Metrics Strip */
+    .metrics-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+    .metric-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem 1.25rem;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .metric-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .metric-card.indigo::before { background: var(--primary); }
+    .metric-card.emerald::before { background: var(--emerald); }
+    .metric-card.amber::before { background: var(--amber); }
+    .metric-card.sky::before { background: var(--sky); }
+    .metric-card.purple::before { background: var(--purple); }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-strong);
+    }
+    .metric-val {
+      font-size: 1.65rem;
+      font-weight: 850;
+      letter-spacing: -0.02em;
+      font-family: var(--mono);
+      color: var(--text);
+    }
+    .metric-lbl {
+      font-size: 0.76rem;
+      font-weight: 750;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* Flow Section Header */
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 850;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* 4 Portals Grid */
+    .portals-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 3.5rem;
+    }
+    @media (max-width: 900px) {
+      .portals-grid { grid-template-columns: 1fr; }
+      .metrics-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .portal-card {
+      background: var(--surface-card);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 1.85rem;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      text-decoration: none;
+      color: inherit;
+    }
+    .portal-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Specific portal theme colors */
+    .portal-card.p-step1:hover { border-color: #6366f1; }
+    .portal-card.p-step2:hover { border-color: #10b981; }
+    .portal-card.p-step3:hover { border-color: #f59e0b; }
+    .portal-card.p-step4:hover { border-color: #0284c7; }
+
+    .portal-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
       margin-bottom: 1.1rem;
     }
-
-    .brand-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: .4rem;
-      background: var(--primary-soft);
-      color: var(--primary);
-      border: 1px solid #c7d2fe;
-      padding: .3rem .8rem;
-      border-radius: 999px;
-      font-size: .78rem;
-      font-weight: 700;
+    .portal-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+      box-shadow: var(--shadow-sm);
     }
+    .p-step1 .portal-icon { background: #e0e7ff; color: #4338ca; }
+    .p-step2 .portal-icon { background: #d1fae5; color: #047857; }
+    .p-step3 .portal-icon { background: #fef3c7; color: #b45309; }
+    .p-step4 .portal-icon { background: #e0f2fe; color: #0369a1; }
 
-    h1 {
-      font-size: 1.72rem;
-      font-weight: 800;
-      letter-spacing: -.02em;
-      margin: .6rem 0 .5rem;
-      line-height: 1.3
-    }
-
-    .header-desc {
-      color: var(--text-2);
-      font-size: .9rem;
-      max-width: 900px
-    }
-
-    .batch-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: .45rem;
-      flex-wrap: wrap;
-      margin-top: .7rem;
-      background: var(--surface-3);
-      border: 1px solid var(--border-strong);
-      border-radius: 10px;
-      padding: .35rem .7rem;
-      font-size: .78rem;
-      color: var(--text-2);
-      font-weight: 600;
-    }
-
-    .batch-badge.imported {
-      background: var(--emerald-soft);
-      border-color: #a7f3d0;
-      color: #047857
-    }
-
-    .batch-badge .b-name {
-      font-family: var(--mono);
-      font-weight: 700;
-      color: var(--text)
-    }
-
-    .batch-badge .b-time {
-      font-family: var(--mono);
-      font-weight: 700;
-      color: var(--primary)
-    }
-
-    .batch-badge.imported .b-time {
-      color: #047857
-    }
-
-    .batch-badge .b-sep {
-      color: var(--text-3)
-    }
-
-    .header-controls {
+    .portal-badges {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: .7rem
+      gap: 5px;
     }
-
-    .lang-switcher {
-      display: inline-flex;
-      background: var(--surface-3);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 3px
-    }
-
-    .lang-btn {
-      border: none;
-      background: transparent;
-      padding: .34rem .8rem;
-      border-radius: 8px;
-      font-size: .8rem;
-      font-weight: 600;
-      color: var(--text-2);
-      cursor: pointer;
-      font-family: var(--font);
-      transition: .16s
-    }
-
-    .lang-btn.active {
-      background: var(--surface);
-      color: var(--primary);
-      box-shadow: var(--shadow-sm)
-    }
-
-    .data-strip {
-      display: flex;
-      align-items: center;
-      gap: .7rem;
-      flex-wrap: wrap;
-      background: linear-gradient(90deg, #ecfdf5, #f0f9ff);
-      border: 1px solid #bae6fd;
-      border-radius: 12px;
-      padding: .6rem .9rem;
-      margin-bottom: 1.1rem;
-      font-size: .8rem;
-      color: #0369a1;
-      font-weight: 600;
-    }
-
-    .data-strip code {
-      background: rgba(255, 255, 255, .85);
-      border-color: #bae6fd;
-      color: #0369a1
-    }
-
-    /* ---------- 气象雷达 ---------- */
-    .radar-section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 1.35rem 1.5rem;
-      margin-bottom: 1.1rem
-    }
-
-    .radar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 1rem;
-      flex-wrap: wrap;
-      margin-bottom: 1.1rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px dashed var(--border)
-    }
-
-    .radar-title {
-      font-size: 1.05rem;
+    .step-tag {
+      font-size: 0.7rem;
       font-weight: 800;
-      display: flex;
-      align-items: center;
-      gap: .5rem
-    }
-
-    .radar-desc-text {
-      font-size: .83rem;
-      color: var(--text-2);
-      max-width: 760px;
-      margin-top: .25rem
-    }
-
-    .pulse-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--emerald);
-      box-shadow: 0 0 0 0 rgba(5, 150, 105, .5);
-      animation: pulse 2s infinite
-    }
-
-    @keyframes pulse {
-      0% {
-        box-shadow: 0 0 0 0 rgba(5, 150, 105, .5)
-      }
-
-      70% {
-        box-shadow: 0 0 0 9px rgba(5, 150, 105, 0)
-      }
-
-      100% {
-        box-shadow: 0 0 0 0 rgba(5, 150, 105, 0)
-      }
-    }
-
-    .radar-status {
-      font-size: .76rem;
-      font-weight: 700;
-      color: var(--emerald);
-      background: var(--emerald-soft);
-      border: 1px solid #a7f3d0;
-      padding: .25rem .6rem;
-      border-radius: 999px
-    }
-
-    .radar-status.fallback {
-      color: var(--amber);
-      background: var(--amber-soft);
-      border-color: #fde68a
-    }
-
-    .radar-cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(232px, 1fr));
-      gap: .9rem
-    }
-
-    .radar-card {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 13px;
-      padding: .95rem 1rem;
-      transition: .18s
-    }
-
-    .radar-card:hover {
-      border-color: #c7d2fe;
-      box-shadow: var(--shadow);
-      transform: translateY(-2px)
-    }
-
-    .radar-card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: .78rem;
-      font-weight: 700;
-      color: var(--text-2);
-      margin-bottom: .35rem
-    }
-
-    .radar-live {
-      font-size: .66rem;
-      font-weight: 800;
-      letter-spacing: .06em;
-      color: var(--emerald);
-      background: var(--emerald-soft);
-      border: 1px solid #a7f3d0;
-      padding: .1rem .42rem;
-      border-radius: 5px
-    }
-
-    .radar-live.off {
-      color: var(--amber);
-      background: var(--amber-soft);
-      border-color: #fde68a
-    }
-
-    .radar-city {
-      font-size: .78rem;
-      color: var(--text-3);
-      font-family: var(--mono)
-    }
-
-    .radar-weather-display {
-      display: flex;
-      align-items: center;
-      gap: .8rem;
-      margin: .6rem 0 .7rem
-    }
-
-    .radar-temp {
-      font-size: 1.85rem;
-      font-weight: 800;
-      letter-spacing: -.03em;
-      font-family: var(--mono);
-      color: var(--text)
-    }
-
-    .radar-w-desc {
-      font-size: .82rem;
-      font-weight: 600;
-      color: var(--text-2)
-    }
-
-    .radar-w-sub {
-      font-size: .7rem;
-      color: var(--text-3);
-      font-family: var(--mono)
-    }
-
-    .radar-trigger-pill {
-      font-size: .72rem;
-      font-weight: 600;
-      line-height: 1.5;
-      color: #4338ca;
-      background: var(--primary-soft);
-      border: 1px solid #c7d2fe;
-      border-radius: 9px;
-      padding: .45rem .6rem
-    }
-
-    /* ---------- 评分说明 ---------- */
-    .alert-box {
-      background: linear-gradient(135deg, #fffbeb, #fff7ed);
-      border: 1px solid #fde68a;
-      border-radius: var(--radius);
-      padding: 1.15rem 1.35rem;
-      margin-bottom: 1.1rem;
-      box-shadow: var(--shadow-sm)
-    }
-
-    .alert-title {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      font-weight: 800;
-      font-size: .98rem;
-      color: #92400e;
-      margin-bottom: .55rem
-    }
-
-    .alert-content {
-      font-size: .84rem;
-      color: #78350f;
-      line-height: 1.75
-    }
-
-    .formula-pill {
-      display: inline-block;
-      font-family: var(--mono);
-      font-size: .78rem;
-      background: #fff;
-      border: 1px solid #fcd34d;
-      color: #92400e;
-      padding: .3rem .7rem;
-      border-radius: 8px;
-      margin: .35rem 0
-    }
-
-    /* ---------- KPI ---------- */
-    .section-title {
-      font-size: 1.02rem;
-      font-weight: 800;
-      margin: 1.6rem 0 .8rem;
-      display: flex;
-      align-items: center;
-      gap: .5rem
-    }
-
-    .section-title::before {
-      content: '';
-      width: 4px;
-      height: 17px;
-      border-radius: 3px;
-      background: var(--primary)
-    }
-
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
-      gap: .9rem;
-      margin-bottom: 1.1rem
-    }
-
-    .kpi-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.1rem 1.2rem;
-      box-shadow: var(--shadow-sm);
-      transition: .18s;
-      position: relative;
-      overflow: hidden
-    }
-
-    .kpi-card:hover {
-      box-shadow: var(--shadow);
-      transform: translateY(-2px)
-    }
-
-    .kpi-card::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: var(--accent, var(--primary))
-    }
-
-    .kpi-card.c1 {
-      --accent: var(--primary)
-    }
-
-    .kpi-card.c2 {
-      --accent: var(--amber)
-    }
-
-    .kpi-card.c3 {
-      --accent: var(--emerald)
-    }
-
-    .kpi-card.c4 {
-      --accent: var(--violet)
-    }
-
-    .kpi-card.c5 {
-      --accent: var(--sky)
-    }
-
-    .kpi-label {
-      font-size: .76rem;
-      font-weight: 700;
-      color: var(--text-3);
+      padding: 3px 10px;
+      border-radius: 6px;
       text-transform: uppercase;
-      letter-spacing: .04em
+      letter-spacing: 0.05em;
     }
+    .p-step1 .step-tag { background: #4f46e5; color: #fff; }
+    .p-step2 .step-tag { background: #059669; color: #fff; }
+    .p-step3 .step-tag { background: #d97706; color: #fff; }
+    .p-step4 .step-tag { background: #0284c7; color: #fff; }
 
-    .kpi-value {
-      font-size: 1.95rem;
-      font-weight: 800;
-      letter-spacing: -.03em;
-      font-family: var(--mono);
-      color: var(--accent, var(--primary));
-      line-height: 1.25;
-      margin: .15rem 0
-    }
-
-    .kpi-sub {
-      font-size: .77rem;
-      color: var(--text-2);
-      line-height: 1.5
-    }
-
-    /* ---------- 图表 ---------- */
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
-      gap: .9rem;
-      margin-bottom: 1.1rem
-    }
-
-    .chart-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1rem 1.15rem 1.15rem;
-      box-shadow: var(--shadow-sm)
-    }
-
-    .chart-title {
-      font-size: .88rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: .7rem
-    }
-
-    .chart-container {
-      position: relative;
-      height: 250px
-    }
-
-    .chart-fallback {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      font-size: .8rem;
-      color: var(--text-3);
-      text-align: center;
-      padding: 1rem;
-      background: var(--surface-2);
-      border-radius: 10px
-    }
-
-    /* ---------- 表格 (SALES PRO HIGH-VISIBILITY SUITE) ---------- */
-    .table-section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
-      overflow: hidden;
-      margin-bottom: 1.5rem;
-    }
-
-    .table-toolbar {
-      padding: 1.1rem 1.4rem;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface-2);
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .filter-group {
-      display: flex;
-      gap: .65rem;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .search-box,
-    .select-filter {
-      border: 1.5px solid var(--border-strong);
-      background: var(--surface);
-      border-radius: 10px;
-      padding: .6rem .85rem;
-      font-size: .88rem;
-      font-family: var(--font);
-      color: var(--text);
-      transition: all .16s ease;
-      font-weight: 600;
-    }
-
-    .search-box {
-      flex: 1 1 320px;
-      min-width: 260px;
-    }
-
-    .search-box:focus,
-    .select-filter:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, .18);
-    }
-
-    .select-filter {
-      cursor: pointer;
-      max-width: 240px;
-    }
-
-    .toolbar-foot {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .result-count {
-      font-size: .92rem;
-      font-weight: 600;
-      color: var(--text-2);
-    }
-
-    .result-count b {
-      color: var(--primary);
-      font-family: var(--mono);
-      font-weight: 800;
-      font-size: 1.05rem;
-    }
-
-    .table-responsive {
-      overflow-x: auto;
-      max-height: 80vh;
-      overflow-y: auto;
-      scrollbar-width: thin;
-      scrollbar-color: #cbd5e1 #f8fafc;
-    }
-    .table-responsive::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    .table-responsive::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 4px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      font-size: .95rem; /* Large, comfortable base font for sales */
-    }
-
-    thead th {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: #f1f5f9;
-      color: #0f172a;
-      font-size: .84rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      text-align: left;
-      padding: 1rem 1.15rem;
-      border-bottom: 2px solid #cbd5e1;
-      white-space: nowrap;
-      box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05);
-    }
-
-    thead th.sortable {
-      cursor: pointer;
-      user-select: none;
-      transition: background .16s, color .16s;
-    }
-
-    thead th.sortable:hover {
-      color: var(--primary);
-      background: #e2e8f0;
-    }
-
-    thead th .sort-ind {
-      opacity: .45;
-      font-size: .75rem;
-      margin-left: .25rem;
-    }
-
-    thead th.sorted .sort-ind {
-      opacity: 1;
-      color: var(--primary);
-    }
-
-    tbody td {
-      padding: 1rem 1.15rem;
-      border-bottom: 1px solid #e2e8f0;
-      vertical-align: middle;
-      color: #0f172a;
-      font-size: .92rem;
-      line-height: 1.5;
-    }
-
-    tbody tr:nth-child(even) {
-      background: #f8fafc;
-    }
-
-    tbody tr:hover {
-      background: #eef2ff !important;
-      box-shadow: inset 4px 0 0 #4f46e5;
-    }
-
-    .cell-code {
-      font-family: var(--mono);
-      font-size: .86rem;
-      font-weight: 750;
-      color: #475569;
-      white-space: nowrap;
-    }
-
-    .fb-id {
-      display: inline-flex;
-      align-items: center;
-      gap: .35rem;
-      font-family: var(--mono);
-      font-size: .84rem;
-      font-weight: 700;
-      color: #1d4ed8;
-      background: #eff6ff;
-      border: 1.5px solid #bfdbfe;
-      border-radius: 8px;
-      padding: .28rem .65rem;
-      max-width: none;
-      white-space: nowrap;
-      text-decoration: none;
-      transition: all .16s ease;
-    }
-
-    .fb-id:hover {
-      background: #dbeafe;
-      border-color: #60a5fa;
-      transform: translateY(-1px);
-    }
-
-    .fb-id.none {
-      color: var(--text-3);
-      background: var(--slate-soft);
-      border-color: var(--border);
-      cursor: default;
-    }
-
-    .lead-name {
-      font-weight: 800;
-      font-size: 1.05rem;
-      color: #0f172a;
-      line-height: 1.4;
-      margin-bottom: 5px;
-    }
-
-    .lead-link {
-      color: #4f46e5;
-      text-decoration: none;
-      font-weight: 800;
-    }
-
-    .lead-link:hover {
-      color: #3730a3;
-      text-decoration: underline;
-    }
-
-    .lead-owner {
-      font-size: .88rem;
-      color: #334155;
-      font-weight: 600;
-      margin: .35rem 0 .45rem;
-      line-height: 1.45;
-    }
-
-    .lead-owner b {
-      color: #0284c7;
-      font-weight: 800;
-    }
-
-    .lead-contact {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .45rem;
-      margin-top: .45rem;
-    }
-
-    .contact-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: .35rem;
-      font-size: .86rem;
-      font-family: var(--mono);
-      font-weight: 700;
-      background: #ffffff;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 8px;
-      padding: .3rem .7rem;
-      color: #0f172a;
-      text-decoration: none;
-      transition: all .2s ease;
-      cursor: pointer;
-    }
-
-    .contact-chip:hover {
-      border-color: #4f46e5;
-      color: #4f46e5;
-      background: #eef2ff;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.15);
-    }
-
-    .loc-text {
-      font-size: .92rem;
-      font-weight: 700;
-      color: #1e293b;
-      min-width: 140px;
-      line-height: 1.45;
-      display: block;
-    }
-
-    .cat-text {
-      font-size: .88rem;
-      font-weight: 600;
-      color: #334155;
-      max-width: 250px;
-      line-height: 1.5;
-    }
-
-    .prod-text {
-      font-size: .88rem;
-      font-weight: 600;
-      color: #0f172a;
-      max-width: 320px;
-      line-height: 1.5;
-    }
-
-    .action-text {
-      font-size: .88rem;
-      font-weight: 600;
-      color: #0f172a;
-      max-width: 320px;
-      line-height: 1.5;
-    }
-
-    .score-pill {
-      display: inline-block;
-      font-family: var(--mono);
-      font-weight: 800;
-      font-size: .95rem;
-      padding: .3rem .75rem;
-      border-radius: 10px;
-      border: 1.5px solid;
-    }
-
-    .score-pill.s {
-      background: var(--amber-soft);
-      color: #b45309;
-      border-color: #fde68a
-    }
-
-    .score-pill.a {
-      background: var(--primary-soft);
-      color: #4338ca;
-      border-color: #c7d2fe
-    }
-
-    .score-pill.b {
-      background: var(--emerald-soft);
-      color: #047857;
-      border-color: #a7f3d0
-    }
-
-    .score-pill.c {
-      background: var(--slate-soft);
-      color: #475569;
-      border-color: var(--border-strong)
-    }
-
-    .score-pill.d {
-      background: var(--rose-soft);
-      color: #be123c;
-      border-color: #fecdd3
-    }
-
-    .badge-amz-target {
-      background: var(--amber-soft);
-      color: #b45309;
-      border: 1px solid #fde68a
-    }
-
-    .badge-amz-grass {
-      background: var(--emerald-soft);
-      color: #047857;
-      border: 1px solid #a7f3d0
-    }
-
-    .badge-amz-toys {
-      background: var(--violet-soft);
-      color: #6d28d9;
-      border: 1px solid #ddd6fe
-    }
-
-    .badge-amz-none {
-      background: var(--slate-soft);
-      color: var(--text-3);
-      border: 1px solid var(--border)
-    }
-
-    .weather-cell {
-      border-radius: 12px;
-      padding: .65rem .85rem;
-      cursor: pointer;
-      transition: .18s;
-      border: 1.5px solid;
-      min-width: 240px;
-      max-width: 340px;
-    }
-
-    .weather-cell:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
-    }
-
-    .w-cold {
-      background: #eff6ff;
-      border-color: #bfdbfe;
-      color: #1d4ed8
-    }
-
-    .w-rain {
-      background: var(--sky-soft);
-      border-color: #bae6fd;
-      color: #0369a1
-    }
-
-    .w-hot {
-      background: var(--amber-soft);
-      border-color: #fde68a;
-      color: #b45309
-    }
-
-    .w-mild {
-      background: var(--emerald-soft);
-      border-color: #a7f3d0;
-      color: #047857
-    }
-
-    .w-none {
-      background: var(--slate-soft);
-      border-color: var(--border);
-      color: var(--text-3)
-    }
-
-    .weather-temp-row {
-      display: flex;
-      align-items: center;
-      gap: .35rem;
-      font-size: .78rem;
-      font-weight: 800;
-      font-family: var(--mono)
-    }
-
-    .weather-trigger-text {
-      font-size: .7rem;
-      font-weight: 500;
-      opacity: .9;
-      margin-top: .15rem;
-      line-height: 1.45
-    }
-
-    .empty-row {
-      text-align: center;
-      padding: 3rem 1rem;
-      color: var(--text-3);
-      font-size: .9rem
-    }
-
-    .pagination {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      padding: .85rem 1.15rem;
-      border-top: 1px solid var(--border);
-      background: var(--surface-2);
-      flex-wrap: wrap
-    }
-
-    .page-info {
-      font-size: .82rem;
-      color: var(--text-2)
-    }
-
-    .page-info b {
-      color: var(--primary);
-      font-family: var(--mono)
-    }
-
-    .page-nav {
-      display: flex;
-      gap: .4rem;
-      align-items: center
-    }
-
-    /* ---------- Playbook ---------- */
-    .playbook-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: .9rem;
-      margin-bottom: 1.1rem
-    }
-
-    .playbook-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.15rem 1.25rem;
-      box-shadow: var(--shadow-sm)
-    }
-
-    .playbook-title {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      font-weight: 800;
-      font-size: .92rem;
-      margin-bottom: .65rem;
-      color: var(--text)
-    }
-
-    .playbook-quote {
-      font-size: .83rem;
-      font-style: italic;
-      color: var(--primary);
-      background: var(--primary-soft);
-      border-left: 3px solid var(--primary);
-      padding: .6rem .8rem;
-      border-radius: 0 9px 9px 0;
-      margin-bottom: .65rem;
-      line-height: 1.6
-    }
-
-    .playbook-card p,
-    .playbook-card ul {
-      font-size: .82rem;
-      color: var(--text-2);
-      line-height: 1.75
-    }
-
-    .playbook-card ul {
-      padding-left: 1.15rem
-    }
-
-    footer {
-      text-align: center;
-      font-size: .78rem;
-      color: var(--text-3);
-      padding: 1.5rem 1rem .5rem;
-      line-height: 1.9
-    }
-
-    /* ---------- 弹窗 ---------- */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, .45);
-      backdrop-filter: blur(3px);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-      padding: 1.25rem
-    }
-
-    .modal-box {
-      background: var(--surface);
-      border-radius: 18px;
-      box-shadow: var(--shadow-lg);
-      width: min(760px, 100%);
-      max-height: 88vh;
-      overflow-y: auto
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.1rem 1.35rem;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface-2);
-      border-radius: 18px 18px 0 0
-    }
-
-    .modal-title {
-      font-weight: 800;
-      font-size: 1.02rem;
-      color: var(--sky);
-      display: flex;
-      align-items: center;
-      gap: .45rem
-    }
-
-    .modal-close-btn {
-      border: none;
-      background: transparent;
-      font-size: 1.5rem;
-      color: var(--text-3);
-      cursor: pointer;
-      line-height: 1;
-      padding: 0 .3rem;
-      border-radius: 6px
-    }
-
-    .modal-close-btn:hover {
-      color: var(--text);
-      background: var(--surface-3)
-    }
-
-    .modal-body {
-      padding: 1.35rem
-    }
-
-    .loading-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 60vh;
-      gap: 1rem;
-      color: var(--text-2)
-    }
-
-    .spinner {
-      width: 34px;
-      height: 34px;
-      border: 3px solid var(--border-strong);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin .8s linear infinite
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg)
-      }
-    }
-
-    .load-error {
-      background: var(--rose-soft);
-      border: 1px solid #fecdd3;
-      color: #9f1239;
-      padding: 1.25rem;
-      border-radius: 12px;
-      max-width: 620px;
-      font-size: .85rem;
-      line-height: 1.8
-    }
-
-    /* ---------- 导入 & 提示 ---------- */
-    .btn-import {
-      background: var(--emerald);
-      border-color: var(--emerald);
-      color: #fff;
-      box-shadow: 0 6px 16px -6px rgba(5, 150, 105, .5)
-    }
-
-    .btn-import:hover {
-      background: #047857;
-      border-color: #047857;
-      color: #fff
-    }
-
-    .data-strip.dragover {
-      border-color: var(--emerald);
-      background: linear-gradient(90deg, #ecfdf5, #dcfce7);
-      box-shadow: 0 0 0 3px rgba(5, 150, 105, .15)
-    }
-
-    .source-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: .35rem;
-      background: #fff;
-      border: 1px solid #bae6fd;
-      color: #0369a1;
-      padding: .15rem .55rem;
-      border-radius: 999px;
-      font-size: .72rem;
-      font-weight: 700
-    }
-
-    .source-tag.imported {
-      background: #fff;
-      border-color: #a7f3d0;
-      color: #047857
-    }
-
-    #toast {
-      position: fixed;
-      right: 1.25rem;
-      bottom: 1.25rem;
-      z-index: 200;
-      display: flex;
-      flex-direction: column;
-      gap: .5rem;
-      align-items: flex-end
-    }
-
-    .toast-item {
-      background: var(--surface);
-      border: 1px solid var(--border-strong);
-      border-left: 4px solid var(--primary);
-      border-radius: 10px;
-      box-shadow: var(--shadow-lg);
-      padding: .7rem 1rem;
-      font-size: .83rem;
-      font-weight: 600;
-      color: var(--text);
-      max-width: 420px;
-      animation: slideIn .22s ease
-    }
-
-    .toast-item.ok {
-      border-left-color: var(--emerald)
-    }
-
-    .toast-item.error {
-      border-left-color: var(--rose)
-    }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateX(18px)
-      }
-
-      to {
-        opacity: 1;
-        transform: none
-      }
-    }
-
-
-    /* ---------- Avatar Cell, Badges & Modal Zoom (2026 Enhanced) ---------- */
-    .cell-avatar {
-      text-align: center;
-      vertical-align: middle;
-      padding: 0.45rem 0.25rem !important;
-      width: 58px;
-    }
-
-    .lead-avatar-wrapper {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 52px;
-      height: 52px;
-      cursor: pointer;
-      border-radius: 50%;
-      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .lead-avatar-wrapper:hover {
-      transform: scale(1.15);
-      z-index: 10;
-    }
-
-    .lead-avatar-img {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      object-fit: cover;
-      background: var(--surface-3);
-      box-shadow: var(--shadow-sm);
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .lead-avatar-img.avatar-dog {
-      border: 2.5px solid #10b981;
-    }
-
-    .lead-avatar-img.avatar-person {
-      border: 2.5px solid #0284c7;
-    }
-
-    .lead-avatar-wrapper:hover .lead-avatar-img.avatar-dog {
-      border-color: #059669;
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.45);
-    }
-
-    .lead-avatar-wrapper:hover .lead-avatar-img.avatar-person {
-      border-color: #0369a1;
-      box-shadow: 0 0 12px rgba(2, 132, 199, 0.45);
-    }
-
-    .avatar-tag-badge {
-      position: absolute;
-      bottom: -2px;
-      right: -2px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      line-height: 1;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-      pointer-events: none;
-    }
-
-    .avatar-tag-badge.badge-dog {
-      background: #ecfdf5;
-      border: 1.5px solid #10b981;
-    }
-
-    .avatar-tag-badge.badge-person {
-      background: #f0f9ff;
-      border: 1.5px solid #0284c7;
-    }
-
-    /* Avatar Modal Popup Styles */
-    .avatar-modal-box {
-      width: min(640px, 95vw) !important;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.25);
-      animation: avatarModalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes avatarModalIn {
-      from {
-        opacity: 0;
-        transform: scale(0.9) translateY(12px);
-      }
-
-      to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-      }
-    }
-
-    .avatar-popup-container {
-      display: flex;
-      gap: 1.5rem;
-      align-items: flex-start;
-    }
-
-    @media (max-width: 620px) {
-      .avatar-popup-container {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-      }
-    }
-
-    .avatar-popup-visual {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.85rem;
-      flex-shrink: 0;
-    }
-
-    .avatar-popup-img-wrap {
-      position: relative;
-      width: 190px;
-      height: 190px;
-      border-radius: 22px;
-      overflow: hidden;
-      box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.22);
-    }
-
-    .avatar-popup-img-wrap.wrap-dog {
-      border: 4px solid #10b981;
-    }
-
-    .avatar-popup-img-wrap.wrap-person {
-      border: 4px solid #0284c7;
-    }
-
-    .avatar-popup-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .avatar-popup-watermark {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(4px);
-      color: #fff;
+    .tech-pill {
       font-size: 0.68rem;
-      font-weight: 800;
-      text-align: center;
-      padding: 4px 6px;
-      letter-spacing: 0.6px;
-    }
-
-    .modal-avatar-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 0.35rem 0.8rem;
-      border-radius: 999px;
-      font-size: 0.76rem;
       font-weight: 700;
-      border: 1px solid;
-    }
-
-    .modal-avatar-badge.dog {
-      background: #ecfdf5;
-      color: #047857;
-      border-color: #a7f3d0;
-    }
-
-    .modal-avatar-badge.person {
-      background: #f0f9ff;
-      color: #0369a1;
-      border-color: #bae6fd;
-    }
-
-    .avatar-popup-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 0.7rem;
-      min-width: 0;
-    }
-
-    .avatar-popup-name {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1.35;
-    }
-
-    .avatar-popup-id-row {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: var(--surface-2);
-      padding: 0.35rem 0.75rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      width: fit-content;
-    }
-
-    .avatar-popup-fbid {
       font-family: var(--mono);
-      font-size: 0.84rem;
-      color: var(--sky);
-      font-weight: 700;
-    }
-
-    .btn-copy-fbid {
-      padding: 2px 7px;
-      font-size: 0.75rem;
+      background: var(--surface-2);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
       border-radius: 4px;
     }
 
-    .avatar-popup-detail-list {
+    .portal-title {
+      font-size: 1.25rem;
+      font-weight: 850;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    .portal-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 1.35rem;
+    }
+
+    .portal-features {
+      list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 0.75rem 0.95rem;
-      font-size: 0.82rem;
-    }
-
-    .avatar-detail-item {
-      display: flex;
-      justify-content: space-between;
-      gap: 0.5rem;
-      line-height: 1.55;
-    }
-
-    .avatar-detail-label {
-      color: var(--text-2);
-      font-weight: 600;
-      flex-shrink: 0;
-    }
-
-    .avatar-detail-val {
+      gap: 6px;
+      margin-bottom: 1.5rem;
+      font-size: 0.81rem;
       color: var(--text);
-      font-weight: 500;
-      text-align: right;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
-
-    .avatar-popup-actions {
+    .portal-features li {
       display: flex;
-      gap: 0.6rem;
-      margin-top: 0.3rem;
-      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .portal-features li::before {
+      content: "✓";
+      color: var(--emerald);
+      font-weight: 800;
     }
 
-    @media(max-width:900px) {
-      body {
-        padding: 1rem .75rem 2.5rem
-      }
+    .portal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      padding-top: 1.1rem;
+      margin-top: auto;
+    }
+    .portal-url-code {
+      font-size: 0.75rem;
+      font-family: var(--mono);
+      color: var(--text-muted);
+    }
 
-      header {
-        padding: 1.15rem
-      }
+    .btn-enter {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 9px;
+      font-size: 0.84rem;
+      font-weight: 750;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+    .p-step1 .btn-enter { background: var(--primary); color: #fff; }
+    .p-step2 .btn-enter { background: var(--emerald); color: #fff; }
+    .p-step3 .btn-enter { background: var(--amber); color: #fff; }
+    .p-step4 .btn-enter { background: var(--sky); color: #fff; }
 
-      h1 {
-        font-size: 1.35rem
-      }
+    .portal-card:hover .btn-enter {
+      transform: translateX(4px);
+    }
 
-      .header-controls {
-        align-items: stretch;
-        width: 100%
-      }
+    /* Key FB_ID Architecture Callout */
+    .fbid-banner {
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.06), rgba(5, 150, 105, 0.06));
+      border: 1.5px dashed var(--border-strong);
+      border-radius: 16px;
+      padding: 1.6rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 3.5rem;
+    }
+    .fbid-icon-box {
+      width: 60px;
+      height: 60px;
+      border-radius: 14px;
+      background: #4f46e5;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+    .fbid-text h3 {
+      font-size: 1.05rem;
+      font-weight: 850;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .fbid-text p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
 
-      .kpi-value {
-        font-size: 1.6rem
-      }
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      padding: 1.8rem 28px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: auto;
     }
   </style>
 </head>
 
 <body>
+  <!-- Top Navigation -->
+  <header class="header-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="brand-wrap">
+        <div class="brand-icon">🐾</div>
+        <div class="brand-text">
+          <h1 id="txtNavTitle">Pet Lead AI — Enterprise System</h1>
+          <p id="txtNavDesc">Hệ Thống Độc Lập Khép Kín Tiếp Thị & Bóc Tách Thú Cưng Hoa Kỳ</p>
+        </div>
+      </a>
 
-  <div id="app">
-    <div class="loading-wrap">
-      <div class="spinner"></div>
-      <div id="loadingText">正在加载数据文件 data/*.json ...</div>
+      <div class="nav-actions">
+        <div class="system-status-pill">
+          <span class="status-dot"></span>
+          <span id="txtStatusOnline">Hệ Thống Trực Tuyến / 在线</span>
+        </div>
+
+        <div class="lang-switcher">
+          <button type="button" class="lang-btn active" id="btnLangVi" onclick="setLang('vi')">🇻🇳 Tiếng Việt</button>
+          <button type="button" class="lang-btn" id="btnLangZh" onclick="setLang('zh')">🇨🇳 简体中文</button>
+        </div>
+
+        <div class="theme-switcher">
+          <button type="button" class="theme-btn active" id="btnThemeLight" onclick="setTheme('light')">☀️ Sáng</button>
+          <button type="button" class="theme-btn" id="btnThemeDark" onclick="setTheme('dark')">🌙 Tối</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Hero Banner -->
+    <section class="hero">
+      <div class="hero-badge">
+        <span>🚀</span> <span id="txtHeroBadge">KIẾN TRÚC MULTI-AGENT AI KHÉP KÍN v2.1 / META CRM ECOSYSTEM</span>
+      </div>
+      <h2 class="hero-title" id="txtHeroTitle">
+        CỔNG ĐIỀU HÀNH TRUNG TÂM<br>HỆ THỐNG TIẾP THỊ & BÓC TÁCH THÚ CƯNG 2026
+      </h2>
+      <p class="hero-desc" id="txtHeroDesc">
+        Hệ thống tự động hóa khép kín 4 giai đoạn chuẩn Meta RAG: Quét Follower Facebook ➔ Lọc AI Thị Giác YOLOv8 ONNX ➔ Cào Phễu Profile & Làm Giàu 30 Trường CRM ➔ Giám Sát Chấm Công Đa Ngày & Kịch Bản Telesale Copilot ➔ Radar Khí Tượng & Đòn Bẩy Thị Trường Hoa Kỳ.
+      </p>
+    </section>
+
+    <!-- Key Metrics Strip -->
+    <div class="metrics-strip">
+      <div class="metric-card indigo">
+        <div class="metric-val">20,000+</div>
+        <div class="metric-lbl" id="mLblFollowers">Followers Đã Quét</div>
+      </div>
+      <div class="metric-card emerald">
+        <div class="metric-val">3,324</div>
+        <div class="metric-lbl" id="mLblBreeders">Trại Cún Mục Tiêu B2B</div>
+      </div>
+      <div class="metric-card amber">
+        <div class="metric-val">100%</div>
+        <div class="metric-lbl" id="mLblNumericFbid">Numeric FB_ID Số Sạch</div>
+      </div>
+      <div class="metric-card sky">
+        <div class="metric-val">682+</div>
+        <div class="metric-lbl" id="mLblTimesheet">Trại Giám Sát Chấm Công</div>
+      </div>
+      <div class="metric-card purple">
+        <div class="metric-val">23</div>
+        <div class="metric-lbl" id="mLblAmazon">Gian Hàng Amazon Diamond</div>
+      </div>
+    </div>
+
+    <!-- All-in-One Master Suite Card -->
+    <div style="background: linear-gradient(135deg, #1e1b4b, #064e3b); border: 2px solid #6366f1; border-radius: 20px; padding: 24px 30px; margin-bottom: 2.5rem; color: #fff; box-shadow: 0 10px 30px rgba(79, 70, 229, 0.25); display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 280px;">
+        <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(99, 102, 241, 0.3); color: #a5b4fc; padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 800; border: 1px solid rgba(165, 180, 252, 0.4); margin-bottom: 8px;">
+          ⚡ MASTER ALL-IN-ONE SUITE (CHẠY ĐỘC LẬP 0% PYTHON)
+        </div>
+        <h2 style="font-size: 1.45rem; font-weight: 850; margin-bottom: 6px; letter-spacing: -0.02em;">Bảng Điều Khiển Hợp Nhất 5-in-1</h2>
+        <p style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.5; margin: 0;">
+          Tích hợp toàn diện: <strong>Bước 1 Lọc AI WebAssembly</strong> + <strong>Bước 2 Phễu Master CRM</strong> + <strong>3 Công cụ Siêu tốc</strong> (Chỉ lấy UID 0s, Bóc tách Địa chỉ & SĐT, Tìm Chủ Trại Heuristics).
+        </p>
+      </div>
+      <a href="dashboard.html" style="background: linear-gradient(135deg, #4f46e5, #059669); color: #fff; text-decoration: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; box-shadow: 0 4px 16px rgba(5, 150, 105, 0.4); display: inline-flex; align-items: center; gap: 8px; transition: transform 0.2s; white-space: nowrap;">
+        <span>🚀 Mở Dashboard Hợp Nhất 5-in-1</span> <span>➔</span>
+      </a>
+    </div>
+
+    <!-- Section Title -->
+    <div class="section-head">
+      <div>
+        <div class="section-title">
+          <span>🚪</span> <span id="txtPortalsTitle">4 Cổng Đi Vô Hệ Thống Theo Đúng Quy Trình</span>
+        </div>
+        <div class="section-subtitle" id="txtPortalsSub">Nhấp vào từng cổng để truy cập trực tiếp vào công cụ tương ứng theo luồng vận hành</div>
+      </div>
+    </div>
+
+    <!-- 4 Portals Grid -->
+    <div class="portals-grid">
+      <!-- CỔNG 1: BƯỚC 1 -->
+      <a href="step1_vision_harvester.html" class="portal-card p-step1" title="Truy cập Cổng Bước 1">
+        <div>
+          <div class="portal-top">
+            <div class="portal-icon">👁️</div>
+            <div class="portal-badges">
+              <span class="step-tag" id="tagStep1">BƯỚC 1 / STEP 1</span>
+              <span class="tech-pill">YOLOv8-cls ONNX • 224x224 RGB</span>
+            </div>
+          </div>
+          <h3 class="portal-title" id="tStep1Title">1. Quét Follower & Thẩm Định AI Thị Giác</h3>
+          <p class="portal-desc" id="tStep1Desc">
+            Cào danh sách Người theo dõi Facebook, triệt tiêu 100% rác hệ thống (quảng cáo, sidebar, tin story), phân tích NLP 250+ giống chó và chạy mô hình AI dog-model.onnx lọc ra 100% chủ trại cún thật.
+          </p>
+          <ul class="portal-features">
+            <li id="tStep1F1">Bóc tách 100% Numeric FB_ID số sạch không lẫn rác</li>
+            <li id="tStep1F2">Nhận diện cún cưng với độ chính xác cao (Threshold $\ge$ 0.70)</li>
+            <li id="tStep1F3">Xuất file JSON chuẩn bị cho Bước 2 cào phễu</li>
+          </ul>
+        </div>
+        <div class="portal-footer">
+          <span class="portal-url-code">step1_vision_harvester.html (1.html)</span>
+          <button type="button" class="btn-enter" id="btnEnter1">
+            <span id="txtBtnEnter1">Truy Cập Bước 1</span> <span>➔</span>
+          </button>
+        </div>
+      </a>
+
+      <!-- CỔNG 2: BƯỚC 2 -->
+      <a href="step2_profile_enricher.html" class="portal-card p-step2" title="Truy cập Cổng Bước 2">
+        <div>
+          <div class="portal-top">
+            <div class="portal-icon">🔍</div>
+            <div class="portal-badges">
+              <span class="step-tag" id="tagStep2">BƯỚC 2 / STEP 2</span>
+              <span class="tech-pill">Headless Multi-Subpage Crawler</span>
+            </div>
+          </div>
+          <h3 class="portal-title" id="tStep2Title">2. Cào Phễu Profile & Làm Giàu 30 Trường CRM</h3>
+          <p class="portal-desc" id="tStep2Desc">
+            Tự động cào Profile Facebook, truy vết trang chủ website, bóc tách tên chủ trại (Meet the Breeder), giải mã Cloudflare email cá nhân, số điện thoại US (+1), và phân loại kênh bán hàng Amazon Storefront.
+          </p>
+          <ul class="portal-features">
+            <li id="tStep2F1">Làm giàu đầy đủ 30 trường dữ liệu chuẩn Meta RAG</li>
+            <li id="tStep2F2">Phân loại gian hàng Amazon (Cỏ/Potty, Đồ chơi, Khác)</li>
+            <li id="tStep2F3">Xuất Excel Master 37 Cột CRM & Tải Avatar HD chuẩn</li>
+          </ul>
+        </div>
+        <div class="portal-footer">
+          <span class="portal-url-code">step2_profile_enricher.html (2.html)</span>
+          <button type="button" class="btn-enter" id="btnEnter2">
+            <span id="txtBtnEnter2">Truy Cập Bước 2</span> <span>➔</span>
+          </button>
+        </div>
+      </a>
+
+      <!-- CỔNG 3: BƯỚC 3 -->
+      <a href="step3_timesheet_activity.html" class="portal-card p-step3" title="Truy cập Cổng Bước 3">
+        <div>
+          <div class="portal-top">
+            <div class="portal-icon">📅</div>
+            <div class="portal-badges">
+              <span class="step-tag" id="tagStep3">BƯỚC 3 / STEP 3</span>
+              <span class="tech-pill">Timesheet Matrix & Radar 24h</span>
+            </div>
+          </div>
+          <h3 class="portal-title" id="tStep3Title">3. Bảng Chấm Công Hoạt Động & Khung Giờ Vàng</h3>
+          <p class="portal-desc" id="tStep3Desc">
+            Giám sát tần suất đăng bài và chấm công 682+ trại cún nội địa Hoa Kỳ qua từng ngày. Biểu đồ radar 24h xác định khung giờ vàng đăng bài, kịch bản Telesale Copilot chốt đơn Take-Home Kit & Khay Pet Potty.
+          </p>
+          <ul class="portal-features">
+            <li id="tStep3F1">Điểm danh cộng dồn đa ngày (Dấu tick xanh theo từng ngày)</li>
+            <li id="tStep3F2">Lọc và xếp hạng người dùng năng nổ (💎 Siêu Năng Nổ $\le 24$h)</li>
+            <li id="tStep3F3">Chỉnh sửa (✏️) và Xóa (🗑️) thông tin trực tiếp trên bảng</li>
+          </ul>
+        </div>
+        <div class="portal-footer">
+          <span class="portal-url-code">step3_timesheet_activity.html (timesheet.html)</span>
+          <button type="button" class="btn-enter" id="btnEnter3">
+            <span id="txtBtnEnter3">Truy Cập Bước 3</span> <span>➔</span>
+          </button>
+        </div>
+      </a>
+
+      <!-- CỔNG 4: BƯỚC 4 -->
+      <a href="step4_market_intelligence.html" class="portal-card p-step4" title="Truy cập Cổng Bước 4">
+        <div>
+          <div class="portal-top">
+            <div class="portal-icon">🌦️</div>
+            <div class="portal-badges">
+              <span class="step-tag" id="tagStep4">BƯỚC 4 / STEP 4</span>
+              <span class="tech-pill">Macro Market & Weather Radar</span>
+            </div>
+          </div>
+          <h3 class="portal-title" id="tStep4Title">4. Báo Cáo Toàn Thị Trường & Khí Tượng Mỹ</h3>
+          <p class="portal-desc" id="tStep4Desc">
+            Toàn cảnh 3,324+ trại cún nội địa Hoa Kỳ. Tích hợp radar khí tượng OpenWeatherMap 4 vùng khí hậu Mỹ (Tây Bắc mưa nhiều, Tuyết rơi, Bờ Đông, Bờ Tây) để kích hoạt chiến dịch đòn bẩy tiếp thị theo ngữ cảnh.
+          </p>
+          <ul class="portal-features">
+            <li id="tStep4F1">Mô hình chấm điểm 5 trục độc lập chống bão hòa (0-100đ)</li>
+            <li id="tStep4F2">Phân tầng Hạng Khách Hàng (Tier S Kim Cương, Tier A Vàng)</li>
+            <li id="tStep4F3">Đòn bẩy bán Khay vệ sinh & Cỏ thoát nước theo thời tiết thực tế</li>
+          </ul>
+        </div>
+        <div class="portal-footer">
+          <span class="portal-url-code">step4_market_intelligence.html (market_report.html)</span>
+          <button type="button" class="btn-enter" id="btnEnter4">
+            <span id="txtBtnEnter4">Truy Cập Bước 4</span> <span>➔</span>
+          </button>
+        </div>
+      </a>
+    </div>
+
+    <!-- FB_ID Core Architecture Callout -->
+    <div class="fbid-banner">
+      <div class="fbid-icon-box">🔑</div>
+      <div class="fbid-text">
+        <h3 id="txtFbidBannerTitle">Chìa Khóa Định Danh Duy Nhất: Trọng Yếu Của Numeric FB_ID (Facebook ID Số)</h3>
+        <p id="txtFbidBannerDesc">
+          Mã số <b>FB_ID (Numeric Facebook ID)</b> là sợi chỉ đỏ duy nhất kết nối xuyên suốt cả 4 bước: Từ việc cào sạch ở Bước 1, làm giàu 30 trường ở Bước 2, chấm công điểm danh ở Bước 3, đến quản trị dữ liệu ở Bước 4. Việc bảo toàn mã FB_ID số sạch giúp hệ thống không bao giờ bị trùng lặp hồ sơ, nhận diện đúng chủ trại cún dù họ có đổi tên hay đổi đường dẫn trang cá nhân.
+        </p>
+      </div>
     </div>
   </div>
+
+  <!-- Footer -->
+  <footer>
+    <div>
+      <b>PET LEAD AI ENTERPRISE SYSTEM v2.1</b> — Kiến Trúc Multi-Agent AI Tiếp Thị Thú Cưng Khép Kín.
+    </div>
+    <div style="margin-top:6px; color:#94a3b8; font-size:0.75rem;">
+      Hỗ trợ triển khai: Cổng 3007 (Nginx / Node / Python) • Đồng bộ 100% dữ liệu Meta CRM 2026.
+    </div>
+  </footer>
 
   <script>
-    /* =========================================================================
-     *  数据加载：优先 fetch 真实 JSON（便于外部调用与热更新）
-     *  file:// 直开时 fetch 被浏览器拦截，自动回退到 data/loader.js（由 tools/build.mjs 生成）
-     * ========================================================================= */
-    const DATA_FILES = ['meta', 'analytics', 'i18n', 'leads'];
+    let currentLang = 'vi';
 
-    async function loadData() {
-      try {
-        const responses = await Promise.all(DATA_FILES.map(f => fetch(`data/${f}.json`, { cache: 'no-cache' })));
-        if (responses.some(r => !r.ok)) throw new Error('json fetch failed');
-        const [meta, analytics, i18n, leads] = await Promise.all(responses.map(r => r.json()));
-        return { meta, analytics, i18n, leads, via: 'fetch' };
-      } catch (err) {
-        await new Promise((resolve, reject) => {
-          const s = document.createElement('script');
-          s.src = 'data/loader.js';
-          s.onload = resolve;
-          s.onerror = () => reject(new Error('loader.js not found'));
-          document.head.appendChild(s);
-        });
-        return { ...window.REPORT_DATA, via: 'loader' };
+    const I18N = {
+      vi: {
+        navTitle: "Pet Lead AI — Enterprise System",
+        navDesc: "Hệ Thống Độc Lập Khép Kín Tiếp Thị & Bóc Tách Thú Cưng Hoa Kỳ",
+        statusOnline: "Hệ Thống Trực Tuyến / 在线",
+        heroBadge: "KIẾN TRÚC MULTI-AGENT AI KHÉP KÍN v2.1 / META CRM ECOSYSTEM",
+        heroTitle: "CỔNG ĐIỀU HÀNH TRUNG TÂM<br>HỆ THỐNG TIẾP THỊ & BÓC TÁCH THÚ CƯNG 2026",
+        heroDesc: "Hệ thống tự động hóa khép kín 4 giai đoạn chuẩn Meta RAG: Quét Follower Facebook ➔ Lọc AI Thị Giác YOLOv8 ONNX ➔ Cào Phễu Profile & Làm Giàu 30 Trường CRM ➔ Giám Sát Chấm Công Đa Ngày & Kịch Bản Telesale Copilot ➔ Radar Khí Tượng & Đòn Bẩy Thị Trường Hoa Kỳ.",
+        lblFollowers: "Followers Đã Quét",
+        lblBreeders: "Trại Cún Mục Tiêu B2B",
+        lblNumericFbid: "Numeric FB_ID Số Sạch",
+        lblTimesheet: "Trại Giám Sát Chấm Công",
+        lblAmazon: "Gian Hàng Amazon Diamond",
+        portalsTitle: "4 Cổng Đi Vô Hệ Thống Theo Đúng Quy Trình",
+        portalsSub: "Nhấp vào từng cổng để truy cập trực tiếp vào công cụ tương ứng theo luồng vận hành",
+        tagStep1: "BƯỚC 1 / STEP 1",
+        tStep1Title: "1. Quét Follower & Thẩm Định AI Thị Giác",
+        tStep1Desc: "Cào danh sách Người theo dõi Facebook, triệt tiêu 100% rác hệ thống (quảng cáo, sidebar, tin story), phân tích NLP 250+ giống chó và chạy mô hình AI dog-model.onnx lọc ra 100% chủ trại cún thật.",
+        tStep1F1: "Bóc tách 100% Numeric FB_ID số sạch không lẫn rác",
+        tStep1F2: "Nhận diện cún cưng với độ chính xác cao (Threshold >= 0.70)",
+        tStep1F3: "Xuất file JSON chuẩn bị cho Bước 2 cào phễu",
+        btnEnter1: "Truy Cập Bước 1",
+
+        tagStep2: "BƯỚC 2 / STEP 2",
+        tStep2Title: "2. Cào Phễu Profile & Làm Giàu 30 Trường CRM",
+        tStep2Desc: "Tự động cào Profile Facebook, truy vết trang chủ website, bóc tách tên chủ trại (Meet the Breeder), giải mã Cloudflare email cá nhân, số điện thoại US (+1), và phân loại kênh bán hàng Amazon Storefront.",
+        tStep2F1: "Làm giàu đầy đủ 30 trường dữ liệu chuẩn Meta RAG",
+        tStep2F2: "Phân loại gian hàng Amazon (Cỏ/Potty, Đồ chơi, Khác)",
+        tStep2F3: "Xuất Excel Master 37 Cột CRM & Tải Avatar HD chuẩn",
+        btnEnter2: "Truy Cập Bước 2",
+
+        tagStep3: "BƯỚC 3 / STEP 3",
+        tStep3Title: "3. Bảng Chấm Công Hoạt Động & Khung Giờ Vàng",
+        tStep3Desc: "Giám sát tần suất đăng bài và chấm công 682+ trại cún nội địa Hoa Kỳ qua từng ngày. Biểu đồ radar 24h xác định khung giờ vàng đăng bài, kịch bản Telesale Copilot chốt đơn Take-Home Kit & Khay Pet Potty.",
+        tStep3F1: "Điểm danh cộng dồn đa ngày (Dấu tick xanh theo từng ngày)",
+        tStep3F2: "Lọc và xếp hạng người dùng năng nổ (💎 Siêu Năng Nổ <= 24h)",
+        tStep3F3: "Chỉnh sửa (✏️) và Xóa (🗑️) thông tin trực tiếp trên bảng",
+        btnEnter3: "Truy Cập Bước 3",
+
+        tagStep4: "BƯỚC 4 / STEP 4",
+        tStep4Title: "4. Báo Cáo Toàn Thị Trường & Khí Tượng Mỹ",
+        tStep4Desc: "Toàn cảnh 3,324+ trại cún nội địa Hoa Kỳ. Tích hợp radar khí tượng OpenWeatherMap 4 vùng khí hậu Mỹ (Tây Bắc mưa nhiều, Tuyết rơi, Bờ Đông, Bờ Tây) để kích hoạt chiến dịch đòn bẩy tiếp thị theo ngữ cảnh.",
+        tStep4F1: "Mô hình chấm điểm 5 trục độc lập chống bão hòa (0-100đ)",
+        tStep4F2: "Phân tầng Hạng Khách Hàng (Tier S Kim Cương, Tier A Vàng)",
+        tStep4F3: "Đòn bẩy bán Khay vệ sinh & Cỏ thoát nước theo thời tiết thực tế",
+        btnEnter4: "Truy Cập Bước 4",
+
+        fbidBannerTitle: "Chìa Khóa Định Danh Duy Nhất: Trọng Yếu Của Numeric FB_ID (Facebook ID Số)",
+        fbidBannerDesc: "Mã số FB_ID (Numeric Facebook ID) là sợi chỉ đỏ duy nhất kết nối xuyên suốt cả 4 bước: Từ việc cào sạch ở Bước 1, làm giàu 30 trường ở Bước 2, chấm công điểm danh ở Bước 3, đến quản trị dữ liệu ở Bước 4. Việc bảo toàn mã FB_ID số sạch giúp hệ thống không bao giờ bị trùng lặp hồ sơ, nhận diện đúng chủ trại cún dù họ có đổi tên hay đổi đường dẫn trang cá nhân."
+      },
+      zh: {
+        navTitle: "Pet Lead AI — 企业级全链路智能获客系统",
+        navDesc: "闭环多智能体赋能：美国本土宠物活体狗舍拓客与亚马逊私域建联系统",
+        statusOnline: "多智能体系统在线 / 正常运行",
+        heroBadge: "企业级 MULTI-AGENT AI 闭环架构 v2.1 / META CRM ECOSYSTEM",
+        heroTitle: "系统核心总控制台<br>2026 美国宠物精准拓客与电销打卡大盘",
+        heroDesc: "4大阶段端到端深度赋能：Facebook关注粉丝清洗 ➔ YOLOv8 ONNX 视觉AI初筛 ➔ 主页深度穿透挖掘30项CRM字段 ➔ 连续发帖考勤打卡与黄金电销时段雷达 ➔ 美国宏观市场大盘与气象雷达营销策略。",
+        lblFollowers: "已爬取粉丝底池",
+        lblBreeders: "B2B核心目标狗舍",
+        lblNumericFbid: "100%纯数字FB_ID",
+        lblTimesheet: "连续发帖考勤客户",
+        lblAmazon: "钻石级亚马逊店铺",
+        portalsTitle: "4大系统功能入口 (按标准拓客闭环流程)",
+        portalsSub: "点击下方对应卡片，即可一键直达对应工具模块开展作业",
+        tagStep1: "第一步 / STEP 1",
+        tStep1Title: "1. 粉丝采集与视觉AI识别初筛",
+        tStep1Desc: "自动批量清洗FB主页关注粉丝列表，100%排除系统广告与侧栏杂质，结合250+犬种NLP词矩阵，运行 dog-model.onnx 深度视觉模型识别真实犬舍与养宠客户。",
+        tStep1F1: "提取100%纯数字FB_ID，杜绝系统噪音",
+        tStep1F2: "高精度狗狗识别过滤 (阈值 >= 0.70)",
+        tStep1F3: "生成标准JSON文件无缝流转至第2步",
+        btnEnter1: "立即进入第一步",
+
+        tagStep2: "第二步 / STEP 2",
+        tStep2Title: "2. 主页漏斗深度挖掘与30项CRM补全",
+        tStep2Desc: "自动化后台批量扫描FB主页与官网，深度穿透查找犬舍主人姓名 (Meet the Breeder)、解密Cloudflare邮件、获取美国本土电话 (+1) 及亚马逊店铺品类分类。",
+        tStep2F1: "完善30项Meta RAG标准企业CRM画像",
+        tStep2F2: "精准研判亚马逊店铺 (草坪便盆/玩具/综合)",
+        tStep2F3: "一键导出37列Excel与高清头像底库",
+        btnEnter2: "立即进入第二步",
+
+        tagStep3: "第三步 / STEP 3",
+        tStep3Title: "3. 客户发帖考勤打卡与黄金时段雷达",
+        tStep3Desc: "每日实时追踪682+核心狗舍发帖频率与考勤打卡。24小时发帖雷达洞悉客户活跃窗口期，内置AI电销助手直接提供幼犬带回家礼包与三层便盆电话直击话术。",
+        tStep3F1: "多日考勤连续打卡矩阵 (每日发帖绿标打卡)",
+        tStep3F2: "活跃度动态分级过滤 (💎超级活跃 <= 24小时)",
+        tStep3F3: "表格内支持直接编辑 (✏️) 与删除 (🗑️) 资料",
+        btnEnter3: "立即进入第三步",
+
+        tagStep4: "第四步 / STEP 4",
+        tStep4Title: "4. 全美宏观市场大盘与气象雷达报告",
+        tStep4Desc: "全景呈现 3,324+ 美国本土活体狗舍分布。集成 OpenWeatherMap 实况天气雷达，针对雨季、暴雪、寒潮与高温区域实施天气杠杆场景化精准促销。",
+        tStep4F1: "5轴防饱和动态评分模型 (0-100分)",
+        tStep4F2: "客户等级金字塔 (Tier S 钻石客户、Tier A 黄金客户)",
+        tStep4F3: "根据气象实况强力推介快速沥水便盆与定制草坪",
+        btnEnter4: "立即进入第四步",
+
+        fbidBannerTitle: "全链路唯一身份基石：纯数字 FB_ID 的绝对核心价值",
+        fbidBannerDesc: "纯数字 Facebook ID (Numeric FB_ID) 是贯穿整个系统4大步骤的唯一主键：从第1步采集去重、第2步官网穿透、第3步每日考勤打卡，到第4步宏观资产沉淀。确保每个客户具备唯一的数字ID，无论客户更改主页名称或个性化链接，系统皆能精准锁定并持续追踪！"
       }
-    }
-
-    /* ============================ 应用状态 ============================ */
-    const S = {
-      data: null, meta: null, an: null, i18n: null, leads: [],
-      filtered: [], lang: 'zh', page: 1, pageSize: 25,
-      sort: { key: 'score', dir: 'desc' },
-      charts: {}, weatherCache: {}
     };
 
-    const $ = (id) => document.getElementById(id);
-    const t = (key) => (S.i18n[S.lang] && S.i18n[S.lang][key]) || key;
-    const isVi = () => S.lang === 'vi';
+    function setLang(lang) {
+      currentLang = lang;
+      document.getElementById('btnLangVi').classList.toggle('active', lang === 'vi');
+      document.getElementById('btnLangZh').classList.toggle('active', lang === 'zh');
+      
+      const d = I18N[lang];
+      document.getElementById('txtNavTitle').innerText = d.navTitle;
+      document.getElementById('txtNavDesc').innerText = d.navDesc;
+      document.getElementById('txtStatusOnline').innerText = d.statusOnline;
+      document.getElementById('txtHeroBadge').innerText = d.heroBadge;
+      document.getElementById('txtHeroTitle').innerHTML = d.heroTitle;
+      document.getElementById('txtHeroDesc').innerText = d.heroDesc;
 
-    function fmt(tpl, vars) {
-      return String(tpl == null ? '' : tpl).replace(/\{(\w+)\}/g, (_, k) => (vars[k] != null ? vars[k] : `{${k}}`));
-    }
-    const num = (n) => (typeof n === 'number' ? n.toLocaleString('en-US') : n);
-    const pad2 = (n) => String(n).padStart(2, '0');
-    /** 2026-10-16 15:32:07 */
-    const fmtDateTime = (d, dateOnly) => {
-      const x = d instanceof Date ? d : new Date(d);
-      if (isNaN(x.getTime())) return '—';
-      const day = `${x.getFullYear()}-${pad2(x.getMonth() + 1)}-${pad2(x.getDate())}`;
-      return dateOnly ? day : `${day} ${pad2(x.getHours())}:${pad2(x.getMinutes())}:${pad2(x.getSeconds())}`;
-    };
-    /** 20261016_1532 —— 用于导出文件名 */
-    const stampOf = (d) => {
-      const x = d instanceof Date ? d : new Date(d);
-      return `${x.getFullYear()}${pad2(x.getMonth() + 1)}${pad2(x.getDate())}_${pad2(x.getHours())}${pad2(x.getMinutes())}`;
-    };
-    const safeName = (s) => String(s || '').replace(/\.[^.]+$/, '').replace(/[^\w\u4e00-\u9fa5-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40);
-    const ESC_SEQ = { '&': 'amp', '<': 'lt', '>': 'gt', '"': 'quot', "'": '#39' };
-    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => '&' + ESC_SEQ[c] + ';');
+      document.getElementById('mLblFollowers').innerText = d.lblFollowers;
+      document.getElementById('mLblBreeders').innerText = d.lblBreeders;
+      document.getElementById('mLblNumericFbid').innerText = d.lblNumericFbid;
+      document.getElementById('mLblTimesheet').innerText = d.lblTimesheet;
+      document.getElementById('mLblAmazon').innerText = d.lblAmazon;
 
-    /* ============================ 模板渲染 ============================ */
-    function renderShell() {
-      const an = S.an, meta = S.meta;
-      const breeder = an.categories.find(c => c.key === 'breeder') || { value: 0, percent: 0 };
-      const reach = an.dataQuality;
+      document.getElementById('txtPortalsTitle').innerText = d.portalsTitle;
+      document.getElementById('txtPortalsSub').innerText = d.portalsSub;
 
-      document.documentElement.lang = S.lang === 'vi' ? 'vi' : 'zh';
-      document.title = t('pageTitle');
+      document.getElementById('tagStep1').innerText = d.tagStep1;
+      document.getElementById('tStep1Title').innerText = d.tStep1Title;
+      document.getElementById('tStep1Desc').innerText = d.tStep1Desc;
+      document.getElementById('tStep1F1').innerText = d.tStep1F1;
+      document.getElementById('tStep1F2').innerText = d.tStep1F2;
+      document.getElementById('tStep1F3').innerText = d.tStep1F3;
+      document.getElementById('txtBtnEnter1').innerText = d.btnEnter1;
 
-      $('app').innerHTML = `
-  <div class="container">
-    <header>
-      <div>
-        <div class="brand-badge" id="lblBrandBadge"></div>
-        <h1 id="lblTitle"></h1>
-        <p class="header-desc" id="lblDesc"></p>
-        <div class="batch-badge" id="batchBadge"></div>
-      </div>
-      <div class="header-controls">
-        <div class="lang-switcher">
-          <button id="langBtnVi" class="lang-btn" onclick="setLanguage('vi')">🇻🇳 Tiếng Việt</button>
-          <button id="langBtnZh" class="lang-btn" onclick="setLanguage('zh')">🇨🇳 简体中文</button>
-        </div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
-          <button class="btn btn-import" onclick="triggerImport()" id="btnImport"></button>
-          <button class="btn btn-primary" onclick="exportSalesData()" id="btnExport"></button>
-          <button class="btn btn-emerald" onclick="exportPriorityBatch38Data()" id="btnExportBatch38" style="background:#059669; border:1px solid #047857; color:#fff; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
-            <span id="lblBtnExportBatch38">📊 Xuất Excel 38 Cột (Priority Batch)</span>
-          </button>
-          <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="handleImportFile(event)">
-        </div>
-      </div>
-    </header>
+      document.getElementById('tagStep2').innerText = d.tagStep2;
+      document.getElementById('tStep2Title').innerText = d.tStep2Title;
+      document.getElementById('tStep2Desc').innerText = d.tStep2Desc;
+      document.getElementById('tStep2F1').innerText = d.tStep2F1;
+      document.getElementById('tStep2F2').innerText = d.tStep2F2;
+      document.getElementById('tStep2F3').innerText = d.tStep2F3;
+      document.getElementById('txtBtnEnter2').innerText = d.btnEnter2;
 
-    <div class="data-strip" id="dataStrip"></div>
+      document.getElementById('tagStep3').innerText = d.tagStep3;
+      document.getElementById('tStep3Title').innerText = d.tStep3Title;
+      document.getElementById('tStep3Desc').innerText = d.tStep3Desc;
+      document.getElementById('tStep3F1').innerText = d.tStep3F1;
+      document.getElementById('tStep3F2').innerText = d.tStep3F2;
+      document.getElementById('tStep3F3').innerText = d.tStep3F3;
+      document.getElementById('txtBtnEnter3').innerText = d.btnEnter3;
 
-    <div class="radar-section">
-      <div class="radar-header">
-        <div>
-          <div class="radar-title"><span class="pulse-dot"></span><span id="lblRadarTitle"></span></div>
-          <div class="radar-desc-text" id="lblRadarDesc"></div>
-        </div>
-        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
-          <span class="radar-status" id="radarStatus"></span>
-          <button class="btn btn-sm" onclick="refreshRadar()" id="btnRefreshRadar"></button>
-        </div>
-      </div>
-      <div class="radar-cards-grid" id="radarHubsGrid"></div>
-    </div>
+      document.getElementById('tagStep4').innerText = d.tagStep4;
+      document.getElementById('tStep4Title').innerText = d.tStep4Title;
+      document.getElementById('tStep4Desc').innerText = d.tStep4Desc;
+      document.getElementById('tStep4F1').innerText = d.tStep4F1;
+      document.getElementById('tStep4F2').innerText = d.tStep4F2;
+      document.getElementById('tStep4F3').innerText = d.tStep4F3;
+      document.getElementById('txtBtnEnter4').innerText = d.btnEnter4;
 
-    <div class="alert-box">
-      <div class="alert-title"><span>🛡️</span><span id="lblAlertTitle"></span></div>
-      <div class="alert-content" id="lblAlertContent"></div>
-    </div>
-
-    <div class="section-title" id="secKpi"></div>
-    <div class="kpi-grid">
-      <div class="kpi-card c1"><div class="kpi-label" id="kpiLabelTotal"></div><div class="kpi-value" id="kpiValTotal"></div><div class="kpi-sub" id="kpiSubTotal"></div></div>
-      <div class="kpi-card c2"><div class="kpi-label" id="kpiLabelTierS"></div><div class="kpi-value" id="kpiValTierS"></div><div class="kpi-sub" id="kpiSubTierS"></div></div>
-      <div class="kpi-card c3"><div class="kpi-label" id="kpiLabelBreeder"></div><div class="kpi-value" id="kpiValBreeder"></div><div class="kpi-sub" id="kpiSubBreeder"></div></div>
-      <div class="kpi-card c4"><div class="kpi-label" id="kpiLabelAmz"></div><div class="kpi-value" id="kpiValAmz"></div><div class="kpi-sub" id="kpiSubAmz"></div></div>
-      <div class="kpi-card c5"><div class="kpi-label" id="kpiLabelReach"></div><div class="kpi-value" id="kpiValReach"></div><div class="kpi-sub" id="kpiSubReach"></div></div>
-    </div>
-
-    <div class="section-title" id="secCharts"></div>
-    <div class="charts-grid">
-      <div class="chart-card"><div class="chart-title" id="chartTitleTier"></div><div class="chart-container"><canvas id="tierChart"></canvas></div></div>
-      <div class="chart-card"><div class="chart-title" id="chartTitleAmazon"></div><div class="chart-container"><canvas id="amzChart"></canvas></div></div>
-      <div class="chart-card"><div class="chart-title" id="chartTitleScore"></div><div class="chart-container"><canvas id="scoreChart"></canvas></div></div>
-      <div class="chart-card"><div class="chart-title" id="chartTitleCategory"></div><div class="chart-container"><canvas id="catChart"></canvas></div></div>
-      <div class="chart-card"><div class="chart-title" id="chartTitleCoverage"></div><div class="chart-container"><canvas id="covChart"></canvas></div></div>
-    </div>
-
-    <div class="section-title" id="secTable"></div>
-    <div class="table-section">
-      <div class="table-toolbar">
-        <div class="filter-group">
-          <input type="text" id="searchInput" class="search-box" oninput="onFilterChange()">
-          <select id="amzFilter" class="select-filter" onchange="onFilterChange()"></select>
-          <select id="tierFilter" class="select-filter" onchange="onFilterChange()"></select>
-          <select id="catFilter" class="select-filter" onchange="onFilterChange()"></select>
-          <select id="ownerFilter" class="select-filter" onchange="onFilterChange()" style="font-weight:600;"></select>
-          <select id="weatherFilter" class="select-filter" onchange="onFilterChange()"></select>
-          <select id="avatarFilter" class="select-filter" onchange="onFilterChange()"></select>
-          <button class="btn btn-sm" onclick="resetFilters()" id="btnReset"></button>
-        </div>
-        <div class="toolbar-foot">
-          <div class="result-count" id="recordCount"></div>
-          <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span id="lblPageSize" style="font-size:0.86rem; font-weight:700; color:var(--text-2);">Hiển thị:</span>
-              <select id="pageSizeSelect" class="select-filter" style="width:115px; font-weight:700;" onchange="onPageSizeChange()">
-                <option value="25" selected>25 dòng</option>
-                <option value="50">50 dòng</option>
-                <option value="100">100 dòng</option>
-                <option value="200">200 dòng</option>
-              </select>
-            </div>
-            <button class="btn btn-sm btn-primary" id="btnToggleFullWidth" onclick="toggleFullWidth()" style="font-weight:750; padding: .55rem 1rem;">
-              <span>🖥️ Mở rộng toàn màn hình</span>
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="table-responsive">
-        <table>
-          <thead><tr id="tableHead"></tr></thead>
-          <tbody id="leadsTableBody"></tbody>
-        </table>
-      </div>
-      <div class="pagination">
-        <div class="page-info"><span id="lblPage"></span> <b><span id="currentPage">1</span></b> / <b><span id="totalPages">1</span></b></div>
-        <div class="page-nav">
-          <button class="btn btn-sm" id="prevBtn" onclick="changePage(-1)"></button>
-          <button class="btn btn-sm" id="nextBtn" onclick="changePage(1)"></button>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-title" id="secPlaybook"></div>
-    <div class="playbook-grid">
-      <div class="playbook-card">
-        <div class="playbook-title"><span>🎯</span><span id="pbTitle1"></span></div>
-        <div class="playbook-quote" id="pbQuote1"></div>
-        <p id="pbNote1"></p>
-      </div>
-      <div class="playbook-card">
-        <div class="playbook-title"><span>💡</span><span id="pbTitle2"></span></div>
-        <ul id="pbList2"></ul>
-      </div>
-      <div class="playbook-card">
-        <div class="playbook-title"><span>🌦️</span><span id="pbTitle3"></span></div>
-        <div class="playbook-quote" id="pbQuote3"></div>
-        <ul id="pbList3"></ul>
-      </div>
-    </div>
-
-    <footer><div id="lblFooter"></div><div id="dataHint" style="margin-top:.3rem"></div></footer>
-  </div>
-
-  <div class="modal-overlay" id="weatherModalOverlay" onclick="closeWeatherModal(event)">
-    <div class="modal-box" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title"><span>🌦️</span><span id="modalTitleText"></span></div>
-        <button class="modal-close-btn" onclick="closeWeatherModal()">&times;</button>
-      </div>
-      <div class="modal-body" id="modalContentBody"></div>
-    </div>
-  </div>
-
-    <div class="modal-overlay" id="avatarModalOverlay" onclick="closeAvatarModal(event)">
-    <div class="modal-box avatar-modal-box" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title"><span>🖼️</span><span id="avatarModalTitleText"></span></div>
-        <button class="modal-close-btn" onclick="closeAvatarModal()">&times;</button>
-      </div>
-      <div class="modal-body avatar-modal-body" id="avatarModalContentBody"></div>
-    </div>
-  </div>
-
-  <div id="toast"></div>`;
-
-      $('kpiValTotal').textContent = num(an.totalLeads);
-      $('kpiValTierS').textContent = num(an.tierIndex['Tier S'] || 0);
-      $('kpiValBreeder').textContent = num(breeder.value);
-      $('kpiValAmz').textContent = num(an.amazonTotal);
-      $('kpiValReach').textContent = num(reach.reachableByPhoneOrEmail);
-
-      $('kpiSubTotal').textContent = t('kpiSubTotal');
-      $('kpiSubTierS').textContent = fmt(t('kpiSubTierS'), { avg: an.score.avg, min: an.score.min, max: an.score.max });
-      $('kpiSubBreeder').textContent = fmt(t('kpiSubBreeder'), { percent: breeder.percent });
-      $('kpiSubAmz').textContent = fmt(t('kpiSubAmz'), { both: an.amazonIndex.both_target || 0 });
-      $('kpiSubReach').textContent = fmt(t('kpiSubReach'), { percent: reach.reachablePercent });
-
-      $('pageSizeSelect').innerHTML = meta.config.pageSizeOptions
-        .map(n => `<option value="${n}"${n === S.pageSize ? ' selected' : ''}>${n}</option>`).join('');
+      document.getElementById('txtFbidBannerTitle').innerText = d.fbidBannerTitle;
+      document.getElementById('txtFbidBannerDesc').innerText = d.fbidBannerDesc;
     }
 
-    function applyI18n() {
-      const set = (id, key, html) => { const el = $(id); if (el) html ? el.innerHTML = t(key) : el.textContent = t(key); };
-      set('lblBrandBadge', 'brandBadge');
-      set('lblTitle', 'title');
-      set('lblDesc', 'desc', true);
-      set('btnExport', 'btnExport');
-      set('btnImport', 'btnImport');
-      set('btnReset', 'btnReset');
-      set('btnRefreshRadar', 'btnRefreshRadar');
-      set('lblRadarTitle', 'radarTitle');
-      set('lblRadarDesc', 'radarDesc');
-      set('lblAlertTitle', 'alertTitle');
-      set('lblAlertContent', 'alertContent');
-
-      $('lblAlertContent').innerHTML = t('alertContent').replace('<br>', `<br><div class="formula-pill">${t('alertFormula')}</div>`);
-
-      set('kpiLabelTotal', 'kpiTotal');
-      set('kpiLabelTierS', 'kpiTierS');
-      set('kpiLabelBreeder', 'kpiBreeder');
-      set('kpiLabelAmz', 'kpiAmz');
-      set('kpiLabelReach', 'kpiReach');
-
-      set('chartTitleTier', 'chartTier');
-      set('chartTitleAmazon', 'chartAmazon');
-      set('chartTitleScore', 'chartScore');
-      set('chartTitleCategory', 'chartCategory');
-      set('chartTitleCoverage', 'chartCoverage');
-
-      set('secKpi', isVi() ? 'Tổng quan chỉ số' : '核心指标总览');
-      set('secCharts', isVi() ? 'Phân tích trực quan' : '可视化分析');
-      set('secTable', isVi() ? 'Danh sách khách hàng' : '潜客明细清单');
-      set('secPlaybook', isVi() ? 'Cẩm nang bán hàng' : '销售作战手册');
-      set('lblPageSize', 'pageSizeLabel');
-      set('lblPage', 'pageLbl');
-      set('prevBtn', 'prevBtn');
-      set('nextBtn', 'nextBtn');
-
-      $('searchInput').placeholder = t('searchPlaceholder');
-      fillSelect('amzFilter', 'amzOptions');
-      fillSelect('tierFilter', 'tierOptions');
-      fillSelect('catFilter', 'catOptions');
-      fillSelect('ownerFilter', 'ownerOptions');
-      fillSelect('weatherFilter', 'weatherOptions');
-      fillSelect('avatarFilter', 'avatarOptions');
-
-      if ($('lblBtnExportBatch38')) {
-        $('lblBtnExportBatch38').textContent = t('btnExportPriority') || (isVi() ? '📊 Xuất Excel 38 Cột (Priority Batch)' : '📊 导出 38 列标准潜客表 (Priority Batch)');
-      }
-
-      const cols = [
-        { key: 'thCode', label: t('thCode'), sort: 'stt' },
-        { key: 'thAvatar', label: t('thAvatar') || 'Avatar', sort: 'avatar_type' },
-        { key: 'thFbId', label: t('thFbId'), sort: 'fb_id' },
-        { key: 'thName', label: t('thName'), sort: 'name' },
-        { key: 'thLocation', label: t('thLocation'), sort: 'city' },
-        { key: 'thWeather', label: t('thWeather'), sort: null },
-        { key: 'thCategory', label: t('thCategory'), sort: 'cat' },
-        { key: 'thAmazon', label: t('thAmazon'), sort: null },
-        { key: 'thProduct', label: t('thProduct'), sort: null },
-        { key: 'thScore', label: t('thScore'), sort: 'score' },
-        { key: 'thTier', label: t('thTier'), sort: 'rank_tier' },
-        { key: 'thAction', label: t('thAction'), sort: null }
-      ];
-      $('tableHead').innerHTML = cols.map(c => {
-        if (!c.sort) return `<th>${c.label}</th>`;
-        const active = S.sort.key === c.sort;
-        const ind = active ? (S.sort.dir === 'asc' ? '▲' : '▼') : '↕';
-        return `<th class="sortable${active ? ' sorted' : ''}" onclick="toggleSort('${c.sort}')">${c.label}<span class="sort-ind">${ind}</span></th>`;
-      }).join('');
-
-      set('pbTitle1', 'pbTitle1');
-      set('pbTitle2', 'pbTitle2');
-      set('pbTitle3', 'pbTitle3');
-      set('pbQuote1', 'pbQuote1', true);
-      set('pbNote1', 'pbNote1', true);
-      set('pbList2', 'pbList2', true);
-      set('pbQuote3', 'pbQuote3', true);
-      set('pbList3', 'pbList3', true);
-
-      const m = S.meta.report;
-      set('lblFooter', 'footer');
-      $('lblFooter').innerHTML = fmt(t('footer'), { source: m.sourceFile, spec: m.scoringSpec, weather: m.weatherSource });
-      $('dataHint').innerHTML = fmt(t('dataHint'), { leads: num(S.an.totalLeads) });
-
-      // 数据批次徽章：名称 + 时间戳，明确当前展示的是哪一时间段的分析数据
-      const src = currentSource();
-      const imported = src.type === 'imported';
-      $('batchBadge').className = 'batch-badge' + (imported ? ' imported' : '');
-      $('batchBadge').innerHTML =
-        `<span>📅 ${esc(t('batchLabel'))}</span><span class="b-sep">:</span>` +
-        `<span class="b-name">${esc(src.name)}</span><span class="b-sep">·</span>` +
-        `<span>${esc(imported ? t('importedAt') : t('builtinAt'))}</span>` +
-        `<span class="b-time">${esc(src.atLabel)}</span><span class="b-sep">·</span>` +
-        `<span>${esc(fmt(t('recordsCount'), { count: num(S.an.totalLeads) }))}</span>`;
-
-      const tag = src.type === 'imported'
-        ? `${esc(t('sourceImported'))} · ${esc(src.name)} · ${esc(src.atLabel)}`
-        : `${esc(t('sourceBuiltin'))} · data/leads.json · ${esc(src.atLabel)}`;
-      $('dataStrip').innerHTML =
-        `<span>${fmt(t('dataHint'), { leads: num(S.an.totalLeads) })}</span>` +
-        `<span class="source-tag${src.type === 'imported' ? ' imported' : ''}">${tag}</span>` +
-        `<span style="color:var(--text-3);font-weight:500">${esc(t('dropHint'))}</span>`;
-      bindDropZone();
-
-      set('modalTitleText', 'modalTitle');
-
-      $('langBtnVi').classList.toggle('active', S.lang === 'vi');
-      $('langBtnZh').classList.toggle('active', S.lang === 'zh');
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('btnThemeLight').classList.toggle('active', theme === 'light');
+      document.getElementById('btnThemeDark').classList.toggle('active', theme === 'dark');
+      localStorage.setItem('portal_theme', theme);
     }
 
-    function fillSelect(id, key) {
-      const el = $(id), cur = el.value;
-      const opts = t(key);
-      el.innerHTML = (Array.isArray(opts) ? opts : []).map(o =>
-        `<option value="${esc(o.val)}"${o.val === cur ? ' selected' : ''}>${esc(o.text)}</option>`).join('');
-    }
-
-    function setLanguage(lang) {
-      S.lang = lang;
-      applyI18n();
-      renderRadarHubs();
-      renderTable();
-      renderCharts();
-    }
-
-    /* ============================ 天气引擎 ============================ */
-    function locKeyOf(lead) {
-      return lead.zip ? String(lead.zip) : `${lead.city || ''}_${lead.state || ''}`;
-    }
-
-    function offlineWeather(lead) {
-      const rules = S.meta.weatherRules;
-      const st = (lead.state || '').trim().toUpperCase();
-      let type = 'mild';
-      if (rules.cold.states.includes(st)) type = 'cold';
-      else if (rules.rain.states.includes(st)) type = 'rain';
-      else if (rules.hot.states.includes(st)) type = 'hot';
-      const fb = rules[type].fallback;
-      return {
-        tempF: fb.tempF, tempC: Math.round((fb.tempF - 32) * 5 / 9),
-        main: fb.main, desc: fb.desc, icon: fb.icon,
-        humidity: 55, wind: 6, conditionType: type, cityName: lead.city || lead.state || 'USA', isLive: false
-      };
-    }
-
-    async function fetchWeather(lead) {
-      const key = locKeyOf(lead);
-      if (!key || key === '_') return null;
-      if (S.weatherCache[key]) return S.weatherCache[key];
-
-      const cfg = S.meta.config;
-      let url = '';
-      if (lead.zip) url = `${cfg.owmEndpoint}?zip=${lead.zip},US&units=${cfg.owmUnits}&appid=${cfg.owmApiKey}`;
-      else if (lead.city && lead.state) url = `${cfg.owmEndpoint}?q=${encodeURIComponent(lead.city)},${lead.state},US&units=${cfg.owmUnits}&appid=${cfg.owmApiKey}`;
-      if (!url) return null;
-
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('owm failed');
-        const d = await res.json();
-        const tempF = Math.round(d.main.temp);
-        const main = d.weather[0].main;
-        let type = 'mild';
-        const th = S.meta.weatherRules.thresholds;
-        if (tempF < th.coldBelowF || main === 'Snow') type = 'cold';
-        else if (['Rain', 'Drizzle', 'Thunderstorm'].includes(main)) type = 'rain';
-        else if (tempF > th.hotAboveF) type = 'hot';
-        S.weatherCache[key] = {
-          tempF, tempC: Math.round((tempF - 32) * 5 / 9), main,
-          desc: d.weather[0].description, icon: d.weather[0].icon,
-          humidity: d.main.humidity, wind: d.wind.speed, conditionType: type,
-          cityName: d.name || lead.city || lead.state, isLive: true
-        };
-      } catch (e) {
-        S.weatherCache[key] = offlineWeather(lead);
-      }
-      return S.weatherCache[key];
-    }
-
-    function weatherOf(lead) {
-      const key = locKeyOf(lead);
-      return (key && key !== '_' && S.weatherCache[key]) || null;
-    }
-
-    function triggerOf(lead, w) {
-      const cond = w ? w.conditionType : 'mild';
-      const temp = w ? `${w.tempF}°F (${w.tempC}°C) · ` : '';
-      return {
-        icon: { cold: '❄️', rain: '🌧️', hot: '☀️', mild: '🌤️' }[cond],
-        cls: `w-${cond}`,
-        label: temp + t(cond),
-        pitch: t('pitch' + cond.charAt(0).toUpperCase() + cond.slice(1))
-      };
-    }
-
-    function renderRadarHubs() {
-      const grid = $('radarHubsGrid');
-      const hubs = S.meta.weatherHubs;
-      grid.innerHTML = hubs.map(h => {
-        const name = isVi() ? h.nameVi : h.nameZh;
-        const trigger = isVi() ? h.triggerVi : h.triggerZh;
-        return `
-      <div class="radar-card">
-        <div class="radar-card-top">
-          <span>${esc(name)}</span>
-          <span class="radar-live" id="rl-${h.id}">LIVE</span>
-        </div>
-        <div class="radar-city">📍 ${esc(h.city)}, ${esc(h.state)} · ${esc(h.zip)}</div>
-        <div class="radar-weather-display">
-          <span class="radar-temp" id="temp-${h.id}">${h.defaultTemp}°F</span>
-          <div>
-            <div class="radar-w-desc" id="desc-${h.id}">${esc(h.defaultMain)}</div>
-            <div class="radar-w-sub" id="sub-${h.id}">${Math.round((h.defaultTemp - 32) * 5 / 9)}°C</div>
-          </div>
-        </div>
-        <div class="radar-trigger-pill">${esc(trigger)}</div>
-      </div>`;
-      }).join('');
-
-      hubs.forEach(h => {
-        fetchWeather({ zip: h.zip, city: h.city, state: h.state }).then(w => {
-          if (!w) return;
-          const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
-          set(`temp-${h.id}`, `${w.tempF}°F`);
-          set(`desc-${h.id}`, `${w.main} · ${w.desc}`);
-          set(`sub-${h.id}`, `${w.tempC}°C · 💧${w.humidity}% · 💨${w.wind}mph`);
-          const rl = $(`rl-${h.id}`);
-          if (rl && !w.isLive) { rl.classList.add('off'); rl.textContent = t('radarFallbackLabel'); }
-          updateRadarStatus();
-        });
-      });
-    }
-
-    function updateRadarStatus() {
-      const anyLive = Object.values(S.weatherCache).some(w => w.isLive);
-      const el = $('radarStatus');
-      if (!el) return;
-      el.textContent = anyLive ? t('radarStatusLive') : t('radarStatusFallback');
-      el.classList.toggle('fallback', !anyLive);
-    }
-
-    function refreshRadar() {
-      Object.keys(S.weatherCache).forEach(k => delete S.weatherCache[k]);
-      renderRadarHubs();
-      renderTable();
-    }
-
-    /* ============================ 图表 ============================ */
-    const PALETTE = ['#4f46e5', '#d97706', '#059669', '#7c3aed', '#0284c7', '#e11d48', '#64748b', '#ca8a04'];
-    const CHART_FONT = { color: '#64748b', font: { size: 11, family: "'Inter','Noto Sans SC',sans-serif" } };
-    const GRID = { color: 'rgba(15,23,42,.07)' };
-
-    function renderCharts() {
-      if (typeof Chart === 'undefined') {
-        document.querySelectorAll('.chart-container').forEach(c => {
-          c.innerHTML = `<div class="chart-fallback">${isVi() ? 'Không tải được Chart.js (CDN). Vui lòng kết nối mạng rồi tải lại.' : '未能加载 Chart.js（CDN），请联网后刷新页面。'}</div>`;
-        });
-        return;
-      }
-      const an = S.an;
-      const mount = (id, cfg) => {
-        const el = $(id);
-        if (!el) return;
-        if (S.charts[id]) S.charts[id].destroy();
-        const ctx = el.getContext('2d');
-        S.charts[id] = new Chart(ctx, cfg);
-      };
-
-      // 评级分布
-      mount('tierChart', {
-        type: 'doughnut',
-        data: {
-          labels: an.tiers.map(d => `${d.label} (${d.value})`),
-          datasets: [{ data: an.tiers.map(d => d.value), backgroundColor: ['#d97706', '#4f46e5', '#059669', '#64748b', '#e11d48'], borderColor: '#fff', borderWidth: 2 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '58%', plugins: { legend: { position: 'bottom', labels: { ...CHART_FONT, boxWidth: 12, padding: 10 } } } }
-      });
-
-      // 亚马逊渠道（对数轴）
-      const amz = an.amazon;
-      mount('amzChart', {
-        type: 'bar',
-        data: {
-          labels: amz.map(d => (isVi() ? d.vi : d.zh)),
-          datasets: [{ label: isVi() ? 'Số lượng' : '客户数', data: amz.map(d => d.value), backgroundColor: ['#d97706', '#059669', '#7c3aed', '#0284c7', '#cbd5e1'], borderRadius: 6, borderSkipped: false }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          scales: {
-            y: { type: 'logarithmic', ticks: CHART_FONT, grid: GRID, border: { display: false } },
-            x: { ticks: { ...CHART_FONT, font: { size: 10, family: "'Inter','Noto Sans SC',sans-serif" }, maxRotation: 24, minRotation: 0 }, grid: { display: false }, border: { display: false } }
-          },
-          plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.parsed.y.toLocaleString()} (${amz[c.dataIndex].percent}%)` } } }
-        }
-      });
-
-      // 评分分布
-      mount('scoreChart', {
-        type: 'bar',
-        data: {
-          labels: an.score.buckets.map(b => b.label),
-          datasets: [{ label: isVi() ? 'Số lượng' : '客户数', data: an.score.buckets.map(b => b.value), backgroundColor: PALETTE, borderRadius: 6, borderSkipped: false }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          scales: { y: { ticks: CHART_FONT, grid: GRID, border: { display: false } }, x: { ticks: CHART_FONT, grid: { display: false }, border: { display: false } } },
-          plugins: { legend: { display: false } }
-        }
-      });
-
-      // 机构类型
-      const cats = an.categories;
-      mount('catChart', {
-        type: 'doughnut',
-        data: {
-          labels: cats.map(d => `${isVi() ? d.vi : d.zh} (${d.value})`),
-          datasets: [{ data: cats.map(d => d.value), backgroundColor: ['#059669', '#4f46e5', '#0284c7'], borderColor: '#fff', borderWidth: 2 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '52%', plugins: { legend: { position: 'bottom', labels: { ...CHART_FONT, boxWidth: 12, padding: 10 } } } }
-      });
-
-      // 联系方式覆盖率
-      const cov = an.contactCoverage;
-      mount('covChart', {
-        type: 'bar',
-        data: {
-          labels: cov.map(d => `${isVi() ? d.vi : d.zh} ${d.percent}%`),
-          datasets: [{ label: isVi() ? 'Số lượng' : '客户数', data: cov.map(d => d.value), backgroundColor: ['#4f46e5', '#059669', '#d97706', '#0284c7', '#7c3aed'], borderRadius: 6, borderSkipped: false }]
-        },
-        options: {
-          indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-          scales: { x: { ticks: CHART_FONT, grid: GRID, border: { display: false } }, y: { ticks: { ...CHART_FONT, font: { size: 10, family: "'Inter','Noto Sans SC',sans-serif" } }, grid: { display: false }, border: { display: false } } },
-          plugins: { legend: { display: false } }
-        }
-      });
-    }
-
-    /* ============================ 表格 ============================ */
-    function amzKindOf(l) {
-      const c = l.amz_cat || '';
-      if (c.includes('Selling pet toys + Artificial grass')) return 'both_target';
-      if (c.includes('Selling artificial grass')) return 'grass_target';
-      if (c.includes('Selling pet toys')) return 'toys_target';
-      if (!l.amz_link || c === 'Amazon link not found') return 'no_amz';
-      return 'amz_other';
-    }
-
-    function tierCls(tier) {
-      return { 'Tier S': 's', 'Tier A': 'a', 'Tier B': 'b', 'Tier C': 'c', 'Tier D': 'd' }[tier] || 'c';
-    }
-
-    function isGenericOwner(owner, kennelName) {
-      if (!owner) return true;
-      const o = String(owner).trim();
-      if (o === 'Đang cập nhật hồ sơ' || o === 'Chưa xác thực' || o === '—' || o === '待进一步核实' || o === 'Chưa có thông tin') return true;
-      if (/chủ trại|quản lý chuồng trại|breeder owner|kennel manager|huấn luyện viên|head trainer|shelter intake|director|manager|待进一步核实|管舍人|负责人/i.test(o)) {
-        return true;
-      }
-      if (kennelName && o.toLowerCase() === String(kennelName).trim().toLowerCase()) {
-        return true;
-      }
-      return false;
-    }
-
-    function applyFilters() {
-      const q = ($('searchInput').value || '').toLowerCase().trim();
-      const amzVal = $('amzFilter').value;
-      const tierVal = $('tierFilter').value;
-      const catVal = $('catFilter').value;
-      const ownerVal = $('ownerFilter') ? $('ownerFilter').value : '';
-      const wVal = $('weatherFilter').value;
-      const avVal = $('avatarFilter') ? $('avatarFilter').value : '';
-      const rules = S.meta.weatherRules;
-
-      S.filtered = S.leads.filter(l => {
-        if (q) {
-          const hay = [l.name, l.owner, l.phone, l.email, l.city, l.state, l.zip, l.cat, l.product_fit, l.stt, l.fb_id]
-            .filter(Boolean).join(' ').toLowerCase();
-          if (!hay.includes(q)) return false;
-        }
-        if (tierVal && l.rank_tier !== tierVal) return false;
-        if (catVal && l.cat_code !== catVal) return false;
-        if (avVal && l.avatar_type !== avVal) return false;
-        if (ownerVal) {
-          const isGen = isGenericOwner(l.owner, l.name);
-          if (ownerVal === 'generic' && !isGen) return false;
-          if (ownerVal === 'named' && isGen) return false;
-        }
-        if (amzVal) {
-          const k = amzKindOf(l);
-          if (amzVal === 'has_amz' ? k === 'no_amz' : k !== amzVal) return false;
-        }
-        if (wVal) {
-          const st = (l.state || '').trim().toUpperCase();
-          if (wVal === 'cold') { if (!rules.cold.states.includes(st)) return false; }
-          else if (wVal === 'rain') { if (!rules.rain.states.includes(st)) return false; }
-          else if (wVal === 'hot') { if (!rules.hot.states.includes(st)) return false; }
-          else if (wVal === 'mild') {
-            if ([...rules.cold.states, ...rules.rain.states, ...rules.hot.states].includes(st)) return false;
-          }
-        }
-        return true;
-      });
-
-      const { key, dir } = S.sort;
-      const sign = dir === 'asc' ? 1 : -1;
-      S.filtered.sort((a, b) => {
-        let x = a[key], y = b[key];
-        if (typeof x === 'number' && typeof y === 'number') return (x - y) * sign;
-        x = String(x == null ? '' : x); y = String(y == null ? '' : y);
-        return x.localeCompare(y, 'en') * sign;
-      });
-    }
-
-    function renderTable() {
-      applyFilters();
-      const tbody = $('leadsTableBody');
-      S.pageSize = ($('pageSizeSelect') && Number($('pageSizeSelect').value)) || S.meta?.config?.pageSize || 25;
-      const totalPages = Math.max(1, Math.ceil(S.filtered.length / S.pageSize));
-      if (S.page > totalPages) S.page = totalPages;
-      const start = (S.page - 1) * S.pageSize;
-      const pageData = S.filtered.slice(start, start + S.pageSize);
-
-      $('currentPage').textContent = S.page;
-      $('totalPages').textContent = totalPages;
-      $('prevBtn').disabled = S.page <= 1;
-      $('nextBtn').disabled = S.page >= totalPages;
-      $('recordCount').innerHTML = fmt(t('resultCount'), {
-        shown: num(pageData.length), total: num(S.filtered.length), page: S.page, pages: totalPages
-      });
-
-      if (!pageData.length) {
-        tbody.innerHTML = `<tr><td colspan="12" class="empty-row">${esc(t('noMatch'))}</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = pageData.map(lead => {
-        const cls = tierCls(lead.rank_tier);
-        const kind = amzKindOf(lead);
-        const badgeMap = {
-          both_target: ['badge-amz-target', 'amzTargetBoth'],
-          grass_target: ['badge-amz-grass', 'amzTargetGrass'],
-          toys_target: ['badge-amz-toys', 'amzTargetToys'],
-          amz_other: ['badge-amz-none', 'amzOther'],
-          no_amz: ['badge-amz-none', 'amzNone']
-        };
-        const [bCls, bKey] = badgeMap[kind];
-        const amzBadge = `<span class="badge ${bCls}" title="${esc(lead.amz_cat || '')}">${esc(t(bKey))}</span>`;
-        const amzCell = lead.amz_link
-          ? `<a href="${esc(lead.amz_link)}" target="_blank" rel="noopener" style="text-decoration:none">${amzBadge}</a>`
-          : amzBadge;
-
-        const links = [];
-        if (lead.url) links.push(`<a class="lead-link" href="${esc(lead.url)}" target="_blank" rel="noopener">${esc(lead.name)}</a>`);
-        else links.push(`<span class="lead-name">${esc(lead.name)}</span>`);
-        if (lead.website) links.push(` <a href="${esc(lead.website)}" target="_blank" rel="noopener" title="Website" style="font-size:.8rem">🌐</a>`);
-
-        const isGen = isGenericOwner(lead.owner, lead.name);
-        let owner = '';
-        if (isGen) {
-          const displayOwner = lead.owner || (isVi() ? 'Chủ trại / Quản lý chuồng trại' : '犬舍负责人 / 管舍人');
-          owner = `<div class="lead-owner" style="margin-top:4px;">
-            <span style="font-size:0.77rem; font-weight:700; color:#b45309; background:#fef3c7; border:1px solid #fde68a; padding:2px 7px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;" title="${isVi() ? 'Chưa có tên cụ thể' : '待核实具体人名'}">
-              ⚠️ ${esc(t('ownerLabel'))} ${esc(displayOwner)}
-            </span>
-          </div>`;
-        } else {
-          owner = `<div class="lead-owner" style="margin-top:4px;">
-            <span style="font-size:0.77rem; font-weight:750; color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; padding:2px 7px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;">
-              👤 <b>${esc(t('ownerLabel'))}</b> ${esc(lead.owner)} ✨
-            </span>
-          </div>`;
-        }
-
-        const chips = [];
-        if (lead.phone) {
-          chips.push(`<span class="contact-chip" onclick="navigator.clipboard.writeText('${esc(lead.phone)}'); toast('✓ Đã copy số điện thoại: ${esc(lead.phone)}', 'ok');" title="Nhấp để copy số điện thoại gọi điện">📞 <b>${esc(lead.phone)}</b></span>`);
-        }
-        if (lead.email) {
-          chips.push(`<span class="contact-chip" onclick="navigator.clipboard.writeText('${esc(lead.email)}'); toast('✓ Đã copy email: ${esc(lead.email)}', 'ok');" title="Nhấp để copy email gửi thư">✉️ <b>${esc(lead.email)}</b></span>`);
-        }
-        const contact = chips.length ? `<div class="lead-contact">${chips.join('')}</div>` : '';
-
-        const loc = [lead.city, lead.state, lead.zip].filter(Boolean).join(', ') || lead.country || 'USA';
-
-        const wbId = 'wb-' + String(lead.stt).replace(/[^a-zA-Z0-9]/g, '');
-        const w = weatherOf(lead);
-        const trg = w ? triggerOf(lead, w) : null;
-        const hasLoc = locKeyOf(lead) && locKeyOf(lead) !== '_';
-        const weatherCell = trg
-          ? `<div id="${wbId}" class="weather-cell ${trg.cls}" onclick="openWeatherModal('${esc(lead.stt)}')" title="${esc(isVi() ? 'Nhấp để xem kịch bản sales' : '点击查看实时天气与销售话术')}">
-           <div class="weather-temp-row"><span>${trg.icon}</span><span>${esc(trg.label)}</span></div>
-           <div class="weather-trigger-text">${esc(trg.pitch)}</div>
-         </div>`
-          : `<div id="${wbId}" class="weather-cell w-none" onclick="openWeatherModal('${esc(lead.stt)}')">
-           <div class="weather-temp-row"><span>📍</span><span>${esc(isVi() ? 'Chưa rõ vị trí' : '待补充地区')}</span></div>
-           <div class="weather-trigger-text">${esc(isVi() ? 'Nhấp để xem kịch bản chung' : '点击查看通用话术')}</div>
-         </div>`;
-
-        const fbId = lead.fb_id || '';
-        const fbCell = fbId
-          ? `<a class="fb-id" href="${esc(lead.url || '#')}" target="_blank" rel="noopener" title="${esc(fbId)}">f ${esc(fbId)}</a>`
-          : `<span class="fb-id none" title="${esc(isVi() ? 'Không có link Facebook' : '无 Facebook 链接')}">—</span>`;
-
-        return `
-      <tr>
-        <td class="cell-code">${esc(lead.stt)}</td>
-        <td class="cell-avatar">
-          <div class="lead-avatar-wrapper" onclick="openAvatarModal('${esc(lead.stt)}')" title="${esc(isVi() ? 'Nhấp để xem ảnh đại diện phóng to' : '点击放大查看头像')}">
-            <img src="${esc(lead.avatar_url || lead.avatar || '')}" 
-                 alt="${esc(lead.name)}" 
-                 class="lead-avatar-img ${lead.avatar_type === 'dog' ? 'avatar-dog' : 'avatar-person'}" 
-                 loading="lazy" 
-                 onload="handleAvatarLoad(this, '${esc(lead.name)}');"
-                 onerror="handleAvatarError(this, '${esc(lead.name)}');" />
-            <span class="avatar-tag-badge ${lead.avatar_type === 'dog' ? 'badge-dog' : 'badge-person'}" title="${esc(lead.avatar_label || (lead.avatar_type === 'dog' ? 'Chó' : 'Người'))}">
-              ${lead.avatar_type === 'dog' ? '🐶' : '👤'}
-            </span>
-          </div>
-        </td>
-        <td>${fbCell}</td>
-        <td><div class="lead-name">${links.join('')}</div>${owner}${contact}</td>
-        <td><span class="loc-text">📍 ${esc(loc)}</span></td>
-        <td>${weatherCell}</td>
-        <td><div class="cat-text">${esc(lead.cat)}</div></td>
-        <td>${amzCell}</td>
-        <td><div class="prod-text">${esc(lead.product_fit)}</div></td>
-        <td><span class="score-pill ${cls}">${lead.score}${esc(t('scoreUnit'))}</span></td>
-        <td><span class="badge badge-${cls}">${esc(lead.rank_tier)}</span></td>
-        <td><div class="action-text">${esc(lead.sales_action || '')}</div></td>
-      </tr>`;
-      }).join('');
-
-      pageData.forEach(lead => {
-        if (weatherOf(lead)) return;
-        const k = locKeyOf(lead);
-        if (!k || k === '_') return;
-        const wbId = 'wb-' + String(lead.stt).replace(/[^a-zA-Z0-9]/g, '');
-        fetchWeather(lead).then(w => {
-          const el = $(wbId);
-          if (!el || !w) return;
-          const trg = triggerOf(lead, w);
-          el.className = `weather-cell ${trg.cls}`;
-          el.innerHTML = `<div class="weather-temp-row"><span>${trg.icon}</span><span>${esc(trg.label)}</span></div>
-                      <div class="weather-trigger-text">${esc(trg.pitch)}</div>`;
-          updateRadarStatus();
-        });
-      });
-    }
-
-    
-    function toggleFullWidth() {
-      const container = document.querySelector('.container');
-      const btn = $('btnToggleFullWidth');
-      if (!container) return;
-      const isFull = container.classList.toggle('is-fullwidth');
-      if (btn) {
-        btn.innerHTML = isFull 
-          ? `<span>📐 Thu về khung chuẩn</span>` 
-          : `<span>🖥️ Mở rộng toàn màn hình</span>`;
-        btn.className = isFull ? 'btn btn-sm' : 'btn btn-sm btn-primary';
-      }
-    }
-
-    function onFilterChange() { S.page = 1; renderTable(); }
-    function onPageSizeChange() { S.page = 1; renderTable(); }
-    function resetFilters() {
-      $('searchInput').value = '';
-      ['amzFilter', 'tierFilter', 'catFilter', 'ownerFilter', 'weatherFilter', 'avatarFilter'].forEach(id => { if ($(id)) $(id).value = ''; });
-      S.page = 1;
-      renderTable();
-    }
-    function toggleSort(key) {
-      if (S.sort.key === key) S.sort.dir = S.sort.dir === 'asc' ? 'desc' : 'asc';
-      else S.sort = { key, dir: key === 'score' ? 'desc' : 'asc' };
-      S.page = 1;
-      renderTable();
-      applyI18nHeaderSortOnly();
-    }
-    function applyI18nHeaderSortOnly() {
-      const cols = [
-        { label: t('thCode'), sort: 'stt' }, { label: t('thAvatar') || 'Avatar', sort: 'avatar_type' }, { label: t('thFbId'), sort: 'fb_id' },
-        { label: t('thName'), sort: 'name' },
-        { label: t('thLocation'), sort: 'city' }, { label: t('thWeather'), sort: null },
-        { label: t('thCategory'), sort: 'cat' }, { label: t('thAmazon'), sort: null },
-        { label: t('thProduct'), sort: null }, { label: t('thScore'), sort: 'score' },
-        { label: t('thTier'), sort: 'rank_tier' }, { label: t('thAction'), sort: null }
-      ];
-      $('tableHead').innerHTML = cols.map(c => {
-        if (!c.sort) return `<th>${c.label}</th>`;
-        const active = S.sort.key === c.sort;
-        const ind = active ? (S.sort.dir === 'asc' ? '▲' : '▼') : '↕';
-        return `<th class="sortable${active ? ' sorted' : ''}" onclick="toggleSort('${c.sort}')">${c.label}<span class="sort-ind">${ind}</span></th>`;
-      }).join('');
-    }
-    function changePage(delta) {
-      const totalPages = Math.max(1, Math.ceil(S.filtered.length / S.pageSize));
-      const target = S.page + delta;
-      if (target < 1 || target > totalPages) return;
-      S.page = target;
-      renderTable();
-      document.querySelector('.table-responsive').scrollTop = 0;
-      document.querySelector('.table-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    /* ============================ 天气话术弹窗 ============================ */
-
-
-    function handleAvatarLoad(img, name) {
-      try {
-        const src = img.currentSrc || img.src || '';
-        if (src.includes('84628273_176159830277856') || src.includes('HsTZSDw4avx') || (img.naturalWidth === 1 && img.naturalHeight === 1)) {
-          handleAvatarError(img, name);
-        }
-      } catch (e) {}
-    }
-
-    function handleAvatarError(img, name) {
-      img.onerror = null;
-      img.onload = null;
-      const safeName = encodeURIComponent((name || 'Breeder').trim());
-      img.src = `https://ui-avatars.com/api/?name=${safeName}&background=random&color=fff&size=160&bold=true`;
-    }
-
-    function openAvatarModal(stt) {
-      const lead = S.leads.find(l => String(l.stt) === String(stt));
-      if (!lead) return;
-
-      $('avatarModalTitleText').innerHTML = `<span>${esc(t('avatarModalTitle') || 'Chi Tiết Ảnh Đại Diện')}</span>`;
-
-      const isDog = lead.avatar_type === 'dog';
-      const typeBadgeHtml = isDog
-        ? `<div class="modal-avatar-badge dog">🐶 <b>${esc(isVi() ? 'Avatar Chó cưng' : '宠物犬头像')}</b> • <span style="opacity:0.9">AI dog-model.onnx Verified</span></div>`
-        : `<div class="modal-avatar-badge person">👤 <b>${esc(isVi() ? 'Avatar Người / Chủ trại' : '犬舍主理人 / 个人代表')}</b> • <span style="opacity:0.9">Breeder Owner Profile</span></div>`;
-
-      const copyBtnText = esc(t('copyFbIdBtn') || 'Sao chép FB ID');
-      const openFbText = esc(t('openFbProfileBtn') || 'Mở Trang Facebook');
-
-      const body = `
-    <div class="avatar-popup-container">
-      <div class="avatar-popup-visual">
-        <div class="avatar-popup-img-wrap ${isDog ? 'wrap-dog' : 'wrap-person'}">
-          <img src="${esc(lead.avatar_url || lead.avatar || '')}" 
-               alt="${esc(lead.name)}" 
-               class="avatar-popup-img"
-               onload="handleAvatarLoad(this, '${esc(lead.name)}');"
-               onerror="handleAvatarError(this, '${esc(lead.name)}');" />
-          <div class="avatar-popup-watermark">${isDog ? '🐶 DOG VERIFIED' : '👤 OWNER PROFILE'}</div>
-        </div>
-        ${typeBadgeHtml}
-      </div>
-      <div class="avatar-popup-info">
-        <h3 class="avatar-popup-name">${esc(lead.name)}</h3>
-        <div class="avatar-popup-id-row">
-          <span class="avatar-popup-fbid">🆔 FB ID: <b>${esc(lead.fb_id || '—')}</b></span>
-          ${lead.fb_id ? `<button class="btn btn-xs btn-copy-fbid" onclick="navigator.clipboard.writeText('${esc(lead.fb_id)}'); toast('${esc(isVi() ? 'Đã sao chép FB ID: ' + lead.fb_id : '已复制 FB ID: ' + lead.fb_id)}', 'ok');">📋 ${copyBtnText}</button>` : ''}
-        </div>
-        <div class="avatar-popup-detail-list">
-          <div class="avatar-detail-item"><span class="avatar-detail-label">👤 ${esc(isVi() ? 'Chủ sở hữu / Đại diện' : '主理人 / 代表')}:</span> <span class="avatar-detail-val">${esc(lead.owner || (isVi() ? 'Chưa xác thực' : '待补充'))}</span></div>
-          <div class="avatar-detail-item"><span class="avatar-detail-label">🏢 ${esc(isVi() ? 'Loại hình doanh nghiệp' : '机构类型')}:</span> <span class="avatar-detail-val">${esc(lead.cat || 'Dog Breeder')}</span></div>
-          <div class="avatar-detail-item"><span class="avatar-detail-label">📍 ${esc(isVi() ? 'Địa chỉ' : '地理位置')}:</span> <span class="avatar-detail-val">${esc([lead.city, lead.state, lead.zip].filter(Boolean).join(', ') || 'USA')}</span></div>
-          <div class="avatar-detail-item"><span class="avatar-detail-label">⭐ ${esc(isVi() ? 'Đánh giá & Điểm số' : '评分分级')}:</span> <span class="avatar-detail-val"><b>${esc(lead.score)}đ</b> (${esc(lead.rank_tier)})</span></div>
-          <div class="avatar-detail-item"><span class="avatar-detail-label">🎯 ${esc(isVi() ? 'Sản phẩm gợi ý' : '匹配产品')}:</span> <span class="avatar-detail-val" style="color:var(--primary);font-weight:600">${esc(lead.product_fit)}</span></div>
-          ${lead.ai_vision_result ? `<div class="avatar-detail-item"><span class="avatar-detail-label">🤖 AI Vision:</span> <span class="avatar-detail-val" style="font-size:0.78rem;color:var(--text-2)">${esc(lead.ai_vision_result)}</span></div>` : ''}
-        </div>
-        <div class="avatar-popup-actions">
-          ${lead.url ? `<a href="${esc(lead.url)}" target="_blank" rel="noopener" class="btn btn-sm btn-primary" style="text-decoration:none">${openFbText}</a>` : ''}
-          <button class="btn btn-sm" onclick="closeAvatarModal()">${esc(isVi() ? 'Đóng' : '关闭')}</button>
-        </div>
-      </div>
-    </div>
-  `;
-
-      $('avatarModalContentBody').innerHTML = body;
-      $('avatarModalOverlay').style.display = 'flex';
-    }
-
-    function closeAvatarModal(event) {
-      if (event && event.target !== $('avatarModalOverlay')) return;
-      $('avatarModalOverlay').style.display = 'none';
-    }
-
-    function openWeatherModal(stt) {
-      const lead = S.leads.find(l => String(l.stt) === String(stt));
-      if (!lead) return;
-      const w = weatherOf(lead) || offlineWeather(lead);
-      const script = S.meta.weatherScripts[w.conditionType];
-      const suffix = isVi() ? 'Vi' : 'Zh';
-      const vars = { name: lead.name, city: lead.city || lead.state || 'USA', tempF: w.tempF, tempC: w.tempC };
-
-      const stats = [
-        [t('weatherStation'), esc(w.cityName || lead.city || lead.state || 'USA')],
-        [t('weatherTemp'), `${w.tempF}°F / ${w.tempC}°C`],
-        [t('weatherHumidity'), `💧 ${w.humidity}%`],
-        [t('weatherWind'), `💨 ${w.wind} mph`]
-      ];
-
-      $('modalContentBody').innerHTML = `
-    <div class="card" style="box-shadow:none;background:var(--surface-2);padding:1.1rem;margin-bottom:1.1rem">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:.9rem">
-        <div>
-          <div style="font-weight:800;font-size:1.08rem">${esc(lead.name)}</div>
-          ${lead.owner ? `<div style="font-size:.8rem;color:var(--sky);margin-top:.15rem">👤 <b>${esc(t('ownerLabel'))}</b> ${esc(lead.owner)}</div>` : ''}
-          <div style="font-size:.8rem;color:var(--text-2);margin-top:.15rem">📍 ${esc([lead.city, lead.state, lead.zip].filter(Boolean).join(', '))} · ${esc(lead.country || 'United States')}</div>
-        </div>
-        <span class="badge badge-${tierCls(lead.rank_tier)}">${esc(lead.rank_tier)} · ${lead.score}${esc(t('scoreUnit'))}</span>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.7rem;background:var(--surface);border:1px solid var(--border);padding:.75rem;border-radius:10px">
-        ${stats.map(([k, v]) => `<div><div style="font-size:.72rem;color:var(--text-3);font-weight:700">${k}</div><div style="font-size:.86rem;font-weight:700;font-family:var(--mono)">${v}</div></div>`).join('')}
-      </div>
-      <div style="font-weight:800;color:var(--sky);font-size:.95rem;margin:.9rem 0 .3rem">${esc(fmt(script['title' + suffix], vars))}</div>
-      <p style="font-size:.83rem;color:var(--text-2);line-height:1.7"><b>${esc(t('weatherImpact'))}</b> ${esc(fmt(script['behavior' + suffix], vars))}</p>
-    </div>
-    <div style="margin-bottom:1.1rem">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;gap:1rem">
-        <span style="font-weight:800;font-size:.9rem">${esc(t('weatherPitch'))}</span>
-        <button class="btn btn-sky btn-sm" onclick="copyPitchText()">${esc(t('modalCopy'))}</button>
-      </div>
-      <div id="salesPitchContainer" style="background:var(--sky-soft);border-left:4px solid var(--sky);border-radius:0 10px 10px 0;padding:1rem;font-size:.86rem;color:#0c4a6e;line-height:1.75;font-style:italic">
-        ${esc(fmt(script['pitch' + suffix], vars))}
-      </div>
-    </div>
-    <div style="display:flex;justify-content:flex-end">
-      <button class="btn btn-primary" onclick="closeWeatherModal()">${esc(t('modalClose'))}</button>
-    </div>`;
-
-      $('weatherModalOverlay').style.display = 'flex';
-    }
-    function closeWeatherModal() { $('weatherModalOverlay').style.display = 'none'; }
-    function copyPitchText() {
-      const el = $('salesPitchContainer');
-      if (!el) return;
-      navigator.clipboard.writeText(el.innerText).then(() => alert(t('modalCopied')));
-    }
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeWeatherModal(); closeAvatarModal(); } });
-
-    /* ============================ 导入 leads.json ============================ */
-    const LEAD_FIELDS = ['stt', 'name', 'owner', 'url', 'website', 'phone', 'email', 'address', 'city', 'state',
-      'zip', 'country', 'cat', 'cat_code', 'amz_cat', 'amz_link', 'product_fit', 'score', 'rank_tier', 'is_prio', 'sales_action', 'fb_id',
-      'avatar', 'avatar_url', 'avatar_type', 'avatar_label', 'ai_vision_result'];
-
-    /** 当前数据批次：内置快照只给到日期，导入文件精确到秒 */
-    function currentSource() {
-      if (S.source) return S.source;
-      const day = (S.meta && S.meta.report && S.meta.report.generatedAt) || '';
-      return { type: 'builtin', name: 'data/leads.json', at: new Date(day || Date.now()), atLabel: day || fmtDateTime(new Date(), true) };
-    }
-
-    function toast(msg, kind) {
-      const box = $('toast');
-      if (!box) return;
-      const el = document.createElement('div');
-      el.className = 'toast-item ' + (kind || '');
-      el.textContent = msg;
-      box.appendChild(el);
-      setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 320); }, 3800);
-    }
-
-    function tierOfScore(s) { return s >= 85 ? 'Tier S' : s >= 70 ? 'Tier A' : s >= 50 ? 'Tier B' : s >= 30 ? 'Tier C' : 'Tier D'; }
-
-    function codeOfCat(l) {
-      if (l.cat_code) return l.cat_code;
-      const c = String(l.cat || '').toLowerCase();
-      if (c.includes('rescue') || c.includes('shelter')) return 'rescue';
-      if (c.includes('training') || c.includes('grooming') || c.includes('care') || c.includes('k9')) return 'service';
-      return 'breeder';
-    }
-
-    /**
-     * 从 url 中提取 Facebook 主页 ID：
-     *   profile.php?id=100068499867139  -> 100068499867139
-     *   /466919830365897/               -> 466919830365897
-     *   /pages/Name/153319254699055/    -> 153319254699055
-     *   /Sierra-Springs-...-194814241052484/ -> 194814241052484
-     *   /lkbernedoodles/                -> lkbernedoodles（自定义用户名）
-     * 多个链接用 ; 分隔时取第一个 facebook 链接；非 FB 链接返回空。
-     */
-    function fbIdOf(lead) {
-      if (lead.fb_id) return String(lead.fb_id);
-      const raw = String(lead.url || '');
-      const parts = raw.split(/[;,\s]+/).filter(Boolean);
-      const fb = parts.find(u => /facebook\.com/i.test(u));
-      if (!fb) return '';
-      try {
-        const u = new URL(/^https?:/i.test(fb) ? fb : 'https://' + fb);
-        if (!/(^|\.)facebook\.com$/i.test(u.hostname)) return '';
-        const id = u.searchParams.get('id');
-        if (id && /^\d{5,}$/.test(id)) return id;
-        const seg = u.pathname.split('/').filter(Boolean);
-        if (!seg.length) return '';
-        if (seg[0] === 'pages') {
-          const nums = seg.filter(s => /^\d{5,}$/.test(s));
-          if (nums.length) return nums[nums.length - 1];
-        }
-        const last = seg[seg.length - 1];
-        if (/^\d{5,}$/.test(last)) return last;
-        const m = last.match(/-(\d{8,})$/);
-        if (m) return m[1];
-        return last.replace(/\?.*$/, '');
-      } catch (e) { return ''; }
-    }
-
-    /** 接受数组，或 { leads: [...] } 包装；补齐缺失字段并派生评级/分类编码 */
-    function normalizeLeads(raw) {
-      const arr = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.leads) ? raw.leads : null);
-      if (!arr) throw new Error('shape');
-      if (!arr.length) throw new Error('empty');
-      if (!arr[0] || typeof arr[0] !== 'object' || Array.isArray(arr[0])) throw new Error('shape');
-      return arr.map((l, i) => {
-        const o = {};
-        LEAD_FIELDS.forEach(k => { o[k] = (l && l[k] != null) ? l[k] : ''; });
-        o.score = Number(o.score) || 0;
-        if (!o.rank_tier) o.rank_tier = tierOfScore(o.score);
-        if (!o.cat_code) o.cat_code = codeOfCat(o);
-        if (!o.country) o.country = 'United States';
-        if (!o.stt) o.stt = 'LEAD-' + String(i + 1).padStart(6, '0');
-        if (!o.name) o.name = o.stt;
-        o.is_prio = !!o.is_prio || o.rank_tier === 'Tier S';
-        o.fb_id = fbIdOf(o);
-        return o;
-      });
-    }
-
-    /** 前端版统计引擎，与 tools/build.mjs 口径一致；导入后自动重算 */
-    function computeAnalytics(leads) {
-      const pct = (n) => leads.length ? +((n / leads.length) * 100).toFixed(1) : 0;
-      const tally = (fn) => {
-        const m = new Map();
-        for (const r of leads) { const k = fn(r); if (k == null || k === '') continue; m.set(k, (m.get(k) || 0) + 1); }
-        return [...m.entries()].sort((a, b) => b[1] - a[1]);
-      };
-      const order = ['Tier S', 'Tier A', 'Tier B', 'Tier C', 'Tier D'];
-      const tiersRaw = tally((l) => l.rank_tier).sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
-      const tiers = tiersRaw.map(([label, value]) => ({ label, value, percent: pct(value) }));
-
-      const AMZ = {
-        both_target: { zh: '玩具 + 草坪便盆（双目标）', vi: 'Cả đồ chơi + Cỏ/Potty (TARGET kép)' },
-        grass_target: { zh: '草坪 / 便盆 TARGET', vi: 'Cỏ / Khay Potty (TARGET)' },
-        toys_target: { zh: '玩具 TARGET', vi: 'Đồ chơi (TARGET)' },
-        amz_other: { zh: '亚马逊其他品类', vi: 'Amazon khác' },
-        no_amz: { zh: '暂无亚马逊店铺', vi: 'Chưa có Amazon' }
-      };
-      const amzRaw = tally(amzKindOf);
-      const amazon = amzRaw.map(([key, value]) => ({ key, value, percent: pct(value), zh: AMZ[key].zh, vi: AMZ[key].vi }));
-      const amazonIndex = Object.fromEntries(amzRaw);
-
-      const CAT = {
-        breeder: { zh: '商业繁育犬舍 (Breeder)', vi: 'Trại chó thương mại (Breeder)' },
-        service: { zh: '训犬 / 美容 / 寄宿 (Pet Care)', vi: 'Huấn luyện & Boarding' },
-        rescue: { zh: '动物救助站 (Rescue)', vi: 'Trạm cứu trợ / Shelter' }
-      };
-      const categories = tally((l) => l.cat_code).map(([key, value]) =>
-        ({ key, value, percent: pct(value), zh: (CAT[key] || { zh: key }).zh, vi: (CAT[key] || { vi: key }).vi }));
-
-      const scores = leads.map((l) => Number(l.score) || 0);
-      const buckets = [
-        { label: '85 - 100', min: 85, max: 100 }, { label: '70 - 84', min: 70, max: 84 },
-        { label: '50 - 69', min: 50, max: 69 }, { label: '30 - 49', min: 30, max: 49 },
-        { label: '< 30', min: -Infinity, max: 29 }
-      ].map(b => ({ label: b.label, value: scores.filter(s => s >= b.min && s <= b.max).length }));
-
-      const has = (k) => leads.filter((l) => typeof l[k] === 'string' && l[k].trim() !== '').length;
-      const contactCoverage = [
-        { key: 'phone', zh: '电话 Phone', vi: 'Điện thoại Phone', value: has('phone') },
-        { key: 'email', zh: '邮箱 Email', vi: 'Email', value: has('email') },
-        { key: 'website', zh: '官网 Website', vi: 'Website chính thức', value: has('website') },
-        { key: 'url', zh: 'Facebook 主页', vi: 'Trang Facebook', value: has('url') },
-        { key: 'zip', zh: '邮编 Zip', vi: 'Mã Zip', value: has('zip') }
-      ].map(d => ({ ...d, percent: pct(d.value) }));
-
-      const geoStates = tally((l) => String(l.state || '').trim().toUpperCase());
-      const reachable = leads.filter((l) => l.phone || l.email).length;
-
-      return {
-        generatedAt: new Date().toISOString(),
-        totalLeads: leads.length,
-        score: {
-          min: scores.length ? Math.min(...scores) : 0,
-          max: scores.length ? Math.max(...scores) : 0,
-          avg: scores.length ? +(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : 0,
-          buckets
-        },
-        tiers,
-        tierIndex: Object.fromEntries(tiers.map(d => [d.label, d.value])),
-        amazon,
-        amazonIndex,
-        amazonTotal: (amazonIndex.both_target || 0) + (amazonIndex.grass_target || 0) + (amazonIndex.toys_target || 0) + (amazonIndex.amz_other || 0),
-        categories,
-        contactCoverage,
-        geo: { states: geoStates.slice(0, 12).map(([label, value]) => ({ label: label || '未标注', value })), distinctStates: geoStates.filter(([s]) => s).length },
-        dataQuality: {
-          reachableByPhoneOrEmail: reachable,
-          reachablePercent: pct(reachable),
-          missingState: leads.filter((l) => !String(l.state || '').trim()).length
-        },
-        priorityLeads: leads.filter((l) => l.is_prio).length
-      };
-    }
-
-    function applyImported(leads, name) {
-      S.leads = leads;
-      S.filtered = [...leads];
-      S.page = 1;
-      S.sort = { key: 'score', dir: 'desc' };
-      Object.keys(S.weatherCache).forEach(k => delete S.weatherCache[k]);
-      S.an = computeAnalytics(leads);
-      const now = new Date();
-      S.source = { type: 'imported', name, count: leads.length, at: now, atLabel: fmtDateTime(now) };
-      renderShell();
-      applyI18n();
-      renderRadarHubs();
-      updateRadarStatus();
-      renderCharts();
-      renderTable();
-      toast(fmt(t('importSuccess'), { name, count: num(leads.length) }), 'ok');
-    }
-
-    function importError(err) {
-      const m = err && err.message;
-      const msg = m === 'shape' ? t('importInvalid') : m === 'empty' ? t('importEmpty') : (m || String(err));
-      toast(fmt(t('importFail'), { msg }), 'error');
-    }
-
-    async function importFileObject(file) {
-      if (!file) return;
-      try {
-        const text = await file.text();
-        applyImported(normalizeLeads(JSON.parse(text)), file.name);
-      } catch (err) { importError(err); }
-    }
-
-    function triggerImport() { const el = $('importFile'); if (el) el.click(); }
-
-    async function handleImportFile(ev) {
-      const input = ev.target;
-      const file = input.files && input.files[0];
-      if (file) await importFileObject(file);
-      input.value = '';
-    }
-
-    function bindDropZone() {
-      const zone = $('dataStrip');
-      if (!zone) return;
-      const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
-      ['dragenter', 'dragover'].forEach(ev => zone.addEventListener(ev, e => { stop(e); zone.classList.add('dragover'); }));
-      zone.addEventListener('dragleave', e => { stop(e); zone.classList.remove('dragover'); });
-      zone.addEventListener('drop', e => {
-        stop(e);
-        zone.classList.remove('dragover');
-        const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-        if (f) importFileObject(f);
-      });
-    }
-
-    /* ============================ 导出 ============================ */
-    function exportSalesData() {
-      const headers = isVi()
-        ? ['STT / Mã', 'FB ID', 'Tên đối tác', 'Chủ sở hữu / Đại diện', 'Điện thoại', 'Email', 'Website', 'Facebook URL',
-          'Thành phố', 'Bang', 'Zip', 'Quốc gia', 'Loại hình', 'Kênh Amazon', 'Link Amazon', 'Sản phẩm gợi ý',
-          'Điểm', 'Hạng', 'Thời tiết & kịch bản', 'Hành động Sales']
-        : ['序号', 'FB ID', '客户名称', '所有者/业务代表', '联系电话', '商务邮箱', '官方网站', 'Facebook 主页',
-          '城市', '州', '邮编', '国家', '业务分类', '亚马逊渠道', '亚马逊链接', '推荐匹配产品',
-          '综合评分', '客户评级', '实时天气与营销触发', '销售动作建议'];
-
-      const rows = S.filtered.map(l => {
-        const w = weatherOf(l);
-        const trg = triggerOf(l, w);
-        const weatherStr = w ? `${trg.icon} ${trg.label}: ${trg.pitch}` : '';
-        return [l.stt, l.fb_id || '', l.name || '', l.owner || '', l.phone || '', l.email || '', l.website || '', l.url || '',
-        l.city || '', l.state || '', l.zip || '', l.country || 'United States', l.cat || '',
-        l.amz_cat || '', l.amz_link || '', l.product_fit || '', l.score, l.rank_tier, weatherStr, l.sales_action || ''];
-      });
-
-      const src = currentSource();
-      const prefix = (isVi() ? 'Danh_Sach_Khach_Hang_Sales_Pet_Grass' : '美国狗舍潜客销售联络表')
-        + '_' + safeName(src.name) + '_' + stampOf(src.at);
-
-      if (typeof XLSX !== 'undefined') {
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        ws['!cols'] = [16, 22, 32, 25, 18, 28, 30, 26, 16, 10, 12, 15, 26, 26, 30, 28, 10, 12, 52, 40].map(wch => ({ wch }));
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, isVi() ? 'Khach_Hang_Sales' : '潜客销售列表');
-        XLSX.writeFile(wb, `${prefix}.xlsx`);
-      } else {
-        const csv = '\uFEFF' + [headers, ...rows]
-          .map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-        a.download = `${prefix}.csv`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      }
-    }
-
-    /* Xuất theo định dạng chuẩn 38 Cột như file priority-data-batch3-20-leads-20261016.xlsx */
-    function exportPriorityBatch38Data() {
-      const headers = [
-        '邮箱地址', '邮箱地址状态', '名字', '姓氏', '全名',
-        '用户社交', 'Facebook ID', 'LinkedIn', '工作职位', '国家',
-        '地址', '行业', '添加日期', '公司名称', '公司网址',
-        '公司社交', '公司规模', '公司所处国家', '公司位置', '州',
-        '城市', '公司所在行业', '总部电话', '电话', '背调链接',
-        '测试打开次数', '客户等级', '打开网页', '营销更新', '回复次数',
-        '营销打开次数', '营销邮件次数', '营销邮件数量', '年级/班级', '班级',
-        '休眠原因', 'remark', 'CRM NO.'
-      ];
-
-      const rows = S.filtered.map(l => {
-        const isGen = isGenericOwner(l.owner, l.name);
-        let firstName = '', lastName = '', fullName = '';
-        let jobTitle = 'Breeder Owner / Kennel Manager';
-
-        if (!isGen && l.owner) {
-          fullName = String(l.owner).trim();
-          const parts = fullName.split(/\s+/);
-          if (parts.length > 1) {
-            lastName = parts[parts.length - 1];
-            firstName = parts.slice(0, -1).join(' ');
-          } else {
-            firstName = parts[0];
-          }
-          jobTitle = 'Owner / Breeder';
-        }
-
-        const email = l.email || '';
-        const emailStatus = email ? 'valid' : '';
-        const rawPhone = l.phone || '';
-        const cleanDigits = rawPhone.replace(/\D/g, '');
-        const intlPhone = cleanDigits ? (cleanDigits.startsWith('1') ? cleanDigits : '1' + cleanDigits) : '';
-        const locAddress = l.address || [l.city, l.state, l.zip].filter(Boolean).join(', ') || '';
-        const stateName = l.state || '';
-        const cityName = l.city || '';
-        const countryName = l.country || 'United States';
-        const industryName = l.industry || l.cat || 'Pet Breeding / Dog Breeder (B2B)';
-        const dateAdded = fmtDateTime(new Date(), false);
-        const companyName = l.name || '';
-        const website = l.website || '';
-        const fbUrl = l.url || '';
-        const fbId = l.fb_id || '';
-        const crmNo = l.stt || ('LEAD-US-' + String(l.id || '').padStart(6, '0'));
-        const remarkStr = `${l.rank_tier || 'Tier S'} (Score: ${l.score || 80}) | FB ID: ${fbId}${l.product_fit ? ' | Fit: ' + l.product_fit : ''}${l.amz_cat ? ' | Amazon: ' + l.amz_cat : ''}`;
-
-        return [
-          email, emailStatus, firstName, lastName, fullName,
-          fbUrl, fbId, '', jobTitle, countryName,
-          locAddress, industryName, dateAdded, companyName, website,
-          fbUrl, '', countryName, locAddress, stateName,
-          cityName, industryName, rawPhone, intlPhone, '',
-          '', '', '', '', '',
-          '', '', '', '', '',
-          '', remarkStr, crmNo
-        ];
-      });
-
-      const src = currentSource();
-      const prefix = (isVi() ? 'Priority_Data_Batch_Leads_38Cot' : '美国狗舍标准潜客38列联络表')
-        + '_' + safeName(src.name) + '_' + stampOf(new Date());
-
-      if (typeof XLSX !== 'undefined') {
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        ws['!cols'] = [
-          { wch: 28 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 24 },
-          { wch: 35 }, { wch: 18 }, { wch: 15 }, { wch: 24 }, { wch: 15 },
-          { wch: 35 }, { wch: 32 }, { wch: 20 }, { wch: 30 }, { wch: 30 },
-          { wch: 35 }, { wch: 12 }, { wch: 15 }, { wch: 35 }, { wch: 15 },
-          { wch: 18 }, { wch: 32 }, { wch: 18 }, { wch: 18 }, { wch: 15 },
-          { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
-          { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
-          { wch: 12 }, { wch: 45 }, { wch: 18 }
-        ];
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Batch3_20_Khach_Hang');
-        XLSX.writeFile(wb, `${prefix}.xlsx`);
-      } else {
-        const csv = '\uFEFF' + [headers, ...rows]
-          .map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-        a.download = `${prefix}.csv`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      }
-    }
-
-    /* ============================ 启动 ============================ */
-    (async function init() {
-      try {
-        S.data = await loadData();
-      } catch (err) {
-        $('app').innerHTML = `<div class="loading-wrap">
-      <div class="load-error">
-        <b>${isVi() ? 'Không thể tải dữ liệu' : '无法加载数据'}</b><br>
-        data/leads.json、data/analytics.json、data/meta.json、data/i18n.json 或 data/loader.js 缺失。<br>
-        ${isVi() ? 'Hãy chạy:' : '请在项目根目录执行：'} <code>node tools/build.mjs</code>
-      </div></div>`;
-        return;
-      }
-      S.meta = S.data.meta;
-      S.i18n = S.data.i18n;
-      const builtinDay = (S.meta.report && S.meta.report.generatedAt) || fmtDateTime(new Date(), true);
-      S.leads = normalizeLeads(S.data.leads);
-      S.source = { type: 'builtin', name: 'data/leads.json', at: new Date(builtinDay), atLabel: builtinDay };
-      S.an = computeAnalytics(S.leads);
-      S.pageSize = (S.meta && S.meta.config && S.meta.config.pageSize) || 25;
-      S.filtered = [...S.leads];
-
-      // 阻止把文件拖到页面空白处时浏览器直接打开（会丢失当前状态）
-      ['dragover', 'drop'].forEach(ev => document.addEventListener(ev, e => {
-        const el = e.target;
-        if (el && el.closest && el.closest('#dataStrip')) return;
-        e.preventDefault();
-      }));
-
-      renderShell();
-      applyI18n();
-      renderRadarHubs();
-      updateRadarStatus();
-      renderCharts();
-      renderTable();
-    })();
+    // Load saved theme
+    const savedTheme = localStorage.getItem('portal_theme') || 'light';
+    setTheme(savedTheme);
   </script>
 </body>
-
 </html>

@@ -56,6 +56,7 @@
       thAmazon: "Kênh Bán Amazon",
       thLocation: "Vị Trí (City, State)",
       thPublish: "Bài Đăng Gần Nhất",
+      thReelsInsights: "🎬 Hậu Trường Reels",
       thCategory: "Nhóm Khách Hàng",
       thProduct: "Sản Phẩm Phù Hợp",
       thTier: "Xếp Hạng & Điểm",
@@ -114,6 +115,7 @@
       thAmazon: "亚马逊销售渠道",
       thLocation: "地理位置 (州/市)",
       thPublish: "最新发帖时间",
+      thReelsInsights: "🎬 Reels爆款透视",
       thCategory: "客户分类",
       thProduct: "推荐匹配产品",
       thTier: "评级与评分",
@@ -405,7 +407,7 @@ const STEP1_AVATAR_LOOKUP = {
     if (filtered.length === 0) {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td colspan="14" style="text-align:center; padding:36px; color:#64748b; font-size:13px;">
+        <td colspan="15" style="text-align:center; padding:36px; color:#64748b; font-size:13px;">
           ${searchQuery || filterAmz !== 'ALL' || filterTierVal !== 'ALL' ? '🔍 Không tìm thấy hồ sơ phù hợp với bộ lọc.' : '📂 Chưa có dữ liệu hồ sơ CRM. Hãy dán link và bấm "Bắt đầu cào phễu" hoặc "Nạp Lead Bước 1".'}
         </td>
       `;
@@ -449,12 +451,15 @@ const STEP1_AVATAR_LOOKUP = {
       // Amazon badge (Song ngữ Việt - Trung)
       let amzBadge = `<span style="color:#64748b; font-size:11px;">Chưa có link / 暂无</span>`;
       if (item.amazon_url || item.has_amazon) {
-        const amzLink = item.amazon_url || `https://www.amazon.com/s?k=${encodeURIComponent(item.name || 'dog')}`;
+        const rawAmz = item.amazon_url || '';
+        const amzLinks = rawAmz.split(',').map(s => s.trim()).filter(Boolean);
+        const primaryAmz = amzLinks[0] || `https://www.amazon.com/s?k=${encodeURIComponent(item.name || 'dog')}`;
         const amzCat = item.amz_cat || 'Kênh bán Amazon / 亚马逊店铺';
+        const label = amzLinks.length > 1 ? `🛒 Amazon (${amzLinks.length}) / 亚马逊` : `🛒 Amazon / 亚马逊`;
         amzBadge = `
           <div>
-            <a href="${amzLink}" target="_blank" rel="noopener noreferrer" class="badge-amz" title="${escapeHtml(amzCat)}">
-              🛒 Amazon / 亚马逊
+            <a href="${primaryAmz}" target="_blank" rel="noopener noreferrer" class="badge-amz" title="${escapeHtml(rawAmz || amzCat)}">
+              ${label}
             </a>
           </div>
         `;
@@ -512,9 +517,15 @@ const STEP1_AVATAR_LOOKUP = {
           ${email ? `<div style="color:#059669; font-size:11px; margin-top:2px; font-family:var(--font-mono); font-weight:600;">✉️ ${escapeHtml(email)}</div>` : ''}
         </td>
         <td>
-          ${website ? `
-            <a href="${website}" target="_blank" rel="noopener noreferrer" style="color:#0284c7; text-decoration:none; font-weight:650; font-size:12px;" title="${escapeHtml(website)}">🌐 ${escapeHtml(website.replace(/^https?:\/\//, '').split('/')[0])}</a>
-          ` : `<span style="color:#94a3b8; font-size:11px;">Chưa có web / 暂无</span>`}
+          ${website ? (
+            /(?:amazon\.[a-z.]+|amzn\.to|a\.co)/i.test(website) ? `
+              <a href="${website}" target="_blank" rel="noopener noreferrer" style="color:#f59e0b; text-decoration:none; font-weight:650; font-size:12px;" title="${escapeHtml(website)}">🛒 Amazon Store</a>
+            ` : `
+              <a href="${website}" target="_blank" rel="noopener noreferrer" style="color:#0284c7; text-decoration:none; font-weight:650; font-size:12px;" title="${escapeHtml(website)}">🌐 ${escapeHtml(website.replace(/^https?:\/\//, '').split('/')[0])}</a>
+            `
+          ) : (item.amazon_url ? `
+            <a href="${item.amazon_url.split(',')[0].trim()}" target="_blank" rel="noopener noreferrer" style="color:#f59e0b; text-decoration:none; font-weight:650; font-size:12px;" title="${escapeHtml(item.amazon_url)}">🛒 Amazon Store</a>
+          ` : `<span style="color:#94a3b8; font-size:11px;">Chưa có web / 暂无</span>`)}
         </td>
         <td>
           ${amzBadge}
@@ -530,6 +541,26 @@ const STEP1_AVATAR_LOOKUP = {
             <span style="color:#64748b;">⏱️ ${escapeHtml(relTime)}</span>
             <span class="badge-status">${escapeHtml(actStatus)}</span>
           </div>
+        </td>
+        <td style="min-width:145px; max-width:185px;">
+          ${(item.has_reel || item.hasReel || item.reel_url || item.reelUrl) ? `
+            <div>
+              <span class="badge-status" style="background:#fef3c7; color:#b45309; border-color:#fde68a; font-weight:750; font-size:11px; display:inline-flex; align-items:center; gap:3px;">
+                ${escapeHtml(item.reel_viral_badge || item.reelViralBadge || (item.reel_viral_age_days ? `🔥 Đề xuất (${item.reel_viral_age_days} ngày)` : '🔥 Có Video Reel'))}
+              </span>
+            </div>
+            <div style="font-size:10.5px; color:#64748b; margin-top:3px; display:flex; gap:6px; align-items:center;">
+              ${(item.reel_duration || item.reelDuration) ? `<span>⏱️ <strong>${escapeHtml(item.reel_duration || item.reelDuration)}</strong></span>` : ''}
+              ${(item.reel_play_count || item.reelPlayCount) ? `<span>👁️ ${Number(item.reel_play_count || item.reelPlayCount).toLocaleString()}</span>` : ''}
+            </div>
+            <div style="margin-top:4px;">
+              <button type="button" class="tbl-btn btn-reel-insights" data-reel-key="${escapeHtml(leadKey)}" onclick="openReelInsightsModal('${escapeJs(leadKey)}'); return false;" style="background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; font-size:10.5px; padding:2px 7px; font-weight:700;" title="Soi chi tiết Hook, Thời lượng, Hashtags và Công thức Viral của chiếc Reel này">
+                <span>👁️ Soi Reel / 算法透视</span>
+              </button>
+            </div>
+          ` : `
+            <span style="color:#94a3b8; font-size:11px;">Chưa có Reel / 暂无</span>
+          `}
         </td>
         <td>
           <span style="font-size:11px; color:#0369a1; background:#e0f2fe; padding:2px 7px; border-radius:5px; border:1px solid #bae6fd; font-weight:600;" title="${escapeHtml(item.cat || 'Dog Breeder')}">
@@ -872,7 +903,9 @@ const STEP1_AVATAR_LOOKUP = {
         '公司位置', '州 (State)', '城市 (City)', '公司所在行业', '总部电话', '电话 (Phone)',
         '背调链接 (Google AI)', '测试打开次数', '客户等级 (Tier)', '打开网页', '营销更新',
         '回复次数', '营销打开次数', '营销邮件次数', '营销邮件数量', '年级/班级', '班级',
-        '休眠原因', '推荐匹配产品 (Product Fit)', '销售跟进建议 (Sales Action)'
+        '休眠原因', '推荐匹配产品 (Product Fit)', '销售跟进建议 (Sales Action)',
+        'Reels 视频链接 (Reel URL)', 'Reels 发布时间 (Reel Date)', '爆款周期 (Viral Days)',
+        'Reel 时长 (Duration)', 'Reel 文案与Hook (Caption/Hook)', 'Reel 标签 (Hashtags)'
       ];
 
       worksheet.addRow(headers);
@@ -928,7 +961,13 @@ const STEP1_AVATAR_LOOKUP = {
           '✓ TÍCH CỰC',
           0, 0, 0, 0, '', '', '',
           lead.product_fit || 'Puppy Starter Kit V2/V3',
-          lead.sales_action || 'Liên hệ giới thiệu thảm cỏ nhân tạo & khay vệ sinh'
+          lead.sales_action || 'Liên hệ giới thiệu thảm cỏ nhân tạo & khay vệ sinh',
+          lead.reel_url || lead.reelUrl || '',
+          lead.reel_publish_time || lead.reelPublishTime || '',
+          lead.reel_viral_age_days || lead.reelViralAgeDays || 0,
+          lead.reel_duration || lead.reelDuration || '',
+          lead.reel_caption || lead.reelCaption || '',
+          lead.reel_hashtags || lead.reelHashtags || ''
         ];
 
         const r = worksheet.addRow(rowValues);
@@ -1138,6 +1177,24 @@ const STEP1_AVATAR_LOOKUP = {
 
         saveLeadsToStorage();
         renderCrmTable();
+        updateKpiCards();
+
+        // Cập nhật ngay sang Bảng Chấm Công (Ledger Matrix) trên client
+        try {
+          generateLedgerDataFromLeads(allLeads);
+          renderLedgerMatrixTable();
+        } catch (errLedger) {
+          console.warn('[Dashboard] Lỗi tạo ledger từ allLeads:', errLedger);
+        }
+
+        // Tự động đồng bộ sang Python Backend (nếu server đang chạy ngầm)
+        try {
+          fetch('http://127.0.0.1:8000/api/ingest-ledger', { method: 'POST' })
+            .then(r => r.json())
+            .then(res => {
+              if (res.status === 'ok') loadLedgerData();
+            }).catch(() => {});
+        } catch (_) {}
 
         const successMsg = currentLang === 'zh'
           ? `✅ 成功从JSON文件导入 ${importedLeads.length} 个狗识别潜客档案 (新增: ${addedCount})！已同步Avatar与FB ID！`
@@ -1218,41 +1275,64 @@ const STEP1_AVATAR_LOOKUP = {
     if (fromVal > urls.length) return alert(`Dòng bắt đầu (${fromVal}) vượt quá tổng số link (${urls.length})!`);
     if (fromVal > toVal) return alert('Dòng bắt đầu không thể lớn hơn dòng kết thúc!');
 
-    // Chạy ngầm hoàn toàn, giữ nguyên tab UI Dashboard không bao giờ chuyển tab
-    chrome.runtime.sendMessage({
-      action: 'START_AUTO',
+    // 1. Gửi trực tiếp nếu đang trong context Extension
+    let sent = false;
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+      try {
+        chrome.runtime.sendMessage({
+          action: 'START_AUTO',
+          urls: urls,
+          startIndex: fromVal - 1,
+          endIndex: toVal - 1,
+          tabId: null
+        }, () => {
+          sent = true;
+          isAutoRunning = true;
+          isPaused = false;
+          updateControlsUi();
+          appendTerminalLog(`🚀 Bắt đầu cào phễu từ dòng ${fromVal} đến dòng ${toVal} (Extension)...`, 'info');
+        });
+      } catch (e) {}
+    }
+
+    // 2. Cầu nối postMessage để Content Script của Extension chuyển tiếp vào background.js (cho server 43.156.237.143)
+    window.postMessage({
+      type: 'START_AUTO',
       urls: urls,
       startIndex: fromVal - 1,
-      endIndex: toVal - 1,
-      tabId: null
-    }, () => {
-      isAutoRunning = true;
-      isPaused = false;
-      updateControlsUi();
-      appendTerminalLog(`🚀 Bắt đầu cào phễu từ dòng ${fromVal} đến dòng ${toVal} (chạy ngầm)...`, 'info');
-    });
+      endIndex: toVal - 1
+    }, '*');
+
+    isAutoRunning = true;
+    isPaused = false;
+    updateControlsUi();
+    appendTerminalLog(`🚀 Đã gửi lệnh bắt đầu cào phễu (${fromVal} ➔ ${toVal}) tới Extension!`, 'info');
   });
 
   $('btnResume')?.addEventListener('click', () => {
-    // Chạy ngầm hoàn toàn, giữ nguyên tab UI Dashboard không bao giờ chuyển tab
-    chrome.runtime.sendMessage({
-      action: 'RESUME_AUTO',
-      tabId: null
-    }, () => {
-      isAutoRunning = true;
-      isPaused = false;
-      updateControlsUi();
-      appendTerminalLog('⏯ Đang tiếp tục cào phễu trong tab ngầm...', 'info');
-    });
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+      try {
+        chrome.runtime.sendMessage({ action: 'RESUME_AUTO', tabId: null });
+      } catch (e) {}
+    }
+    window.postMessage({ type: 'RESUME_AUTO' }, '*');
+    isAutoRunning = true;
+    isPaused = false;
+    updateControlsUi();
+    appendTerminalLog('⏯ Đang tiếp tục cào phễu trong tab ngầm...', 'info');
   });
 
   $('btnPause')?.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ action: 'STOP_AUTO' }, () => {
-      isAutoRunning = false;
-      isPaused = true;
-      updateControlsUi();
-      appendTerminalLog('⏹ Đã tạm dừng cào phễu!', 'warning');
-    });
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+      try {
+        chrome.runtime.sendMessage({ action: 'STOP_AUTO' });
+      } catch (e) {}
+    }
+    window.postMessage({ type: 'STOP_AUTO' }, '*');
+    isAutoRunning = false;
+    isPaused = true;
+    updateControlsUi();
+    appendTerminalLog('⏹ Đã tạm dừng cào phễu!', 'warning');
   });
 
   $('btnClearAllData')?.addEventListener('click', () => {
@@ -1488,9 +1568,37 @@ const STEP1_AVATAR_LOOKUP = {
     } catch (_) {}
 
     if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) {
-      allLeads = localLeads || DEFAULT_LEADS_FALLBACK;
-      renderCrmTable();
-      updateKpiCards();
+      if (localLeads && localLeads.length > 7) {
+        allLeads = localLeads;
+        renderCrmTable();
+        updateKpiCards();
+        loadLedgerData();
+        return;
+      }
+
+      // Khi chạy qua Web Server (Nginx / Live Server): Tự động nạp LEAD_US_Meta_CRM_2026-10-22.json
+      fetch('LEAD_US_Meta_CRM_2026-10-22.json')
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            allLeads = data;
+            saveLeadsToStorage();
+            renderCrmTable();
+            updateKpiCards();
+            loadLedgerData();
+          } else {
+            allLeads = localLeads || DEFAULT_LEADS_FALLBACK;
+            renderCrmTable();
+            updateKpiCards();
+            loadLedgerData();
+          }
+        })
+        .catch(() => {
+          allLeads = localLeads || DEFAULT_LEADS_FALLBACK;
+          renderCrmTable();
+          updateKpiCards();
+          loadLedgerData();
+        });
       return;
     }
 
@@ -1711,6 +1819,15 @@ const STEP1_AVATAR_LOOKUP = {
         if ($('progressPercentText')) $('progressPercentText').textContent = '100%';
         if ($('statusLine')) $('statusLine').textContent = '🎉 Đã hoàn tất toàn bộ quá trình cào!';
         appendTerminalLog('🎉 TOÀN BỘ QUÁ TRÌNH BÓC TÁCH BƯỚC 2 ĐÃ HOÀN TẤT THÀNH CÔNG!', 'success');
+
+        // Tự động đồng bộ sang Bảng Chấm Công (Ledger)
+        try {
+          fetch('http://127.0.0.1:8000/api/ingest-ledger', { method: 'POST' })
+            .then(r => r.json())
+            .then(res => {
+              if (res.status === 'ok') loadLedgerData();
+            }).catch(() => {});
+        } catch (_) {}
       } else if (msg.action === 'STATE_UPDATED') {
         const s = msg.state || {};
         isAutoRunning = s.isAutoRunning || false;
@@ -1772,6 +1889,7 @@ const STEP1_AVATAR_LOOKUP = {
       thAmazon: { vi: 'KÊNH BÁN AMAZON', zh: '亚马逊渠道' },
       thLocation: { vi: 'VỊ TRÍ (CITY, STATE)', zh: '地理位置' },
       thPublish: { vi: 'BÀI ĐĂNG GẦN NHẤT', zh: '最新发帖' },
+      thReelsInsights: { vi: '🎬 HẬU TRƯỜNG REELS', zh: 'Reels爆款透视' },
       thCategory: { vi: 'NHÓM KHÁCH HÀNG', zh: '客户分类' },
       thProduct: { vi: 'SẢN PHẨM PHÙ HỢP', zh: '推荐匹配产品' },
       thTier: { vi: 'XẾP HẠNG & ĐIỂM', zh: '评级与得分' },
@@ -1846,6 +1964,14 @@ const STEP1_AVATAR_LOOKUP = {
         copyText(copyBtn.getAttribute('data-copy'));
         return;
       }
+      const reelBtn = e.target.closest('[data-reel-key], .btn-reel-insights');
+      if (reelBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = reelBtn.getAttribute('data-reel-key');
+        openReelInsightsModal(key);
+        return;
+      }
       const avatarBox = e.target.closest('.circle-avatar-box, [data-profile-url]');
       if (avatarBox) {
         const pUrl = avatarBox.getAttribute('data-profile-url') || avatarBox.getAttribute('href');
@@ -1859,13 +1985,510 @@ const STEP1_AVATAR_LOOKUP = {
     });
   }
 
-  // Phơi bày hàm ra window để inline onclick và sub-scripts đều gọi được
+  // =========================================================================
+  // 🎬 HẬU TRƯỜNG REELS VIRAL (REVERSE ENGINEERING REELS ALGORITHM)
+  // =========================================================================
+  function openReelInsightsModal(leadKey) {
+    const lead = allLeads.find(l => (l.stt || l.lead_id || l.fb_id) == leadKey) || allLeads[Number(leadKey)];
+    if (!lead) return;
+
+    const modal = $('modalReelInsights');
+    if (!modal) return;
+
+    const fbId = lead.fb_id ? String(lead.fb_id).trim() : '';
+    const name = lead.name || lead.owner || 'Facebook Dog Lead';
+    const profileUrl = lead.url || (fbId ? `https://www.facebook.com/profile.php?id=${fbId}` : '#');
+    const avatarUrl = resolveAvatarFallback(fbId, profileUrl, lead.avatar_url || lead.avatar, lead.owner, lead.name);
+
+    if ($('reelModalAvatar')) $('reelModalAvatar').src = avatarUrl;
+    if ($('reelModalOwnerName')) $('reelModalOwnerName').textContent = `${lead.owner ? lead.owner + ' • ' : ''}${name}`;
+    if ($('reelModalFbId')) $('reelModalFbId').textContent = fbId ? `#${fbId}` : '---';
+    if ($('reelModalCategory')) $('reelModalCategory').textContent = lead.cat || 'Dog Breeder / 犬舍繁育';
+
+    const publishDate = lead.reel_publish_time || lead.reelPublishTime || 'Chưa rõ ngày';
+    const viralBadge = lead.reel_viral_badge || lead.reelViralBadge || (lead.reel_viral_age_days ? `🔥 Đề xuất (${lead.reel_viral_age_days} ngày)` : 'Có Video Reel');
+    const duration = lead.reel_duration || lead.reelDuration || (lead.reel_duration_sec ? `${lead.reel_duration_sec}s` : '---');
+    const playCount = Number(lead.reel_play_count || lead.reelPlayCount || 0).toLocaleString();
+
+    if ($('reelModalPublishDate')) $('reelModalPublishDate').textContent = publishDate;
+    if ($('reelModalViralBadge')) $('reelModalViralBadge').textContent = viralBadge;
+    if ($('reelModalDuration')) $('reelModalDuration').textContent = duration;
+    if ($('reelModalPlayCount')) $('reelModalPlayCount').textContent = playCount;
+
+    const caption = lead.reel_caption || lead.reelCaption || '(Chưa bóc tách được nội dung chữ của Reel)';
+    const hashtags = lead.reel_hashtags || lead.reelHashtags || '#puppy #dogbreeder #viralreels';
+    const reelUrl = lead.reel_url || lead.reelUrl || (lead.reel_id ? `https://www.facebook.com/reel/${lead.reel_id}` : (lead.url || '#'));
+
+    if ($('reelModalCaption')) $('reelModalCaption').value = caption;
+    if ($('reelModalHashtags')) $('reelModalHashtags').value = hashtags;
+
+    const btnDirect = $('btnReelDirectUrl');
+    if (btnDirect) {
+      btnDirect.href = reelUrl;
+      btnDirect.style.display = (reelUrl && reelUrl !== '#') ? 'inline-flex' : 'none';
+    }
+
+    const tipBox = $('reelModalStrategyTip');
+    if (tipBox) {
+      const ageDays = lead.reel_viral_age_days || lead.reelViralAgeDays || 0;
+      tipBox.innerHTML = `
+        <strong>💡 Bí mật phân phối của Reel này:</strong> Video xuất bản từ <em>${publishDate}</em> (${ageDays > 0 ? `cách đây ${ageDays} ngày` : 'mới đây'}) vẫn được thuật toán Reels phân phối tự nhiên toàn cầu nhờ thời lượng vàng <strong>${duration}</strong> và câu Hook giữ chân khán giả.<br>
+        <strong>🎯 Khuyến nghị Content/Sales:</strong> Sử dụng cấu trúc Hook này để quay video demo <em>Thảm cỏ huấn luyện / Khay vệ sinh Pet Potty</em> để đón đầu luồng reach tự nhiên!
+      `;
+    }
+
+    modal.style.display = 'flex';
+  }
+  window.openReelInsightsModal = openReelInsightsModal;
+
+  $('btnReelModalClose')?.addEventListener('click', () => {
+    if ($('modalReelInsights')) $('modalReelInsights').style.display = 'none';
+  });
+  $('btnReelModalCloseBottom')?.addEventListener('click', () => {
+    if ($('modalReelInsights')) $('modalReelInsights').style.display = 'none';
+  });
+  $('btnCopyReelCaption')?.addEventListener('click', () => {
+    const cap = $('reelModalCaption')?.value || '';
+    if (cap) {
+      copyText(cap);
+      appendTerminalLog('📋 Đã sao chép Hook của Reel vào Clipboard!', 'success');
+    }
+  });
+
+  // =========================================================================
+  // 📅 ACTIVITY LEDGER & ATTENDANCE TIMESHEET LOGIC (BẢNG CHẤM CÔNG HOẠT ĐỘNG)
+  // =========================================================================
+  let ledgerData = { leads: {}, tracked_dates: [] };
+
+  const tabBtnCrm = $('tabBtnCrmTable');
+  const tabBtnLedger = $('tabBtnLedgerTable');
+  const viewCrm = $('viewCrmTable');
+  const viewLedger = $('viewLedgerTable');
+
+  if (tabBtnCrm && tabBtnLedger && viewCrm && viewLedger) {
+    tabBtnCrm.addEventListener('click', () => {
+      tabBtnCrm.classList.add('active');
+      tabBtnLedger.classList.remove('active');
+      viewCrm.style.display = 'block';
+      viewLedger.style.display = 'none';
+    });
+
+    tabBtnLedger.addEventListener('click', () => {
+      tabBtnLedger.classList.add('active');
+      tabBtnCrm.classList.remove('active');
+      viewCrm.style.display = 'none';
+      viewLedger.style.display = 'block';
+      loadLedgerData();
+    });
+  }
+
+  // Tự động tạo dữ liệu Bảng Chấm Công (Ledger) trực tiếp từ mảng allLeads trên Client
+  function generateLedgerDataFromLeads(leads) {
+    if (!leads || !Array.isArray(leads) || leads.length === 0) return;
+
+    const dateSet = new Set();
+    const leadsMap = {};
+
+    leads.forEach((l, idx) => {
+      const fbId = l.fb_id || `lead_${idx + 1}`;
+      const pubStr = l.publish_time || l.publishTime || '';
+
+      // Trích xuất ngày và giờ từ chuỗi publish_time (e.g. 22/10/2026 04:18:49)
+      let dateKey = '2026-10-22';
+      let timeKey = '12:00';
+
+      const cleanPub = pubStr.replace(/\(Pinned\)/gi, '').replace(/\(Reels\/Feed\)/gi, '').replace(/\(Reels\)/gi, '').trim();
+      const parts = cleanPub.split(' ');
+      if (parts.length >= 2 && parts[0].includes('/')) {
+        const dParts = parts[0].split('/');
+        if (dParts.length === 3) {
+          dateKey = `${dParts[2]}-${dParts[1].padStart(2, '0')}-${dParts[0].padStart(2, '0')}`;
+          const tParts = parts[1].split(':');
+          timeKey = `${tParts[0] || '12'}:${tParts[1] || '00'}`;
+        }
+      } else if (cleanPub.includes('-')) {
+        const dMatch = cleanPub.match(/\d{4}-\d{2}-\d{2}/);
+        if (dMatch) dateKey = dMatch[0];
+      }
+
+      dateSet.add(dateKey);
+
+      // Tính toán khung giờ vàng
+      let goldenHour = '16:00 - 18:00';
+      try {
+        const h = parseInt(timeKey.split(':')[0], 10);
+        if (!isNaN(h)) {
+          const startH = Math.max(0, h - 1);
+          const endH = Math.min(23, h + 1);
+          goldenHour = `${String(startH).padStart(2, '0')}:00 - ${String(endH).padStart(2, '0')}:00`;
+        }
+      } catch (_) {}
+
+      // Kịch bản Telesale RAG
+      const owner = l.owner || 'Chủ trại';
+      const name = l.name || 'Trại cún';
+      let hook = `🔥 TELESALE HOOK: 'Chào ${owner}, em thấy trại ${name} vừa đăng bài cập nhật cún con (${pubStr})! ` +
+        `Bên em chuyên cung cấp giải pháp Khay vệ sinh Pet Potty 3 lớp thoát nước nhanh và Bộ quà tặng Take-Home Kit in logo riêng của trại. ` +
+        `Khung giờ gọi tối ưu: ${goldenHour} (US CST/EST).'`;
+      if (l.has_amazon || l.amazon_url) {
+        hook += ` [Lưu ý: Khách có bán Storefront trên Amazon -> Đề xuất giá sỉ B2B Wholesale]`;
+      }
+
+      const actLedger = {};
+      actLedger[dateKey] = {
+        posted: true,
+        post_time: timeKey,
+        post_type: pubStr.includes('Pinned') ? 'Pinned' : 'Feed',
+        full_str: pubStr
+      };
+
+      leadsMap[fbId] = {
+        fb_id: fbId,
+        lead_id: l.lead_id || l.stt || `LEAD-US-${String(idx + 1).padStart(5, '0')}`,
+        name: l.name || 'Facebook User',
+        owner: l.owner || 'Chủ trại',
+        phone: l.phone || '',
+        email: l.email || '',
+        website: l.website || '',
+        amazon_url: l.amazon_url || '',
+        has_amazon: Boolean(l.has_amazon || l.amazon_url),
+        city: l.city || '',
+        state: l.state || '',
+        url: l.url || `https://www.facebook.com/profile.php?id=${fbId}`,
+        avatar: l.avatar_url || l.avatar || '',
+        score: l.score || 75,
+        rank_tier: l.rank_tier || 'Tier A',
+        sales_action: l.sales_action || 'Telesale: Liên hệ tư vấn sản phẩm',
+        activity_ledger: actLedger,
+        golden_hour_slot: goldenHour,
+        active_streak_days: 1,
+        latest_post_time: pubStr || 'Hôm nay',
+        latest_post_date: dateKey,
+        sales_telesale_hook: hook
+      };
+    });
+
+    const sortedDates = Array.from(dateSet).sort();
+    ledgerData = {
+      tracked_dates: sortedDates,
+      leads: leadsMap
+    };
+
+    updateLedgerUiCounts();
+  }
+
+  function updateLedgerUiCounts() {
+    const totalCount = Object.keys(ledgerData.leads || {}).length;
+    const badgeCount = $('badgeLedgerActiveCount');
+    if (badgeCount) badgeCount.innerText = `${totalCount} Leads`;
+    const leadCountEl = $('ledgerLeadCount');
+    if (leadCountEl) leadCountEl.innerText = totalCount;
+  }
+
+  async function loadLedgerData() {
+    // TẦNG 1: Thử nạp từ file JSON tĩnh tĩnh lead_activity_timesheet_latest.json
+    try {
+      const res = await fetch('lead_activity_timesheet_latest.json');
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.leads && Object.keys(json.leads).length > 0) {
+          ledgerData = json;
+          updateLedgerUiCounts();
+          renderLedgerMatrixTable();
+          return;
+        }
+      }
+    } catch (_) {}
+
+    // TẦNG 2: Thử nạp từ Backend API Python (cổng 8000)
+    try {
+      const res = await fetch('http://127.0.0.1:8000/api/activity-ledger');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.status === 'ok' && json.data) {
+          ledgerData = json.data;
+          updateLedgerUiCounts();
+          renderLedgerMatrixTable();
+          return;
+        }
+      }
+    } catch (_) {}
+
+    // TẦNG 3 (BẢO ĐẢM 100% HIỂN THỊ): Tự động tính toán ma trận điểm danh từ allLeads trên Client
+    if (allLeads && allLeads.length > 0) {
+      generateLedgerDataFromLeads(allLeads);
+      renderLedgerMatrixTable();
+    }
+  }
+
+  function renderLedgerMatrixTable() {
+    const headEl = $('ledgerTableHead');
+    const bodyEl = $('ledgerTableBody');
+    if (!headEl || !bodyEl) return;
+
+    const searchTerm = ($('ledgerSearchInput')?.value || '').trim().toLowerCase();
+    const windowVal = $('ledgerWindowSelect')?.value || '14';
+
+    const allDates = ledgerData.tracked_dates || [];
+    let displayDates = [...allDates];
+    if (windowVal !== 'ALL') {
+      const numDays = parseInt(windowVal, 10) || 14;
+      displayDates = displayDates.slice(-numDays);
+    }
+
+    // Render Table Header
+    let headHtml = `
+      <tr>
+        <th style="width:45px; text-align:center;">STT</th>
+        <th style="width:50px; text-align:center;">Ảnh</th>
+        <th style="min-width:140px;">Chủ Sở Hữu (Owner)</th>
+        <th style="min-width:150px;">Tên Trại / Trang</th>
+        <th style="width:90px;">FB_ID</th>
+        <th style="min-width:120px;">SĐT / Email</th>
+        <th style="width:110px;">Amazon Store</th>
+        <th style="min-width:130px;">Đăng Gần Nhất</th>
+        <th style="width:105px; text-align:center;">Khung Giờ Vàng</th>
+        <th style="width:95px; text-align:center;">Chuỗi Active</th>
+    `;
+
+    for (const d of displayDates) {
+      const parts = d.split('-');
+      const shortDate = parts.length === 3 ? `${parts[2]}/${parts[1]}` : d;
+      headHtml += `<th style="width:65px; text-align:center; background:#1e293b; color:#38bdf8;" title="Ngày: ${d}">${shortDate}</th>`;
+    }
+
+    headHtml += `
+        <th style="min-width:140px; text-align:center;">Kịch Bản Telesale (RAG)</th>
+      </tr>
+    `;
+    headEl.innerHTML = headHtml;
+
+    // Filter Leads
+    const leadsArray = Object.values(ledgerData.leads || {}).filter(l => {
+      if (!searchTerm) return true;
+      const haystack = `${l.owner || ''} ${l.name || ''} ${l.fb_id || ''} ${l.phone || ''} ${l.city || ''} ${l.state || ''}`.toLowerCase();
+      return haystack.includes(searchTerm);
+    });
+
+    if (leadsArray.length === 0) {
+      bodyEl.innerHTML = `<tr><td colspan="${11 + displayDates.length}" style="text-align:center; padding:30px; color:#94a3b8;">Chưa có dữ liệu chấm công phù hợp.</td></tr>`;
+      return;
+    }
+
+    // Render Table Body
+    let bodyHtml = '';
+    leadsArray.forEach((lead, idx) => {
+      const stt = idx + 1;
+      const avatarSrc = lead.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(lead.owner || lead.name || 'DB')}&background=0284c7&color=fff&size=128&bold=true`;
+      const owner = lead.owner || 'Chủ trại';
+      const name = lead.name || 'Trại cún';
+      const fbId = lead.fb_id || '';
+      const phone = lead.phone || '';
+      const email = lead.email || '';
+      const amz = lead.amazon_url ? lead.amazon_url.split(',')[0].trim() : '';
+      const latestPost = lead.latest_post_time || 'Chưa bóc tách';
+      const golden = lead.golden_hour_slot || '16:00 - 18:00';
+      const streak = lead.active_streak_days || 0;
+      const ledger = lead.activity_ledger || {};
+
+      bodyHtml += `
+        <tr>
+          <td style="text-align:center; font-weight:700; color:#64748b; font-family:var(--font-mono);">${stt}</td>
+          <td style="text-align:center; vertical-align:middle;">
+            <a href="${lead.url || '#'}" target="_blank" rel="noopener noreferrer" class="circle-avatar-box">
+              <img class="circle-avatar-img" src="${avatarSrc}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(owner)}&background=0284c7&color=fff&size=128&bold=true';" />
+            </a>
+          </td>
+          <td>
+            <div style="font-weight:750; color:#0f172a; font-size:12.5px;">👤 ${escapeHtml(owner)}</div>
+            <div style="font-size:10.5px; color:#64748b; margin-top:2px;">${escapeHtml(lead.rank_tier || 'Tier A')}</div>
+          </td>
+          <td>
+            <div style="font-weight:600; color:#1e293b; font-size:12px;">${escapeHtml(name)}</div>
+          </td>
+          <td>
+            <span class="badge-fbid" onclick="copyText('${fbId}')"># ${fbId}</span>
+          </td>
+          <td style="white-space:nowrap;">
+            ${phone ? `<div style="color:#0284c7; font-weight:700; font-family:var(--font-mono); font-size:11px;">📞 ${escapeHtml(phone)}</div>` : `<div style="color:#94a3b8; font-size:10.5px;">Chưa có SĐT</div>`}
+            ${email ? `<div style="color:#059669; font-size:10.5px; margin-top:2px; font-family:var(--font-mono);">✉️ ${escapeHtml(email)}</div>` : ''}
+          </td>
+          <td>
+            ${amz ? `
+              <a href="${amz}" target="_blank" rel="noopener noreferrer" class="badge-amz" style="font-size:10.5px; padding:2px 6px;">
+                🛒 Amazon
+              </a>
+            ` : `<span style="color:#94a3b8; font-size:11px;">Chưa có</span>`}
+          </td>
+          <td>
+            <div style="font-size:11.5px; font-weight:650; color:#059669;">${escapeHtml(latestPost)}</div>
+          </td>
+          <td style="text-align:center;">
+            <span class="badge-golden">⏰ ${escapeHtml(golden)}</span>
+          </td>
+          <td style="text-align:center;">
+            <span class="badge-streak">🔥 ${streak} ngày</span>
+          </td>
+      `;
+
+      // Render cells cho từng ngày
+      for (const d of displayDates) {
+        if (ledger[d] && ledger[d].posted) {
+          const pTime = ledger[d].post_time || '';
+          const pType = ledger[d].post_type || 'Post';
+          const shortT = pTime ? pTime.substring(0, 5) : '✓';
+          bodyHtml += `
+            <td style="text-align:center;">
+              <span class="cell-present" title="Đăng lúc: ${pTime} (${pType}) - Ngày ${d}">
+                ✓ ${shortT}
+              </span>
+            </td>
+          `;
+        } else {
+          bodyHtml += `
+            <td style="text-align:center;">
+              <span class="cell-absent">-</span>
+            </td>
+          `;
+        }
+      }
+
+      bodyHtml += `
+          <td style="text-align:center;">
+            <button type="button" class="btn-sales-hook" data-telesale-fbid="${fbId}">
+              <span>🔥</span> <span>Kịch bản Telesale</span>
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+
+    bodyEl.innerHTML = bodyHtml;
+  }
+
+  // Modal Telesale Pitch Handler
+  function openTelesalePitchModal(fbId) {
+    const lead = ledgerData.leads ? ledgerData.leads[fbId] : null;
+    if (!lead) return;
+
+    $('telesaleOwnerName').innerText = `${lead.owner || 'Chủ trại'} (${lead.name || 'Trại cún'})`;
+    $('telesalePhone').innerText = lead.phone || 'Chưa có SĐT (Gợi ý nhắn tin Facebook)';
+    $('telesaleLatestPost').innerText = lead.latest_post_time || 'Gần đây';
+    $('telesaleGoldenHour').innerText = `${lead.golden_hour_slot || '16:00 - 18:00'} (US CST/EST)`;
+    $('telesaleHookText').value = lead.sales_telesale_hook || `Chào ${lead.owner || 'bạn'}, em thấy trại mình vừa đăng bài cập nhật đàn cún siêu đáng yêu...`;
+    
+    const avatarImg = $('telesaleAvatar');
+    if (avatarImg) {
+      avatarImg.src = lead.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(lead.owner || lead.name)}&background=0284c7&color=fff&size=128&bold=true`;
+    }
+
+    const modal = $('modalTelesalePitch');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeTelesalePitchModal() {
+    const modal = $('modalTelesalePitch');
+    if (modal) modal.style.display = 'none';
+  }
+
+  const btnCloseTelesale = $('btnTelesaleModalClose');
+  const btnCancelTelesale = $('btnTelesaleCancel');
+  if (btnCloseTelesale) btnCloseTelesale.addEventListener('click', closeTelesalePitchModal);
+  if (btnCancelTelesale) btnCancelTelesale.addEventListener('click', closeTelesalePitchModal);
+
+  const btnCopyPitch = $('btnCopyTelesaleHook');
+  if (btnCopyPitch) {
+    btnCopyPitch.addEventListener('click', () => {
+      const text = $('telesaleHookText').value;
+      copyText(text);
+      btnCopyPitch.innerHTML = `<span>✓</span> <span>Đã sao chép!</span>`;
+      setTimeout(() => {
+        btnCopyPitch.innerHTML = `<span>📋</span> <span>Sao Chép Kịch Bản / 复制话术</span>`;
+      }, 2000);
+    });
+  }
+
+  // Event Delegation trên #ledgerTableBody
+  const ledgerTbody = $('ledgerTableBody');
+  if (ledgerTbody) {
+    ledgerTbody.addEventListener('click', (e) => {
+      const hookBtn = e.target.closest('[data-telesale-fbid]');
+      if (hookBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const fbid = hookBtn.getAttribute('data-telesale-fbid');
+        openTelesalePitchModal(fbid);
+      }
+    });
+  }
+
+  // Filter inputs cho Ledger
+  const ledgerSearch = $('ledgerSearchInput');
+  if (ledgerSearch) {
+    ledgerSearch.addEventListener('input', () => {
+      renderLedgerMatrixTable();
+    });
+  }
+  const ledgerWindow = $('ledgerWindowSelect');
+  if (ledgerWindow) {
+    ledgerWindow.addEventListener('change', () => {
+      renderLedgerMatrixTable();
+    });
+  }
+
+  // Nút Xuất Excel Chấm Công
+  const btnExportLedger = $('btnExportLedgerExcel');
+  if (btnExportLedger) {
+    btnExportLedger.addEventListener('click', async () => {
+      btnExportLedger.innerHTML = `<span>⏳</span> <span>Đang xuất Excel...</span>`;
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/export-ledger-excel');
+        const json = await res.json();
+        if (json.status === 'ok') {
+          alert(`✅ Đã xuất thành công Bảng Ma Trận Điểm Danh Khách Hàng Excel tại:\n${json.filepath}`);
+        } else {
+          alert(`Lỗi xuất Excel: ${json.message}`);
+        }
+      } catch (err) {
+        alert('Vui lòng đảm bảo server cổng 8000 đang chạy.');
+      } finally {
+        btnExportLedger.innerHTML = `<span>📊</span> <span>Xuất Excel Chấm Công / 导出考勤表</span>`;
+      }
+    });
+  }
+
+  // Nút Điểm danh hôm nay
+  const btnSyncLedger = $('btnSyncLedgerToday');
+  if (btnSyncLedger) {
+    btnSyncLedger.addEventListener('click', async () => {
+      btnSyncLedger.innerHTML = `<span>⏳</span> <span>Đang điểm danh...</span>`;
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/ingest-ledger', { method: 'POST' });
+        const json = await res.json();
+        if (json.status === 'ok') {
+          alert(`✅ Đã điểm danh thành công cho ${json.updated} hồ sơ!`);
+          await loadLedgerData();
+        } else {
+          alert(`Lỗi điểm danh: ${json.message}`);
+        }
+      } catch (err) {
+        alert('Vui lòng đảm bảo server cổng 8000 đang chạy.');
+      } finally {
+        btnSyncLedger.innerHTML = `<span>🔄</span> <span>Điểm danh hôm nay / 同步打卡</span>`;
+      }
+    });
+  }
+
+  // Phơi bày hàm ra window
   window.openEditLeadModal = openEditLeadModal;
   window.openAddLeadModal = openAddLeadModal;
   window.closeEditLeadModal = closeEditLeadModal;
   window.deleteLead = deleteLead;
   window.copyText = copyText;
   window.handleAvatarClick = handleAvatarClick;
+  window.openTelesalePitchModal = openTelesalePitchModal;
+  window.loadLedgerData = loadLedgerData;
 
   loadInitialData();
+  loadLedgerData();
 })();

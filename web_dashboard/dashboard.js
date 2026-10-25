@@ -1,4 +1,11 @@
 
+import { initStandaloneTools } from './modules/standalone_controller.js?v=20261024_02';
+import { classifyAvatar, preloadDogModel } from './modules/vision_classifier.js';
+
+// DOM Helper
+const $ = (id) => (typeof id === 'string' ? document.getElementById(id) : id);
+if (typeof window !== 'undefined') window.$ = $;
+
     // =========================================================================
     // THEME MANAGEMENT (LIGHT / DARK) - DEFAULT: LIGHT (WHITE THEME)
     // =========================================================================
@@ -51,12 +58,23 @@
     // 0. SERVER STATUS MONITOR & NOTIFICATION BANNER
     // =========================================================================
     function getStoredServerUrl() {
+      if (window.location.protocol.startsWith('http')) {
+        const curHost = window.location.host;
+        const isCurLocal = curHost.includes('127.0.0.1') || curHost.includes('localhost');
+        const custom = localStorage.getItem('pet_lead_server_url') || '';
+        if (custom && custom.trim()) {
+          const isCustomLocal = custom.includes('127.0.0.1') || custom.includes('localhost');
+          if (!isCurLocal && isCustomLocal) {
+            localStorage.removeItem('pet_lead_server_url');
+            return `${window.location.protocol}//${window.location.host}`;
+          }
+          return custom.trim().replace(/\/+$/, '');
+        }
+        return `${window.location.protocol}//${window.location.host}`;
+      }
       const custom = localStorage.getItem('pet_lead_server_url') || '';
       if (custom && custom.trim()) {
         return custom.trim().replace(/\/+$/, '');
-      }
-      if (window.location.protocol.startsWith('http')) {
-        return `${window.location.protocol}//${window.location.host}`;
       }
       return 'http://127.0.0.1:8000';
     }
@@ -86,24 +104,17 @@
           ? 'background: linear-gradient(90deg, #1e293b, #0f172a); border-bottom: 2px solid #f59e0b; padding: 12px 24px; color: #f8fafc; display: none; flex-direction: column; gap: 10px; font-size: 13px; z-index: 9999; position: sticky; top: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.4);'
           : 'background: #fffbeb; border-bottom: 2px solid #f59e0b; padding: 12px 24px; color: #78350f; display: none; flex-direction: column; gap: 10px; font-size: 13px; z-index: 9999; position: sticky; top: 0; box-shadow: 0 4px 16px rgba(15,23,42,0.08);';
         banner.style.cssText = bgStyle;
-        const isFileProto = window.location.protocol === 'file:';
         banner.innerHTML = `
           <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
             <div style="display:flex; align-items:center; gap:12px;">
-              <span style="font-size:24px;">⚠️</span>
+              <span style="font-size:22px;">⚠️</span>
               <div>
-                <span id="bannerTitle" style="font-weight:700; color:${isDark ? '#fbbf24' : '#b45309'}; font-size:13.5px;">Chưa kết nối Máy chủ Python Backend (Port 8000)</span>
-                <span id="bannerDesc" style="color:${isDark ? '#cbd5e1' : '#78350f'}; margin-left:8px; display:block; margin-top:3px; line-height:1.4;">
-                  ${isFileProto 
-                    ? '💡 <strong>Trình duyệt đang mở trực tiếp file:/// nên Chrome chặn kết nối nội bộ!</strong> <br/>👉 Cách 1 (Khuyên dùng): Bấm nút <strong>[🌐 Mở http://localhost:8000]</strong> để kết nối Python. <br/>👉 Cách 2 (Tách riêng): Bấm nút <strong>[⚡ TÁCH RIÊNG: CHẾ ĐỘ ĐỘC LẬP]</strong> để dùng ngay trên trình duyệt mà không cần server!'
-                    : 'Vui lòng mở file <strong>CHAY_GIAO_DIEN_WEB.bat</strong> để chạy máy chủ, hoặc bấm <strong>[⚡ TÁCH RIÊNG: CHẾ ĐỘ ĐỘC LẬP]</strong> để dùng trực tiếp.'}
-                </span>
+                <span id="bannerTitle" style="font-weight:700; color:${isDark ? '#fbbf24' : '#b45309'};">Máy chủ Python AI chưa được kết nối!</span>
+                <span id="bannerDesc" style="color:${isDark ? '#cbd5e1' : '#78350f'}; margin-left:8px;">Vui lòng mở file <strong>CHAY_GIAO_DIEN_WEB.bat</strong> trên máy chủ. Nếu chạy trên Server/VPS khác, hãy nhập URL/IP bên dưới.</span>
               </div>
             </div>
-            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-              <button id="btnSwitchStandalone" style="background:linear-gradient(135deg, #4f46e5, #7c3aed); color:#fff; font-weight:800; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; font-size:12.5px; box-shadow:0 2px 8px rgba(79,70,229,0.3); transition:all 0.2s;" title="Chạy hoàn toàn trên trình duyệt bằng mô hình AI và từ điển NLP cún, không cần server">⚡ TÁCH RIÊNG: CHẾ ĐỘ ĐỘC LẬP (OFFLINE)</button>
-              <a href="http://127.0.0.1:8000/index.html" target="_blank" style="background:#059669; color:#fff; font-weight:700; text-decoration:none; border-radius:8px; padding:8px 16px; font-size:12px; display:inline-flex; align-items:center; gap:5px;" title="Mở trang web chuẩn qua cổng 8000 kết nối Python">🌐 Mở http://localhost:8000</a>
-              <button id="btnRetryServerConn" style="background:#f59e0b; color:#0f172a; font-weight:700; border:none; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:12px; transition:all 0.2s;">🔄 Thử lại</button>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button id="btnRetryServerConn" style="background:#f59e0b; color:#0f172a; font-weight:700; border:none; border-radius:8px; padding:7px 16px; cursor:pointer; font-size:12px; transition:all 0.2s;">🔄 Thử kết nối lại (Retry)</button>
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:${isDark ? 'rgba(0,0,0,0.25)' : 'rgba(254,243,199,0.7)'}; padding:8px 12px; border-radius:10px; border:1px solid ${isDark ? 'rgba(245,158,11,0.3)' : '#fde68a'};">
@@ -114,16 +125,6 @@
           </div>
         `;
         document.body.insertBefore(banner, document.body.firstChild);
-
-        const btnSwitchStandalone = document.getElementById('btnSwitchStandalone');
-        if (btnSwitchStandalone) {
-          btnSwitchStandalone.addEventListener('click', () => {
-            localStorage.setItem('pet_lead_mode', 'standalone');
-            banner.style.display = 'none';
-            showToast(currentLang === 'zh' ? '⚡ 已切换至独立模式！直接在浏览器运行，无需Python服务器。' : '⚡ Đã chuyển sang Chế Độ Độc Lập! Lọc cún & bóc tách trực tiếp trên trình duyệt không cần Server.');
-            checkServerConnection();
-          });
-        }
 
         const btnRetry = document.getElementById('btnRetryServerConn');
         if (btnRetry) btnRetry.addEventListener('click', retryServerConnection);
@@ -174,27 +175,6 @@
 
     async function checkServerConnection() {
       const banner = renderServerBanner();
-      const isStandalone = (localStorage.getItem('pet_lead_mode') === 'standalone');
-      if (isStandalone) {
-        banner.style.display = 'none';
-        const statusEl = document.getElementById('lblSystemOnline');
-        if (statusEl) {
-          statusEl.textContent = currentLang === 'zh' ? `● 独立运行模式 (离线AI)` : `● CHẾ ĐỘ ĐỘC LẬP (OFFLINE AI)`;
-          statusEl.style.color = '#a855f7';
-          statusEl.style.borderColor = 'rgba(168, 85, 247, 0.4)';
-          statusEl.style.background = 'rgba(168, 85, 247, 0.12)';
-          statusEl.title = 'Đang chạy độc lập trên trình duyệt không cần Server. Click vào đây nếu muốn kết nối lại Máy chủ Python.';
-          statusEl.style.cursor = 'pointer';
-          statusEl.onclick = () => {
-            if (confirm(currentLang === 'zh' ? '是否切换回Python服务器模式？' : 'Bạn có muốn chuyển lại sang chế độ kết nối Máy chủ Python (Port 8000)?')) {
-              localStorage.removeItem('pet_lead_mode');
-              retryServerConnection();
-            }
-          };
-        }
-        return false;
-      }
-
       try {
         const resp = await fetch(`${API_BASE}/api/system-status`, { signal: AbortSignal.timeout(2200) });
         if (resp.ok) {
@@ -204,11 +184,6 @@
           if (statusEl) {
             statusEl.textContent = currentLang === 'zh' ? `● 系统在线 (${API_BASE})` : `● HỆ THỐNG TRỰC TUYẾN (${API_BASE})`;
             statusEl.style.color = 'var(--emerald)';
-            statusEl.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-            statusEl.style.background = 'rgba(16, 185, 129, 0.12)';
-            statusEl.title = 'Đã kết nối máy chủ Python thành công!';
-            statusEl.onclick = null;
-            statusEl.style.cursor = 'default';
           }
           return true;
         }
@@ -222,14 +197,25 @@
           }
         } catch (e2) {}
       }
+
+      // Trong môi trường Chrome Extension: Tự động chạy chế độ In-Browser Extension Độc Lập 100%, không cần Python!
+      if (window.location.protocol === 'chrome-extension:' || !API_BASE.includes('8000')) {
+        isServerConnected = true;
+        banner.style.display = 'none';
+        const statusEl = document.getElementById('lblSystemOnline');
+        if (statusEl) {
+          statusEl.textContent = currentLang === 'zh' ? '● 插件原生引擎在线 (无需Python)' : '● ĐỘC LẬP TRÌNH DUYỆT (100% KHÔNG CẦN PYTHON)';
+          statusEl.style.color = 'var(--emerald)';
+        }
+        return true;
+      }
+
       isServerConnected = false;
       banner.style.display = 'flex';
       const statusEl = document.getElementById('lblSystemOnline');
       if (statusEl) {
         statusEl.textContent = currentLang === 'zh' ? `● 未连接服务器 (${API_BASE})` : `● CHƯA KẾT NỐI (${API_BASE})`;
         statusEl.style.color = 'var(--rose)';
-        statusEl.style.borderColor = 'rgba(244, 63, 94, 0.3)';
-        statusEl.style.background = 'rgba(244, 63, 94, 0.12)';
       }
       return false;
     }
@@ -259,7 +245,15 @@
         txtNavTitle: "Pet Lead AI",
         txtNavSub: "Hệ thống định danh số Facebook (100087542196018) & Cào làm giàu hồ sơ tự động",
         txtTab1: "🐶 Bước 1: Thẩm Định AI Thị Giác",
-        txtTab2: "⚡ Bước 2: Quét Tự Động Làm Giàu (Bulk)",
+        txtTab2: "⚡ Bước 2: Master CRM Funnel",
+        txtTabHarvester: "👥 Cào Follower FB",
+        txtTabUid: "🆔 Chỉ Lấy FB ID",
+        txtTabContact: "📍 Địa Chỉ & SĐT",
+        txtTabOwner: "👤 Tìm Chủ Trại",
+        lblHarvCardTitle: "👥 Bảng Điều Khiển: Cào Người Theo Dõi Facebook (Follower Harvester)",
+        lblUidCardTitle: "🆔 Bảng Điều Khiển: Chỉ Lấy Facebook ID (UID Super-Fast)",
+        lblContactCardTitle: "📍 Bảng Điều Khiển: Bóc Tách Địa Chỉ & Liên Hệ Website",
+        lblOwnerCardTitle: "👤 Bảng Điều Khiển: Tìm Tên Chủ Trại / Người Đại Diện Website",
         lblSystemOnline: "● HỆ THỐNG TRỰC TUYẾN",
         lblStep1CardTitle: "⚡ Bảng Điều Khiển Bước 1: Lọc AI Thị Giác",
         lblStep1Badge: "✓ Chuẩn Hóa Số",
@@ -382,7 +376,15 @@
         txtNavTitle: "Pet Lead AI",
         txtNavSub: "Facebook数字ID身份识别(100087542196018)与自动化丰富系统",
         txtTab1: "🐶 第一步: AI视觉审核",
-        txtTab2: "⚡ 第二步: 批量自动化丰富档案 (Bulk)",
+        txtTab2: "⚡ 第二步: Master CRM 漏斗清洗",
+        txtTabHarvester: "👥 采集FB粉丝",
+        txtTabUid: "🆔 仅提取UID",
+        txtTabContact: "📍 地址与电话",
+        txtTabOwner: "👤 查找负责人",
+        lblHarvCardTitle: "👥 控制台：Facebook 粉丝与关注者采集",
+        lblUidCardTitle: "🆔 控制台: 极速提取Facebook UID",
+        lblContactCardTitle: "📍 控制台: 挖掘网站联系方式与地址",
+        lblOwnerCardTitle: "👤 控制台: 挖掘犬舍主理人/负责人姓名",
         lblSystemOnline: "● 系统在线",
         lblStep1CardTitle: "⚡ 第一步控制面板: AI视觉筛选",
         lblStep1Badge: "✓ 纯数字ID规范",
@@ -923,7 +925,7 @@
     }
 
     function resolveAvatarFallback(fbId, url, currentAvatar) {
-      if (currentAvatar && (currentAvatar.startsWith('http') || currentAvatar.startsWith('data:')) && !currentAvatar.includes('ui-avatars.com') && !currentAvatar.includes('unavatar.io')) {
+      if (currentAvatar && (currentAvatar.startsWith('http') || currentAvatar.startsWith('data:')) && !currentAvatar.includes('ui-avatars.com')) {
         return currentAvatar;
       }
       const cleanId = fbId ? String(fbId).trim() : '';
@@ -939,7 +941,7 @@
       for (const item of pool) {
         if (!item) continue;
         const itemAv = item.avatar_url || item.avatar || item.photo || item.image || item.img || '';
-        if (!itemAv || itemAv.includes('ui-avatars.com') || itemAv.includes('unavatar.io') || (!itemAv.startsWith('http') && !itemAv.startsWith('data:'))) continue;
+        if (!itemAv || itemAv.includes('ui-avatars.com') || (!itemAv.startsWith('http') && !itemAv.startsWith('data:'))) continue;
 
         if (cleanId && item.fb_id && String(item.fb_id).trim() === cleanId) {
           return itemAv;
@@ -949,7 +951,7 @@
         }
       }
 
-      return (currentAvatar && !currentAvatar.includes('unavatar.io')) ? currentAvatar : '';
+      return currentAvatar || '';
     }
 
     function renderTerminalLogRow(row, entry, lang) {
@@ -1045,30 +1047,13 @@
         else if (level === 'success') color = '#4ade80'; // Bright green
         else if (level === 'err') color = '#f87171'; // Red
 
-        if (!rawStage || rawStage === 'TIẾN ĐỘ' || rawStage === 'WEBSITE' || rawText.startsWith('Đang mở dòng') || rawText.startsWith('[Dòng')) {
-          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:${color}; font-weight:600;">${escapeHtml(text)}</span>`;
-        } else {
-          row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:${color}; font-weight:700;">[${escapeHtml(stage)}]</span> <span>${escapeHtml(text)}</span>`;
-        }
+        row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> <span style="color:${color}; font-weight:700;">[${escapeHtml(stage)}]</span> <span>${escapeHtml(text)}</span>`;
       }
     }
 
-    let lastStep2LogSignature = '';
-    let lastStep2LogTime = 0;
-
     function appendTerminalLogStep2(entry) {
       const body = document.getElementById('terminalBodyStep2');
-      if (!body || !entry) return;
-
-      const rawText = typeof entry === 'string' ? entry : (entry.text || '');
-      const rawStage = (typeof entry === 'object' && entry.stage) || '';
-      const now = Date.now();
-      const sig = `${rawStage}|${rawText}`;
-      if (sig === lastStep2LogSignature && (now - lastStep2LogTime) < 800) {
-        return; // Triệt tiêu in trùng lặp log trong vòng 800ms
-      }
-      lastStep2LogSignature = sig;
-      lastStep2LogTime = now;
+      if (!body) return;
 
       const row = document.createElement('div');
       row.style.margin = '3px 0';
@@ -1117,15 +1102,35 @@
       }
     }
 
-    function switchTab(tabNum) {
-      document.getElementById('tabBtn1').classList.toggle('active', tabNum === 1);
-      document.getElementById('tabBtn2').classList.toggle('active', tabNum === 2);
-      document.getElementById('tabBtn2').classList.toggle('step2', tabNum === 2);
+    function switchTab(tabId) {
+      const current = String(tabId).toLowerCase();
+      const map = {
+        '1': '1',
+        'step1': '1',
+        '2': '2',
+        'step2': '2',
+        'harvester': 'Harvester',
+        'follower': 'Harvester',
+        'followers': 'Harvester',
+        'uid': 'Uid',
+        'contact': 'Contact',
+        'owner': 'Owner'
+      };
+      const activeKey = map[current] || '1';
 
-      document.getElementById('tabPanel1').classList.toggle('active', tabNum === 1);
-      document.getElementById('tabPanel2').classList.toggle('active', tabNum === 2);
+      ['1', '2', 'Harvester', 'Uid', 'Contact', 'Owner'].forEach(k => {
+        const btn = document.getElementById('tabBtn' + k);
+        if (btn) {
+          const isActive = (k === activeKey);
+          btn.classList.toggle('active', isActive);
+          if (k === '2') btn.classList.toggle('step2', isActive);
+          if (k === 'Harvester') btn.classList.toggle('harvester', isActive);
+        }
+        const panel = document.getElementById('tabPanel' + k);
+        if (panel) panel.classList.toggle('active', k === activeKey);
+      });
 
-      if (tabNum === 2) {
+      if (activeKey === '2') {
         autoSyncStep1ToStep2(false);
       }
     }
@@ -1411,7 +1416,7 @@
 
     // D: Server latest harvest auto-sync polling
     async function checkServerLatestRaw() {
-      if (isPipelineRunning) return;
+      if (isPipelineRunning || window.location.protocol === 'chrome-extension:' || !API_BASE.includes('8000')) return;
       try {
         const res = await fetch(`${API_BASE}/api/latest-raw`);
         const json = await res.json();
@@ -1507,29 +1512,31 @@
         reason: `🚀 Kích hoạt lọc AI Multi-Stage Gatekeeper (Ngưỡng Strict = ${(currentThreshold * 100).toFixed(0)}%)...` 
       });
 
-      // 1. Try Python Server API first
+      // 1. Try Python Server API first ONLY if on web server mode
       let serverStarted = false;
-      try {
-        const payloadData = rawFollowers.length > 0 ? rawFollowers : (window.DOG_GALLERY_DATA || []);
-        const resp = await fetch(`${API_BASE}/api/run-step1-filter`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            threshold: currentThreshold,
-            force: true,
-            delay: 0.04,
-            data: payloadData.length > 0 ? payloadData : null
-          })
-        });
-        if (resp.ok) {
-          serverStarted = true;
-          pollServerStep1Status();
+      if (window.location.protocol !== 'chrome-extension:' && API_BASE.includes('8000')) {
+        try {
+          const payloadData = rawFollowers.length > 0 ? rawFollowers : (window.DOG_GALLERY_DATA || []);
+          const resp = await fetch(`${API_BASE}/api/run-step1-filter`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              threshold: currentThreshold,
+              force: true,
+              delay: 0.04,
+              data: payloadData.length > 0 ? payloadData : null
+            })
+          });
+          if (resp.ok) {
+            serverStarted = true;
+            pollServerStep1Status();
+          }
+        } catch (err) {
+          serverStarted = false;
         }
-      } catch (err) {
-        serverStarted = false;
       }
 
-      // 2. If Server offline or unreachable, run Real Animated Client-side Classifier over EVERY item
+      // 2. Chế độ Tiện ích Độc Lập (In-Browser): Chạy ngay bộ thẩm định AI thị giác & NLP trực tiếp trong Chrome
       if (!serverStarted) {
         const dataset = rawFollowers.length > 0 ? rawFollowers : (window.DOG_GALLERY_DATA || []);
         if (dataset.length === 0) {
@@ -1612,12 +1619,48 @@
       }, 200);
     }
 
+    // ─── Toggle Keyword Scan visual handler ─────────────────────────────────
+    (function initKeywordToggle() {
+      const chk = document.getElementById('chkKeywordScan');
+      const bg  = document.getElementById('toggleKeywordBg');
+      const btn = document.getElementById('toggleKeywordBtn');
+      if (!chk || !bg || !btn) return;
+      function _upd() {
+        bg.style.background = chk.checked ? '#10b981' : '#334155';
+        btn.style.left      = chk.checked ? '19px'    : '3px';
+      }
+      chk.addEventListener('change', _upd);
+      _upd();
+    })();
+
     async function runClientSideClassification(records, threshold) {
       const t = I18N_APP[currentLang];
       const total = records.length;
       const approved = [];
       const allClassified = [];
-      
+
+      // Doc trang thai toggle keyword
+      const chkKeyword = document.getElementById('chkKeywordScan');
+      const useKeyword = chkKeyword ? chkKeyword.checked : true;
+
+      // ─── BUOC 1: Load ONNX model TRUOC khi bat dau vong lap ────────────────
+      // Await de dam bao model san sang - khong fire-and-forget
+      appendTerminalLog({
+        timestamp: new Date().toLocaleTimeString(),
+        reason: '[ONNX] Dang tai dog-model.onnx (YOLOv8-cls 224x224)...'
+      });
+      const modelReady = await preloadDogModel((msg) => {
+        appendTerminalLog({ timestamp: new Date().toLocaleTimeString(), reason: msg });
+      });
+      appendTerminalLog({
+        timestamp: new Date().toLocaleTimeString(),
+        status: modelReady ? 'APPROVED' : 'REJECTED',
+        reason: modelReady
+          ? `[ONNX] ✓ dog-model.onnx SAN SANG! Bat dau ONNX vision tren ${total} avatar... (Keyword: ${useKeyword ? 'BẬT' : 'TẮT'})`
+          : `[ONNX] ✗ Khong load duoc model ONNX - se dung NLP keyword${useKeyword ? ' fallback' : ' only'}.`
+      });
+
+      // ─── Regex patterns (NLP Layer 0-2) ─────────────────────────────────────
       const counterRegex = /^\d+[\.,]?\d*[KM]?\s*(?:người theo dõi|đang theo dõi|followers|following|người thích|likes|bạn bè|friends)$/i;
       const timestampRegex = /^\d+\s*(?:giờ|phút|giây|ngày|tuần|tháng|năm|h|m|s|d|w|hrs?|hours?|mins?|minutes?|secs?|seconds?|days?|weeks?|months?|years?)(?:\s*trước)?$/i;
       const navNames = new Set([
@@ -1641,37 +1684,41 @@
         const bio = (item.bio || '').trim();
         const url = (item.url || '').trim();
 
-        // Lớp 0: Loại bỏ bài viết hệ thống, header số lượng người theo dõi, trang chủ host, domain quảng cáo ngoài, nút bản dịch
+        // ─── Lop 0: Loai bo system records ──────────────────────────────────
         if (url && !url.includes('facebook.com') && !url.includes('fb.com')) continue;
         if (url && (url.replace(/\/+$/, '') === 'https://www.facebook.com' || url.replace(/\/+$/, '') === 'https://facebook.com')) continue;
         if (systemUrlPattern.test(url)) continue;
         if (
-          counterRegex.test(name) || 
-          timestampRegex.test(name) || 
-          timestampRegex.test(subtitle) || 
-          navNames.has(name) || 
+          counterRegex.test(name) ||
+          timestampRegex.test(name) ||
+          timestampRegex.test(subtitle) ||
+          navNames.has(name) ||
           /^(?:xem bản dịch|see translation|bản dịch|translation|original)/i.test(name) ||
           /facebook\.com\/(?:gooddog|AmericanKennelClub)(?:\/followers)?\/?$/i.test(url)
-        ) {
-          continue;
-        }
+        ) { continue; }
 
-        // Loại bỏ triệt để ảnh đại diện đơn điệu, ảnh mặc định Facebook, chữ cái monogram trơn
-        const avLower = (item.avatar_url || item.avatar || item.photo || '').toLowerCase();
+        // ─── Kiem tra avatar (phai co avatar fbcdn) ──────────────────────────
+        const rawAvatar0 = (item.avatar_url || item.avatar || item.photo || '');
+        const avLower = rawAvatar0.toLowerCase();
         if (
           !avLower ||
-          avLower.includes('t1.30497-1') || 
-          avLower.includes('453178253_471506465671661') || 
+          avLower.includes('t1.30497-1') ||
+          avLower.includes('453178253_471506465671661') ||
           avLower.includes('825352834_122105784819488183') ||
-          avLower.includes('blank_profile') || 
-          avLower.includes('default_avatar') || 
-          avLower.includes('default_profile') || 
+          avLower.includes('blank_profile') ||
+          avLower.includes('default_avatar') ||
+          avLower.includes('default_profile') ||
           avLower.includes('ui-avatars.com') ||
           avLower.includes('rsrc.php')
-        ) {
-          continue;
+        ) { continue; }
+
+        // Lam sach avatar URL
+        let rawAvatar = rawAvatar0;
+        if (rawAvatar && rawAvatar.includes('fbcdn.net')) {
+          rawAvatar = rawAvatar.replace(/([?&])ctp=[sp]\d+x\d+(&|$)/, '$1').replace(/\?&/, '?').replace(/[?&]$/, '');
         }
 
+        // ─── URL slug cho NLP ────────────────────────────────────────────────
         let urlSlug = '';
         try {
           const u = new URL(url);
@@ -1679,71 +1726,122 @@
           if (p && !p.startsWith('profile.php') && !p.startsWith('people')) {
             urlSlug = p.replace(/[._-]/g, ' ');
           }
-        } catch(e) {}
+        } catch(_) {}
 
         const extKeywords = Array.isArray(item.matched_keywords) ? item.matched_keywords.join(' ') : '';
-        const textSample = `${name} ${subtitle} ${bio} ${item.category || ''} ${urlSlug} ${extKeywords}`.trim();
+        const textSample  = `${name} ${subtitle} ${bio} ${item.category || ''} ${urlSlug} ${extKeywords}`.trim();
 
-        let isDog = false;
-        let conf = 0.0;
-        let decisionReason = "";
-        let stage = "";
+        let isDog          = false;
+        let conf           = 0.0;
+        let decisionReason = '';
+        let stage          = '';
+        let aiVisionResult = 'non_dog';
+        let matchedKeywords = [];
 
-        // Kiểm tra từ khóa giống cún trước (Dog Breed Immunity)
-        const hasDogWord = dogKeywordPattern.test(textSample);
-        const isB2b = b2bBreederPattern.test(textSample);
+        // ════════════════════════════════════════════════════════════════════
+        // BUOC 1 (ONNX VISION - UU TIEN CAO NHAT):
+        // Chay dog-model.onnx tren avatar URL, khong mo tab, chay ngam.
+        // Chi can fetch anh qua Image object, scale 224x224, inference.
+        // ════════════════════════════════════════════════════════════════════
+        let visionRes = null;
+        try {
+          visionRes = await classifyAvatar(rawAvatar, {
+            isDogByKeyword: false, // ONNX chay doc lap, chua biet keyword
+            isB2b: false,
+            onLog: null           // Im lang, khong spam log moi avatar
+          });
+        } catch(vErr) {
+          visionRes = { p_dog: 0.10, p_adult: 0, p_puppy: 0, p_non: 1,
+            label: 'non_dog', isFlora: false, source: 'onnx_err', info: vErr.message.slice(0,60) };
+        }
 
-        // Lớp 1: Từ khóa loại trừ
-        const strongNegMatch = strongNegRegex.exec(textSample);
-        const shortNegMatch = !hasDogWord ? shortNegRegex.exec(textSample) : null;
-        const negMatch = strongNegMatch || shortNegMatch;
+        const pDog    = visionRes.p_dog   || 0;
+        const pAdult  = visionRes.p_adult  || 0;
+        const pPuppy  = visionRes.p_puppy  || 0;
+        const vLabel  = visionRes.label    || 'non_dog';
+        const isFlora = visionRes.isFlora  || false;
+        const vSrc    = visionRes.source   || 'onnx';
+        const vInfo   = visionRes.info     || '';
 
-        if (negMatch) {
-          isDog = false;
-          stage = "negative_keyword";
-          decisionReason = currentLang === 'zh'
-            ? `排除行业关键词: "${negMatch[0].trim()}"`
-            : `Từ khóa loại trừ phi thú cưng: "${negMatch[0].trim()}"`;
-        } else if (hasDogWord || isB2b) {
-          // Lớp 2: Xác thực giống cún cưng & B2B Breeder Ground Truth
-          isDog = true;
-          conf = isB2b ? 0.95 : 0.88;
-          stage = isB2b ? "b2b_breeder_verified" : "dog_keyword";
-          decisionReason = isB2b
-            ? (currentLang === 'zh' ? `B2B繁育者/犬舍认证档案 (P=0.95)` : `B2B Breeder / Chủ trại cún xác thực qua NLP (P=0.95)`)
-            : (currentLang === 'zh' ? `符合繁育者与犬种关键词 (P=0.88)` : `Xác thực qua từ khóa giống chó cưng & AI (P=0.88)`);
+        // ════════════════════════════════════════════════════════════════════
+        // BUOC 2 (KEYWORD NLP - TUY CHON):
+        // Chi chay neu toggle "Quet Tu Khoa NLP" dang BAT
+        // ════════════════════════════════════════════════════════════════════
+        let hasDogWord     = false;
+        let isB2b          = false;
+        let negMatch       = null;
+        if (useKeyword) {
+          hasDogWord = dogKeywordPattern.test(textSample);
+          isB2b      = b2bBreederPattern.test(textSample);
+          const strongNeg = strongNegRegex.exec(textSample);
+          const shortNeg  = !hasDogWord ? shortNegRegex.exec(textSample) : null;
+          negMatch        = strongNeg || shortNeg;
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // QUYET DINH - Theo thu tu uu tien:
+        // [A] Tu khoa loai tru manh (chi khi keyword bat va khong co ONNX manh)
+        // [B] Flora/Landscape guard (ONNX)
+        // [C] ONNX chinh xac cao (khong can keyword)
+        // [D] B2B Breeder + Keyword boost
+        // [E] ONNX + Keyword fusion
+        // [F] ONNX thuan tuy (threshold cao)
+        // [G] Loai
+        // ════════════════════════════════════════════════════════════════════
+
+        // [A] Tu khoa loai tru - chi ap dung neu ONNX khong phat hien cho ro rang
+        if (negMatch && !isB2b && pDog < threshold) {
+          isDog = false; stage = 'negative_keyword';
+          decisionReason = `Từ khóa loại trừ phi thú cưng: "${negMatch[0].trim()}" (P_dog=${pDog.toFixed(2)})`;
+
+        // [B] Flora/Landscape - chi loai khi ONNX cung dong y KHONG co cho (p_dog < 0.35)
+        // Neu ONNX thay dau hieu cho (p_dog >= 0.35), giu lai du anh co nen xanh la
+        } else if (isFlora && !isB2b && !hasDogWord && pDog < 0.35) {
+          isDog = false; stage = 'flora_rejected'; conf = 0;
+          decisionReason = `Loại bỏ ảnh hoa lá/phong cảnh (HSV>45%, P_dog=${pDog.toFixed(2)}) [${vSrc}]`;
+
+        // [C] ONNX chinh xac cao: p_adult >= 0.55 HOAC p_puppy >= 0.65 HOAC p_dog >= 0.80
+        } else if (pAdult >= 0.55 || pPuppy >= 0.65 || pDog >= 0.80) {
+          isDog = true; stage = 'onnx_high_confidence';
+          conf  = pDog;
+          aiVisionResult = vLabel === 'puppy' ? `puppy (P=${pPuppy.toFixed(2)})` : `adult_dog (P=${pAdult.toFixed(2)})`;
+          decisionReason = `[ONNX] Nhận diện chó (Adult=${pAdult.toFixed(2)}, Puppy=${pPuppy.toFixed(2)}, P_dog=${pDog.toFixed(2)}) [${vSrc}] ${vInfo}`;
+
+        // [D] B2B Breeder: keyword xac nhan la trai cho thuong mai -> boost
+        } else if (isB2b) {
+          isDog = true; stage = 'b2b_breeder_verified';
+          conf  = Math.max(pDog, 0.90);
+          const kws = (textSample.match(b2bBreederPattern) || []).slice(0, 3);
+          matchedKeywords = kws.filter(Boolean);
+          aiVisionResult  = pDog > 0.30 ? `${vLabel} (P=${pDog.toFixed(2)})` : `b2b_breeder_portrait`;
+          decisionReason  = `B2B Breeder / Trại cún xác thực (Keyword+ONNX P=${conf.toFixed(2)}) [${vSrc}] ${vInfo}`;
+
+        // [E] ONNX trung binh + Keyword bo sung (hasDogWord xac nhan)
+        } else if (hasDogWord && pDog >= Math.min(0.40, threshold)) {
+          isDog = true; stage = 'onnx_keyword_fusion';
+          conf  = Math.max(pDog, 0.78);
+          const kwsMatch = textSample.match(dogKeywordPattern);
+          matchedKeywords = kwsMatch ? [kwsMatch[1] || kwsMatch[0]].filter(Boolean) : [];
+          aiVisionResult  = vLabel !== 'non_dog' ? `${vLabel} (P=${pDog.toFixed(2)})` : `keyword_verified`;
+          decisionReason  = `Chó: ONNX (P_dog=${pDog.toFixed(2)}) + Từ khóa [${vSrc}] ${vInfo}`;
+
+        // [F] ONNX thuan tuy - pDog >= threshold
+        // Bỏ passStrict: p_dog là tổng adult+puppy, đủ để quyết định
+        } else if (pDog >= threshold) {
+          isDog = true; stage = 'onnx_vision_only';
+          conf  = pDog;
+          aiVisionResult = vLabel !== 'non_dog' ? `${vLabel} (P=${pDog.toFixed(2)})` : `p_dog=${pDog.toFixed(2)}`;
+          decisionReason = `[ONNX] P_dog=${pDog.toFixed(2)} ≥ ${threshold.toFixed(2)} (Adult=${pAdult.toFixed(2)}, Puppy=${pPuppy.toFixed(2)}) [${vSrc}] ${vInfo}`;
+
+        // [G] Loai bo
         } else {
-          isDog = false;
-          conf = 0.15;
-          stage = "insufficient";
-          decisionReason = currentLang === 'zh'
-            ? `无犬类证据 (人脸/风景/非宠物)`
-            : `Không đủ chứng cứ chó cưng (Avatar/Bio phi thú cưng)`;
+          isDog = false; stage = 'rejected'; conf = pDog;
+          const kwNote = useKeyword ? ` | KW:${hasDogWord ? 'yes' : 'no'}` : '';
+          decisionReason = `Không đủ chứng cứ chó (P_dog=${pDog.toFixed(2)}) [${vSrc}]${kwNote} ${vInfo}`;
         }
 
-        let rawAvatar = item.avatar_url || '';
-        if (rawAvatar && rawAvatar.includes('fbcdn.net')) {
-          rawAvatar = rawAvatar.replace(/([?&])ctp=[sp]\d+x\d+(&|$)/, '$1').replace(/\?&/, '?').replace(/[?&]$/, '');
-        }
-
-        // Đảm bảo 100% hồ sơ có Numeric FB_ID thực tế từ Facebook (Numeric FB_ID Ground Truth)
-        let finalFbId = (item.fb_id || '').toString().trim();
-        const isVanity = url && !/[?&]id=\d+/.test(url) && !/facebook\.com\/(?:people\/[^\/]+\/)?\d{10,}/.test(url);
-        if (!finalFbId || !/^\d{8,}$/.test(finalFbId) || finalFbId.length > 16 || isVanity) {
-          try {
-            const rId = await fetch(`${API_BASE}/api/resolve-id`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url: url })
-            });
-            if (rId.ok) {
-              const dId = await rId.json();
-              if (dId && dId.fb_id && /^\d+$/.test(dId.fb_id)) {
-                finalFbId = dId.fb_id;
-              }
-            }
-          } catch (e) {}
-        }
+        // ─── Dam bao 100% Numeric FB_ID ──────────────────────────────────────
+        let finalFbId = item.fb_id || '';
         if (!finalFbId || !/^\d+$/.test(finalFbId)) {
           let hashInt = 0;
           const str = (url || name);
@@ -1756,55 +1854,49 @@
 
         const leadRecord = {
           fb_id: finalFbId,
-          name: name,
+          name,
           url: item.url || (finalFbId ? `https://www.facebook.com/profile.php?id=${finalFbId}` : '#'),
           avatar_url: rawAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1e293b&color=10b981`,
-          subtitle: subtitle,
+          subtitle,
           is_target_dog: isDog,
-          confidence: conf,
+          confidence: parseFloat(conf.toFixed(4)),
           detection_method: decisionReason,
-          ai_vision_result: isDog ? (isB2b ? 'b2b_breeder (P=0.95)' : 'puppy (P=0.88)') : 'non_dog',
-          matched_keywords: isDog ? (isB2b ? ['breeder', 'puppy'] : ['dog_breeder']) : []
+          ai_vision_result: aiVisionResult,
+          matched_keywords: matchedKeywords
         };
 
         allClassified.push(leadRecord);
-        if (isDog) {
-          approved.push(leadRecord);
-        }
+        if (isDog) approved.push(leadRecord);
 
-        // Live terminal log
+        // ─── Live terminal log ───────────────────────────────────────────────
         appendTerminalLog({
           timestamp: new Date().toLocaleTimeString(),
           index: i + 1,
-          total: total,
-          name: name,
+          total,
+          name,
           fb_id: item.fb_id,
           status: isDog ? 'APPROVED' : 'REJECTED',
-          stage: stage,
+          stage,
           reason: decisionReason,
           confidence: conf
         });
 
-        // Live preview updates
         updateScannerCard(leadRecord);
+
+        // ─── Live progress UI ────────────────────────────────────────────────
         const pct = Math.round(((i + 1) / total) * 100);
         document.getElementById('progressFill').style.width = `${pct}%`;
         document.getElementById('lblStep1Percent').textContent = `${pct}%`;
         document.getElementById('lblStep1Status').textContent = currentLang === 'zh'
-          ? `正在审核: ${i + 1}/${total} 份档案 (${pct}%)...`
-          : `Đang phân loại: ${i + 1}/${total} hồ sơ (${pct}%)...`;
+          ? `正在审核 ONNX: ${i + 1}/${total} 份档案 (${pct}%)...`
+          : `ONNX thẩm định: ${i + 1}/${total} hồ sơ (${pct}%)...`;
 
-        // Update live KPIs
         document.getElementById('kpiTarget').textContent = approved.length;
         document.getElementById('kpiDiscarded').textContent = Math.max(0, (i + 1) - approved.length);
         document.getElementById('kpiNumeric').textContent = approved.filter(x => /^\d+$/.test(x.fb_id)).length;
 
-        // Smooth non-blocking animation delay (30ms per item)
-        if (total <= 120) {
-          await new Promise(r => setTimeout(r, 30));
-        } else if (i % 3 === 0) {
-          await new Promise(r => setTimeout(r, 10));
-        }
+        // Non-blocking: yield sau moi profile de giu UI responsive
+        await new Promise(r => setTimeout(r, total <= 80 ? 40 : (i % 2 === 0 ? 12 : 0)));
       }
 
       allEvaluatedStep1Leads = allClassified;
@@ -1816,8 +1908,10 @@
       document.getElementById('txtRunBtn').textContent = t.txtRunBtn;
       document.getElementById('lblStep1Status').textContent = `${t.filterDone}${approved.length}${t.filterDoneUnit}`;
       showToast(`${t.filterDone}${approved.length}${t.filterDoneUnit}`);
-      appendTerminalLog({ 
-        timestamp: new Date().toLocaleTimeString(), 
+      appendTerminalLog({
+        timestamp: new Date().toLocaleTimeString(),
+        status: approved.length > 0 ? 'APPROVED' : 'REJECTED',
+        reason: `HOAN TAT ONNX Multi-Stage Gatekeeper! ${approved.length}/${total} ho so dat chuan cun cung.`
       });
     }
 
@@ -2578,83 +2672,6 @@
         return '';
       }
 
-      function isNotificationOrCommentGarbage(txt) {
-        if (!txt || typeof txt !== 'string') return false;
-        const t = txt.toLowerCase();
-        return (
-          t.includes('đã nhắc đến bạn') ||
-          t.includes('đã bình luận') ||
-          t.includes('đã thích') ||
-          t.includes('đã chia sẻ') ||
-          t.includes('mentioned you') ||
-          t.includes('commented on') ||
-          t.includes('reacted to') ||
-          t.includes('shared your') ||
-          t.includes('chưa đọc') ||
-          t.includes('unread') ||
-          t.includes('thông báo') ||
-          t.length > 50
-        );
-      }
-
-      function parsePublishTimestamp(rawVal) {
-        if (!rawVal) return null;
-        let ts = null;
-        if (typeof rawVal === 'number') {
-          let num = rawVal;
-          if (num > 10000000000) num = Math.floor(num / 1000);
-          if (num >= 1420070400 && num <= 2147483647) ts = num;
-        } else if (typeof rawVal === 'string') {
-          const trimmed = rawVal.trim();
-          if (/^\d{9,13}$/.test(trimmed)) {
-            let num = parseInt(trimmed, 10);
-            if (num > 10000000000) num = Math.floor(num / 1000);
-            if (num >= 1420070400 && num <= 2147483647) ts = num;
-          } else if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
-            const parsedDate = new Date(trimmed);
-            if (!isNaN(parsedDate.getTime())) ts = Math.floor(parsedDate.getTime() / 1000);
-          } else {
-            const m = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
-            if (m) {
-              const day = parseInt(m[1], 10);
-              const month = parseInt(m[2], 10) - 1;
-              const year = parseInt(m[3], 10);
-              const hours = m[4] ? parseInt(m[4], 10) : 12;
-              const minutes = m[5] ? parseInt(m[5], 10) : 0;
-              const seconds = m[6] ? parseInt(m[6], 10) : 0;
-              const parsedDate = new Date(year, month, day, hours, minutes, seconds);
-              if (!isNaN(parsedDate.getTime())) ts = Math.floor(parsedDate.getTime() / 1000);
-            }
-          }
-        }
-        if (!ts) return null;
-        const d = new Date(ts * 1000);
-        const now = new Date();
-        const diffSec = Math.max(0, Math.floor((now.getTime() - d.getTime()) / 1000));
-        const daysAgo = Math.floor(diffSec / (24 * 3600));
-        const pad = n => String(n).padStart(2, '0');
-        const publishHuman = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-        let relVi = '';
-        if (diffSec < 3600) relVi = `${Math.max(1, Math.floor(diffSec / 60))} phút trước`;
-        else if (diffSec < 86400) relVi = `${Math.floor(diffSec / 3600)} giờ trước`;
-        else if (daysAgo < 30) relVi = `${daysAgo} ngày trước`;
-        else if (daysAgo < 365) relVi = `${Math.floor(daysAgo / 30)} tháng trước`;
-        else relVi = `${Math.floor(daysAgo / 365)} năm trước`;
-        let actVi = '';
-        if (daysAgo <= 14) actVi = "🔥 RẤT TÍCH CỰC (Đăng trong 2 tuần qua)";
-        else if (daysAgo <= 45) actVi = "✓ TÍCH CỰC (Đăng trong 1.5 tháng qua)";
-        else if (daysAgo <= 90) actVi = "⚠️ TRUNG BÌNH (Đăng trong 3 tháng qua)";
-        else actVi = `❄️ ĐÓNG BĂNG (> ${Math.floor(daysAgo / 30)} tháng chưa có bài)`;
-        return {
-          timestamp: ts,
-          iso: d.toISOString(),
-          publish_human: publishHuman,
-          relative_time: relVi,
-          days_ago: daysAgo,
-          activity_status: actVi
-        };
-      }
-
       const SYSTEM_EXCLUDED_HOSTS = new Set([
         'facebook.com', 'www.facebook.com', 'm.facebook.com', 'fb.com', 'messenger.com',
         'instagram.com', 'www.instagram.com', 'threads.net', 'whatsapp.com', 'meta.com',
@@ -2810,8 +2827,8 @@
       if (!foundAvatar && initAvatar && (initAvatar.startsWith('http') || initAvatar.startsWith('data:'))) {
         foundAvatar = initAvatar;
       }
-      if (!foundAvatar && typeof verifiedLeads !== 'undefined') {
-        const s1Pool = (verifiedLeads || []).concat(typeof rawFollowers !== 'undefined' ? rawFollowers : []).concat(window.DOG_GALLERY_DATA || []);
+      if (!foundAvatar) {
+        const s1Pool = (verifiedLeads || []).concat(rawFollowers || []).concat(window.DOG_GALLERY_DATA || []);
         const m = s1Pool.find(x => (resolvedFbId && x.fb_id && x.fb_id === resolvedFbId) || (x.url && x.url === window.location.href) || (x.name && x.name === res.name));
         if (m && (m.avatar_url || m.avatar)) {
           foundAvatar = m.avatar_url || m.avatar;
@@ -3018,10 +3035,20 @@
       // =========================================================================
       // 9. BÓC TÁCH BÀI VIẾT GẦN NHẤT & PUBLISH TIME (TRÍCH XUẤT publish_time:"số" & PHÂN TÍCH CON SỐ)
       // =========================================================================
-      const domTimestamps = [];
-      const nowSec = Math.floor(Date.now() / 1000);
+      const foundTimestamps = [];
+      const htmlFull = document.documentElement ? document.documentElement.innerHTML : '';
+      
+      // Quét chính xác trường publish_time:"số" (hoặc creation_time:"số", story_time:"số")
+      const regexPub = /(?:"publish_time"|publish_time|"creation_time"|creation_time|"story_time"|story_time)\s*:\s*"?(\d{9,13})"?/g;
+      let mPub;
+      while ((mPub = regexPub.exec(htmlFull)) !== null) {
+        const parsed = parsePublishTimestamp(mPub[1]);
+        if (parsed) {
+          foundTimestamps.push(parsed.timestamp);
+        }
+      }
 
-      // 1. Quét các script tags tìm website, email, phone
+      // Quét các script tags tìm website, email, phone
       const scripts = document.querySelectorAll('script');
       for (const sc of scripts) {
         const text = sc.textContent || '';
@@ -3051,7 +3078,6 @@
         }
       }
 
-      // 2. Quét trực tiếp bài viết thực tế trên timeline DOM (Ưu tiên tuyệt đối)
       const feed = document.querySelector('div[role="feed"]') || document.querySelector('div[data-pagelet*="Feed"]') || document.querySelector('div[role="main"]') || document.body;
       const postUnits = feed.querySelectorAll('div[data-pagelet*="FeedUnit"], div[role="article"], div[data-pagelet*="ProfileTimeline"]');
       for (const p of postUnits) {
@@ -3067,63 +3093,35 @@
           const utime = timeLink.getAttribute('data-utime') || timeLink.closest('[data-utime]')?.getAttribute('data-utime');
           if (utime) {
             const parsed = parsePublishTimestamp(utime);
-            if (parsed && parsed.timestamp <= nowSec + 60) domTimestamps.push(parsed.timestamp);
+            if (parsed) foundTimestamps.push(parsed.timestamp);
           }
           const rawTxt = (timeLink.innerText || timeLink.getAttribute('aria-label') || '').trim();
           if (rawTxt && !isNotificationOrCommentGarbage(rawTxt)) {
-            // Khớp ngày tháng Việt Nam: 19 thg 10 lúc 14:30 hoặc 19 thg 10
-            const mViDate = rawTxt.match(/(\d{1,2})\s+(?:tháng|thg)\s+(\d{1,2})(?:,?\s*(\d{4}))?(?:\s+lúc\s+(\d{1,2}):(\d{2}))?/i);
-            if (mViDate) {
-              const day = parseInt(mViDate[1], 10);
-              const month = parseInt(mViDate[2], 10) - 1;
-              const year = mViDate[3] ? parseInt(mViDate[3], 10) : new Date().getFullYear();
-              const hour = mViDate[4] ? parseInt(mViDate[4], 10) : 12;
-              const min = mViDate[5] ? parseInt(mViDate[5], 10) : 0;
-              const d = new Date(year, month, day, hour, min, 0);
-              const ts = Math.floor(d.getTime() / 1000);
-              if (ts <= nowSec + 60) domTimestamps.push(ts);
-            } else {
-              const mDur = rawTxt.match(/(\d+)\s*(phút|min|giờ|hour|hr|h|ngày|day|tuần|week|tháng|month|năm|year)(?:[\s·•\-_,]|trước|ago|$)/i);
-              if (mDur) {
-                const num = parseInt(mDur[1], 10);
-                const unit = mDur[2].toLowerCase();
-                let secAgo = 3600;
-                if (unit.startsWith('phút') || unit.startsWith('min')) secAgo = num * 60;
-                else if (unit.startsWith('giờ') || unit.startsWith('hour') || unit.startsWith('hr') || unit === 'h') secAgo = num * 3600;
-                else if (unit.startsWith('ngày') || unit.startsWith('day')) secAgo = num * 86400;
-                else if (unit.startsWith('tuần') || unit.startsWith('week')) secAgo = num * 7 * 86400;
-                else if (unit.startsWith('tháng') || unit.startsWith('month')) secAgo = num * 30 * 86400;
-                else if (unit.startsWith('năm') || unit.startsWith('year')) secAgo = num * 365 * 86400;
-                const ts = Math.floor(Date.now() / 1000) - secAgo;
-                if (ts <= nowSec + 60) domTimestamps.push(ts);
-              } else if (/vừa xong|just now|hôm nay|today/i.test(rawTxt)) {
-                domTimestamps.push(Math.floor(Date.now() / 1000) - 1800);
-              } else if (/hôm qua|yesterday/i.test(rawTxt)) {
-                domTimestamps.push(Math.floor(Date.now() / 1000) - 86400);
-              }
+            const mDur = rawTxt.match(/(\d+)\s*(phút|min|giờ|hour|hr|h|ngày|day|tuần|week|tháng|month|năm|year)(?:[\s·•\-_,]|trước|ago|$)/i);
+            if (mDur) {
+              const num = parseInt(mDur[1], 10);
+              const unit = mDur[2].toLowerCase();
+              let secAgo = 3600;
+              if (unit.startsWith('phút') || unit.startsWith('min')) secAgo = num * 60;
+              else if (unit.startsWith('giờ') || unit.startsWith('hour') || unit.startsWith('hr') || unit === 'h') secAgo = num * 3600;
+              else if (unit.startsWith('ngày') || unit.startsWith('day')) secAgo = num * 86400;
+              else if (unit.startsWith('tuần') || unit.startsWith('week')) secAgo = num * 7 * 86400;
+              else if (unit.startsWith('tháng') || unit.startsWith('month')) secAgo = num * 30 * 86400;
+              else if (unit.startsWith('năm') || unit.startsWith('year')) secAgo = num * 365 * 86400;
+              foundTimestamps.push(Math.floor(Date.now() / 1000) - secAgo);
+            } else if (/vừa xong|just now|hôm nay|today/i.test(rawTxt)) {
+              foundTimestamps.push(Math.floor(Date.now() / 1000) - 1800);
+            } else if (/hôm qua|yesterday/i.test(rawTxt)) {
+              foundTimestamps.push(Math.floor(Date.now() / 1000) - 86400);
             }
           }
         }
-        if (res.latest_post.post_text && domTimestamps.length > 0) break;
-      }
-
-      // 3. Fallback duy nhất: Nếu DOM timeline không có bài nào, mới quét script regex
-      let finalTimestamps = domTimestamps;
-      if (finalTimestamps.length === 0) {
-        const htmlFull = document.documentElement ? document.documentElement.innerHTML : '';
-        const regexPub = /(?:"post_context"|"creation_story")[\s\S]{0,300}?(?:"publish_time"|"creation_time")\s*:\s*"?(\d{9,12})"?/g;
-        let mPub;
-        while ((mPub = regexPub.exec(htmlFull)) !== null) {
-          const parsed = parsePublishTimestamp(mPub[1]);
-          if (parsed && parsed.timestamp <= nowSec + 60) {
-            finalTimestamps.push(parsed.timestamp);
-          }
-        }
+        if (res.latest_post.post_text && foundTimestamps.length > 0) break;
       }
 
       // Tổng hợp và phân tích con số publish_time chuẩn xác
-      if (finalTimestamps.length > 0) {
-        const maxTs = Math.max(...finalTimestamps);
+      if (foundTimestamps.length > 0) {
+        const maxTs = Math.max(...foundTimestamps);
         const parsedTime = parsePublishTimestamp(maxTs);
         if (parsedTime) {
           res.latest_post.publish_timestamp = parsedTime.timestamp;
@@ -3774,13 +3772,21 @@
 
       appendTerminalLogStep2({
         stage: 'KHỞI ĐỘNG',
-        text: `🚀 Kích hoạt bộ cào bóc tách trực tiếp: Từ dòng ${startIdx + 1} đến ${endIdx + 1} (Tổng: ${totalRange} hồ sơ)...`,
+        text: `🚀 Yêu cầu Chrome Extension mở Worker Tab chạy ngầm (active: false) để cào từ dòng ${startIdx + 1} đến ${endIdx + 1} (Tổng: ${totalRange} hồ sơ)...`,
         level: 'info'
       });
 
       let bridgeTriggered = false;
 
-      // 1. Nếu đang mở trong ngữ cảnh Chrome Extension: Gọi trực tiếp Background Service Worker
+      // 1. Gửi qua Window PostMessage Bridge (Content Script lắng nghe trên http://127.0.0.1:8000)
+      window.postMessage({
+        type: 'START_STEP2_SCAN_VIA_EXTENSION',
+        links: urls,
+        options: { startIndex: startIdx, endIndex: endIdx }
+      }, '*');
+      bridgeTriggered = true;
+
+      // 2. Gửi qua Chrome Runtime API nếu đang mở trong tab extension
       if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.sendMessage === 'function') {
         try {
           chrome.runtime.sendMessage({
@@ -3792,34 +3798,29 @@
               bridgeTriggered = true;
             }
           });
-          bridgeTriggered = true;
         } catch (_) {}
       }
 
-      // 2. Nếu không gọi được extension trực tiếp (đang mở Web http://127.0.0.1:8000): Gửi qua Content Script Bridge
-      if (!bridgeTriggered) {
-        window.postMessage({
-          type: 'START_STEP2_SCAN_VIA_EXTENSION',
-          links: urls,
-          options: { startIndex: startIdx, endIndex: endIdx }
-        }, '*');
+      // 3. Nếu có quyền chrome.tabs trực tiếp (trong extension tab)
+      if (window.chrome && chrome.tabs && chrome.tabs.create) {
+        runDirectProfileScrapingLoop(urls, startIdx, endIdx);
         bridgeTriggered = true;
       }
 
-      // 3. Watchdog kiểm tra kết nối Extension sau 4.5 giây: Nếu Extension chưa bật -> Hướng dẫn rõ ràng
+      // 4. Watchdog kiểm tra kết nối Extension sau 3.5 giây: Nếu Extension chưa bật -> Hướng dẫn rõ ràng
       setTimeout(() => {
         const currentDone = parseInt(document.getElementById('lblScrapedCountStep2')?.textContent || '0', 10);
         if (currentDone === 0 && isDirectScrapingRunning && !isDirectScrapingPaused) {
           const checkStatus = document.getElementById('lblScanStatus')?.textContent || '';
           if (checkStatus.includes('Đang cào bóc tách') && document.querySelectorAll('#step2TerminalLogs div').length <= 2) {
             appendTerminalLogStep2({
-              stage: 'HƯỚNG DẪN',
-              text: '💡 Đang kết nối tiện ích bóc tách trực quan... Vui lòng đảm bảo tiện ích "fb_profile_funnel_scraper" đã được nạp (Load unpacked) trong chrome://extensions và tải lại trang.',
-              level: 'info'
+              stage: 'CẢNH BÁO',
+              text: '⚠️ Đang đợi Chrome Extension kết nối... Vui lòng đảm bảo tiện ích "FB Following Scraper" đã được BẬT trong chrome://extensions.',
+              level: 'err'
             });
           }
         }
-      }, 4500);
+      }, 3500);
     }
 
     function pauseDirectScraping() {
@@ -5060,16 +5061,7 @@
       leads.forEach((item, index) => {
         const tr = document.createElement('tr');
         const fbId = item.fb_id || '';
-        let profileUrl = '';
-        if (item.url && item.url.includes('facebook.com')) {
-          profileUrl = item.url;
-        } else if (fbId) {
-          profileUrl = `https://www.facebook.com/profile.php?id=${fbId}`;
-        } else if (item.url && item.url.startsWith('http')) {
-          profileUrl = item.url;
-        } else {
-          profileUrl = '#';
-        }
+        const profileUrl = item.url || (fbId ? `https://www.facebook.com/profile.php?id=${fbId}` : '#');
         const fallbackInitials = encodeURIComponent((item.owner && item.owner !== '---') ? item.owner : (item.name || 'Dog Breeder'));
         const defaultUiAvatar = `https://ui-avatars.com/api/?name=${fallbackInitials}&background=0f172a&color=38bdf8&bold=true`;
         const rawAvatar = resolveAvatarFallback(fbId, profileUrl, item.avatar_url || item.avatar || '');
@@ -5160,49 +5152,39 @@
           ? (parsedPub ? parsedPub.activity_status : translateActivityStatusZh(item.activity_status || (item.latest_post && item.latest_post.activity_status) || ''))
           : (parsedPub ? parsedPub.activity_status : (item.activity_status || (item.latest_post && item.latest_post.activity_status) || ''));
 
-        let rawStt = item.stt || item.lead_id || '';
-        let sttNum = index + 1;
-        const mStt = String(rawStt).match(/(\d+)/);
-        if (mStt) sttNum = parseInt(mStt[1], 10);
-        const sttDisplay = `LEAD-US-${String(sttNum).padStart(6, '0')}`;
-        const leadKey = item.stt || item.fb_id || String(index);
-
+        const sttDisplay = item.stt || `LEAD-US-${String(index+1).padStart(5, '0')}`;
         tr.innerHTML = `
           <td style="font-size:12px; font-weight:700; color:#0284c7; white-space:nowrap;">
-            <span style="background:#e0f2fe; border:1px solid #bae6fd; padding:3px 8px; border-radius:6px; font-family:var(--mono); font-size:11.5px; font-weight:750;">
+            <span style="background:#e0f2fe; border:1px solid #bae6fd; padding:3px 7px; border-radius:6px; font-family:var(--mono);">
               ${sttDisplay}
             </span>
           </td>
-          <td style="text-align:center; vertical-align:middle;">
-            <a href="${profileUrl}" target="_blank" rel="noopener noreferrer" class="circle-avatar-box" style="width:42px; height:42px; min-width:42px; display:inline-block; text-decoration:none; vertical-align:middle; cursor:pointer;" title="${currentLang === 'zh' ? '点击打开Facebook主页' : 'Mở trang Facebook cá nhân'}" onclick="if('${profileUrl}' && '${profileUrl}' !== '#'){ window.open('${profileUrl}', '_blank'); }">
+          <td>
+            <div class="circle-avatar-box" style="width:42px; height:42px; min-width:42px; cursor:pointer;" title="${currentLang === 'zh' ? '点击打开Facebook主页' : 'Mở trang Facebook cá nhân'}" onclick="window.open('${profileUrl}', '_blank')">
               <img class="circle-avatar-img" src="${avatarUrl}" referrerpolicy="no-referrer" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='${defaultUiAvatar}'" />
-            </a>
-          </td>
-          <td style="min-width:140px; max-width:200px;">
-            <div class="crm-editable-cell" onclick="openEditLeadModal('${leadKey}')" title="${currentLang === 'zh' ? '点击修改主理人' : 'Nhấn để sửa thông tin'}" style="color:var(--text); font-size:12.5px; font-weight:750; line-height:1.35; word-break:break-word; cursor:pointer;">
-              ${escapeHtml(ownerDisplay)} <span style="font-size:10px; color:#0284c7; opacity:0.7;">✏️</span>
-            </div>
-          </td>
-          <td style="min-width:150px; max-width:220px;">
-            <div class="crm-editable-cell" onclick="openEditLeadModal('${leadKey}')" title="${currentLang === 'zh' ? '点击修改犬舍名称' : 'Nhấn để sửa thông tin'}" style="font-weight:600; color:var(--text-muted); font-size:12px; line-height:1.35; word-break:break-word; cursor:pointer;">
-              ${escapeHtml(item.name || '---')} <span style="font-size:10px; color:#0284c7; opacity:0.7;">✏️</span>
             </div>
           </td>
           <td>
-            <span class="badge-fbid" onclick="copyText('${fbId}')" title="${currentLang === 'zh' ? '点击复制纯数字ID' : 'Sao chép ID số'}" style="cursor:pointer; font-weight:700; font-size:11.5px; white-space:nowrap;">
+            <strong style="color:var(--text); font-size:13px; font-weight:750;">${escapeHtml(ownerDisplay)}</strong>
+          </td>
+          <td>
+            <div style="font-weight:650; color:var(--text); font-size:12.5px;">${escapeHtml(item.name || '---')}</div>
+          </td>
+          <td>
+            <span class="badge-fbid" onclick="copyText('${fbId}')" title="${currentLang === 'zh' ? '点击复制纯数字ID' : 'Sao chép ID số'}" style="cursor:pointer; font-weight:700; font-size:11.5px;">
               # ${fbId || '---'}
             </span>
           </td>
           <td style="font-size:12px; font-weight:600; white-space:nowrap;">
-            ${(phone && phone !== '---') ? `<div style="font-family:var(--mono); color:#0369a1; font-weight:750; font-size:12px; cursor:pointer;" onclick="openEditLeadModal('${leadKey}')" title="Nhấn để sửa SĐT">📞 ${escapeHtml(phone)}</div>` : ''}
-            ${email ? `<div style="font-family:var(--mono); color:#0f766e; font-size:11.5px; margin-top:2px; cursor:pointer;" onclick="openEditLeadModal('${leadKey}')" title="Nhấn để sửa Email">✉️ ${escapeHtml(email)}</div>` : ''}
-            ${(!phone || phone === '---') && !email ? `<span style="color:var(--text-muted); font-size:12px; cursor:pointer;" onclick="openEditLeadModal('${leadKey}')" title="Nhấn để thêm SĐT">+ Thêm SĐT</span>` : ''}
+            ${(phone && phone !== '---') ? `<div style="font-family:var(--mono); color:#0369a1; font-weight:750; font-size:12px;">📞 ${escapeHtml(phone)}</div>` : ''}
+            ${email ? `<div style="font-family:var(--mono); color:#0f766e; font-size:11.5px; margin-top:2px;" title="${escapeHtml(email)}">✉️ ${escapeHtml(email)}</div>` : ''}
+            ${(!phone || phone === '---') && !email ? '<span style="color:var(--text-muted); font-size:12px;">---</span>' : ''}
           </td>
           <td>
-            ${cleanWeb ? `<a href="${cleanWeb}" target="_blank" rel="noopener noreferrer" style="color:#0284c7; text-decoration:none; font-weight:650; font-size:12px;">🌐 ${escapeHtml(cleanWeb.replace(/^https?:\/\//, '').split('/')[0])}</a>` : `<span style="color:var(--text-muted); font-size:12px; cursor:pointer;" onclick="openEditLeadModal('${leadKey}')" title="Nhấn để thêm Website">+ Thêm Web</span>`}
+            ${cleanWeb ? `<a href="${cleanWeb}" target="_blank" rel="noopener noreferrer" style="color:#0284c7; text-decoration:none; font-weight:650; font-size:12px;">🌐 ${escapeHtml(cleanWeb.replace(/^https?:\/\//, '').split('/')[0])}</a>` : '<span style="color:var(--text-muted); font-size:12px;">---</span>'}
           </td>
-          <td style="color:#334155; font-size:12px; font-weight:600; cursor:pointer;" onclick="openEditLeadModal('${leadKey}')" title="Nhấn để sửa vị trí">
-            ${escapeHtml(location)} <span style="font-size:10px; color:#0284c7; opacity:0.7;">✏️</span>
+          <td style="color:#334155; font-size:12px; font-weight:600;">
+            ${escapeHtml(location)}
           </td>
           <td>
             <div style="font-weight:750; color:#0284c7; font-size:12px;">${escapeHtml(pubTimeDisplay)}</div>
@@ -5225,15 +5207,12 @@
             <span class="badge-tier" style="color:${tierColor}; background:${tierBg}; border:1px solid ${tierBorder}; font-size:11.5px; font-weight:750;">${tier} (${score}đ)</span>
           </td>
           <td>
-            <div style="display:flex; gap:5px; align-items:center;">
-              <button class="btn-action" onclick="openEditLeadModal('${leadKey}')" style="background:#e0f2fe; color:#0369a1; border:1px solid #7dd3fc; font-weight:750; font-size:11px; padding:4px 8px;" title="${currentLang === 'zh' ? '编辑档案' : 'Sửa trực tiếp hồ sơ'}">
-                <span>✏️ Sửa</span>
-              </button>
-              <a href="${profileUrl}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="padding:4px 8px; font-size:11px; text-decoration:none;" title="${currentLang === 'zh' ? '打开主页' : 'Mở Facebook'}">
-                <span>🔗 FB</span>
+            <div style="display:flex; gap:6px;">
+              <a href="${profileUrl}" target="_blank" rel="noopener noreferrer" class="btn-action primary" style="padding:4px 8px; font-size:11px; text-decoration:none;">
+                <span>FB</span>
               </a>
               <button class="btn-action" onclick="copyText('${fbId}')" style="padding:4px 8px; font-size:11px;" title="${currentLang === 'zh' ? '复制ID' : 'Sao chép ID'}">
-                <span>📋 ID</span>
+                <span>ID</span>
               </button>
             </div>
           </td>
@@ -5241,75 +5220,6 @@
         tbody.appendChild(tr);
       });
     }
-
-    // =========================================================================
-    // EDIT LEAD MODAL CONTROLLER & PERSISTENCE
-    // =========================================================================
-    function openEditLeadModal(key) {
-      if (!crmLeads || crmLeads.length === 0) return;
-      const lead = crmLeads.find(l => (l.stt && l.stt === key) || (l.fb_id && l.fb_id === key) || (l.lead_id && l.lead_id === key));
-      if (!lead) return;
-
-      document.getElementById('editLeadKey').value = key;
-      document.getElementById('lblModalLeadId').textContent = lead.stt || lead.lead_id || lead.fb_id || 'LEAD';
-      document.getElementById('editLeadOwner').value = lead.owner || lead.owner_name || '';
-      document.getElementById('editLeadName').value = lead.name || '';
-      document.getElementById('editLeadPhone').value = lead.phone || '';
-      document.getElementById('editLeadEmail').value = lead.email || '';
-      document.getElementById('editLeadWebsite').value = lead.website || '';
-      document.getElementById('editLeadCity').value = lead.city || '';
-      document.getElementById('editLeadState').value = lead.state || '';
-      document.getElementById('editLeadTier').value = lead.rank_tier || lead.tier || 'Tier B';
-      document.getElementById('editLeadProduct').value = lead.product_fit || lead.recommended_product || 'Puppy Starter Kit V3';
-      document.getElementById('editLeadSalesAction').value = lead.sales_action || '';
-
-      const modal = document.getElementById('modalEditLead');
-      if (modal) modal.style.display = 'flex';
-    }
-
-    function closeEditLeadModal() {
-      const modal = document.getElementById('modalEditLead');
-      if (modal) modal.style.display = 'none';
-    }
-
-    document.getElementById('formEditLead')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const key = document.getElementById('editLeadKey').value;
-      const idx = crmLeads.findIndex(l => (l.stt && l.stt === key) || (l.fb_id && l.fb_id === key) || (l.lead_id && l.lead_id === key));
-      if (idx !== -1) {
-        const updated = {
-          ...crmLeads[idx],
-          owner: document.getElementById('editLeadOwner').value.trim(),
-          owner_name: document.getElementById('editLeadOwner').value.trim(),
-          name: document.getElementById('editLeadName').value.trim(),
-          phone: document.getElementById('editLeadPhone').value.trim(),
-          email: document.getElementById('editLeadEmail').value.trim(),
-          website: document.getElementById('editLeadWebsite').value.trim(),
-          has_website: !!document.getElementById('editLeadWebsite').value.trim(),
-          city: document.getElementById('editLeadCity').value.trim(),
-          state: document.getElementById('editLeadState').value.trim().toUpperCase(),
-          rank_tier: document.getElementById('editLeadTier').value,
-          tier: document.getElementById('editLeadTier').value,
-          product_fit: document.getElementById('editLeadProduct').value.trim(),
-          sales_action: document.getElementById('editLeadSalesAction').value.trim()
-        };
-
-        crmLeads[idx] = updated;
-        renderCrmTable(crmLeads);
-        updateCrmKpis(crmLeads);
-        syncFunnelFromCrmLeads();
-
-        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-          chrome.storage.local.set({ crmLeads: crmLeads }).catch(() => {});
-        }
-
-        closeEditLeadModal();
-        showToast(currentLang === 'zh' ? '✓ 已成功更新档案！' : '✓ Đã cập nhật thông tin hồ sơ thành công!');
-      }
-    });
-
-    window.openEditLeadModal = openEditLeadModal;
-    window.closeEditLeadModal = closeEditLeadModal;
 
     // Export Step 2 CRM Excel
     document.getElementById('btnExportCrmExcel').addEventListener('click', async () => {
@@ -5549,8 +5459,624 @@
       });
     }
 
+    // =========================================================================
+    // 3. FOLLOWER HARVESTER TOOL CONTROLLER (ĐỘC LẬP SERVER & MỞ TAB)
+    // =========================================================================
+    let harvDataset = [];
+    let isHarvRunning = false;
+    let isHarvPaused = false;
+
+    function appendHarvTerminalLog(text, level = 'info') {
+      const body = document.getElementById('terminalBodyHarv');
+      if (!body) return;
+      const row = document.createElement('div');
+      const timeStr = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+      const colors = {
+        info: '#38bdf8',
+        success: '#10b981',
+        warn: '#fbbf24',
+        error: '#f87171'
+      };
+      const col = colors[level] || '#cbd5e1';
+      row.style.color = col;
+      row.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${escapeHtml(text)}`;
+      body.appendChild(row);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function renderHarvTable(items = harvDataset) {
+      const tbody = document.getElementById('harvesterTableBody');
+      const lblCount = document.getElementById('lblHarvTableCount');
+      if (lblCount) lblCount.textContent = items.length;
+
+      if (!tbody) return;
+      if (!items || items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:32px; color:var(--text-muted);">${currentLang === 'zh' ? '暂无数据。请输入Facebook链接并点击“开始采集”' : 'Chưa có dữ liệu. Nhập link Facebook rồi bấm "▶️ BẮT ĐẦU CÀO FOLLOWER" hoặc nạp file JSON.'}</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = items.map((rec, i) => {
+        const fbid = rec.fb_id || '';
+        const url = rec.url || (fbid ? `https://www.facebook.com/profile.php?id=${fbid}` : '#');
+        const av = rec.avatar_url || (fbid ? `https://graph.facebook.com/${fbid}/picture?type=large` : '');
+        const hasDog = (rec.category && rec.category.toLowerCase().includes('dog')) || (rec.keywords_found && rec.keywords_found.length > 0);
+        return `
+          <tr>
+            <td style="font-weight:700; color:var(--text-muted);">${i + 1}</td>
+            <td>
+              <div class="circle-avatar-box-crm" style="width:42px; height:42px; min-width:42px;" title="${escapeHtml(rec.name)}">
+                <img src="${escapeHtml(av)}" alt="${escapeHtml(rec.name)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(rec.name || 'FB')}&background=059669&color=fff';" />
+              </div>
+            </td>
+            <td style="font-weight:750; color:var(--text);">${escapeHtml(rec.name)}</td>
+            <td><span class="badge-fbid" title="Facebook Numeric ID">${fbid ? '🆔 ' + escapeHtml(fbid) : '—'}</span></td>
+            <td><a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="color:var(--primary); text-decoration:none; font-size:12px; font-weight:600;">🔗 Trang Cá Nhân</a></td>
+            <td style="font-size:12px; color:var(--text-muted);">${escapeHtml(rec.subtitle || '—')}</td>
+            <td style="font-size:11.5px; color:var(--text-muted); max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(rec.bio || '—')}</td>
+            <td>
+              <span class="badge-tier" style="${hasDog ? 'background:rgba(5,150,105,0.15); border-color:rgba(5,150,105,0.3); color:var(--emerald);' : ''}">
+                ${hasDog ? '🐶 Trại Cún / Dog' : escapeHtml(rec.category || 'Follower')}
+              </span>
+            </td>
+            <td style="text-align:center; white-space:nowrap;">
+              <div style="display:inline-flex; gap:4px;">
+                ${fbid ? `<button class="btn-action" style="padding:3px 7px; font-size:11px;" onclick="copyText('${escapeHtml(fbid)}', 'Đã sao chép FB ID!')" title="Sao chép FB ID">📋</button>` : ''}
+                <button class="btn-action" style="padding:3px 7px; font-size:11px;" onclick="window.open('${escapeHtml(url)}', '_blank')" title="Mở Facebook">🔗</button>
+                <button class="btn-action danger" style="padding:3px 7px; font-size:11px;" onclick="deleteHarvRow(${i})" title="Xóa dòng này">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    window.deleteHarvRow = function(index) {
+      if (index >= 0 && index < harvDataset.length) {
+        harvDataset.splice(index, 1);
+        renderHarvTable();
+        updateHarvKpis();
+        showToast(currentLang === 'zh' ? '已删除该条记录！' : 'Đã xóa 1 hồ sơ!');
+      }
+    };
+
+    function updateHarvKpis() {
+      const tot = harvDataset.length;
+      const numeric = harvDataset.filter(r => r.fb_id && /^\d{8,}$/.test(String(r.fb_id))).length;
+      const dogs = harvDataset.filter(r => (r.category && r.category.toLowerCase().includes('dog')) || (r.keywords_found && r.keywords_found.length > 0) || (r.name && /dog|puppy|doodle|kennel|frenchie|retriever/i.test(r.name))).length;
+      const target = Number(document.getElementById('selLimitHarv')?.value) || 100;
+      const pct = target > 0 ? Math.min(100, Math.round((tot / target) * 100)) : 100;
+
+      if ($('kpiHarvTotal')) $('kpiHarvTotal').textContent = tot;
+      if ($('kpiHarvNumeric')) $('kpiHarvNumeric').textContent = numeric;
+      if ($('kpiHarvDogs')) $('kpiHarvDogs').textContent = dogs;
+      if ($('kpiHarvRate')) $('kpiHarvRate').textContent = `${pct}%`;
+      if ($('lblHarvCount')) $('lblHarvCount').textContent = tot;
+      if ($('lblHarvTarget')) $('lblHarvTarget').textContent = target > 0 ? target : '∞';
+      if ($('lblHarvPercent')) $('lblHarvPercent').textContent = `${pct}%`;
+      if ($('progressFillHarv')) $('progressFillHarv').style.width = `${pct}%`;
+
+      if (tot > 0) {
+        const last = harvDataset[0];
+        const prevRow = document.getElementById('previewRowHarv');
+        if (prevRow) prevRow.style.display = 'flex';
+        if ($('previewHarvName')) $('previewHarvName').textContent = last.name || 'Facebook User';
+        if ($('previewHarvFbid')) $('previewHarvFbid').textContent = `UID: ${last.fb_id || '---'}`;
+        if ($('previewHarvSubtitle')) $('previewHarvSubtitle').textContent = last.subtitle || last.bio || 'Hồ sơ người theo dõi';
+        if ($('previewHarvAvatar')) {
+          $('previewHarvAvatar').src = last.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(last.name || 'FB')}&background=059669&color=fff`;
+        }
+      }
+    }
+
+    function initFollowerHarvesterTool() {
+      const btnQuickPaste = document.getElementById('btnQuickPasteHarv');
+      const inpTarget = document.getElementById('inpTargetUrlHarv');
+      const dropZone = document.getElementById('dropZoneHarv');
+      const fileInput = document.getElementById('fileInputHarv');
+      const btnStart = document.getElementById('btnStartHarv');
+      const btnStop = document.getElementById('btnStopHarv');
+      const btnClear = document.getElementById('btnClearHarv');
+      const searchInp = document.getElementById('searchHarvInput');
+      const btnExportExcel = document.getElementById('btnExportHarvExcel');
+      const btnExportJson = document.getElementById('btnExportHarvJson');
+      const btnPushStep1 = document.getElementById('btnPushHarvToStep1');
+      const btnPushCrm = document.getElementById('btnPushHarvToCrm');
+      const btnClearLog = document.getElementById('btnClearTerminalHarv');
+
+      if (btnClearLog) {
+        btnClearLog.addEventListener('click', () => {
+          const body = document.getElementById('terminalBodyHarv');
+          if (body) body.innerHTML = '<div style="color: #64748b;">[*] Đã xóa sạch nhật ký console.</div>';
+        });
+      }
+
+      if (btnQuickPaste && inpTarget) {
+        btnQuickPaste.addEventListener('click', async () => {
+          try {
+            const txt = await navigator.clipboard.readText();
+            if (txt && txt.trim()) {
+              inpTarget.value = txt.trim();
+              showToast(currentLang === 'zh' ? '已从剪贴板粘贴目标链接！' : 'Đã dán liên kết từ Clipboard!');
+            }
+          } catch (_) {
+            const manual = prompt(currentLang === 'zh' ? '请输入Facebook链接:' : 'Dán đường dẫn Facebook vào đây:');
+            if (manual) inpTarget.value = manual.trim();
+          }
+        });
+      }
+
+      if (dropZone && fileInput) {
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+          if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+              try {
+                const data = JSON.parse(evt.target.result);
+                const items = Array.isArray(data) ? data : (data.followers || data.leads || data.data || []);
+                if (items.length > 0) {
+                  items.forEach(it => {
+                    if (!harvDataset.some(ex => (it.fb_id && ex.fb_id === it.fb_id) || (it.url && ex.url === it.url))) {
+                      harvDataset.push(it);
+                    }
+                  });
+                  renderHarvTable();
+                  updateHarvKpis();
+                  appendHarvTerminalLog(`[✓] Đã nạp thành công ${items.length} hồ sơ từ "${file.name}"!`, 'success');
+                  showToast(currentLang === 'zh' ? `已导入 ${items.length} 份粉丝档案！` : `Đã nạp ${items.length} hồ sơ người theo dõi!`);
+                }
+              } catch (err) {
+                alert('Lỗi đọc tệp JSON: ' + err.message);
+              }
+            };
+            reader.readAsText(file);
+          }
+        });
+      }
+
+      // Cookie Server Management
+      const badgeCookie = document.getElementById('badgeHarvCookie');
+      const inpCookie = document.getElementById('inpHarvCookie');
+      const btnCheckCookie = document.getElementById('btnCheckHarvCookie');
+      const btnSaveCookie = document.getElementById('btnSaveHarvCookie');
+
+      async function checkHarvCookieStatus() {
+        const badge = document.getElementById('badgeHarvCookie') || badgeCookie;
+        try {
+          let res = null;
+          try { res = await fetch(`${API_BASE}/api/cookie-status`); } catch (_) {}
+          if (!res || !res.ok) {
+            try { res = await fetch(`${API_BASE}/api.php?route=cookie-status`); } catch (_) {}
+          }
+          if (!res || !res.ok) {
+            try { res = await fetch(`${API_BASE}/api/status`); } catch (_) {}
+          }
+          if (res && res.ok) {
+            const data = await res.json();
+            const hasCookie = !!(data.has_cookie || data.has_fb_cookie || data.cookie_configured);
+            if (badge) {
+              if (hasCookie) {
+                const uidTxt = data.c_user ? ` (UID: ${data.c_user})` : '';
+                badge.textContent = `✓ Đã có Cookie trên Server${uidTxt}`;
+                badge.style.background = 'rgba(5, 150, 105, 0.15)';
+                badge.style.color = 'var(--emerald)';
+                badge.style.borderColor = 'rgba(5, 150, 105, 0.3)';
+              } else {
+                badge.textContent = '⚠️ Chưa có Cookie';
+                badge.style.background = 'rgba(239, 68, 68, 0.15)';
+                badge.style.color = 'var(--rose)';
+                badge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+              }
+            }
+            return hasCookie;
+          }
+        } catch (e) {
+          console.warn('Lỗi kiểm tra cookie:', e);
+        }
+        return false;
+      }
+      window.checkHarvCookieStatus = checkHarvCookieStatus;
+
+      async function saveHarvCookie() {
+        const badge = document.getElementById('badgeHarvCookie') || badgeCookie;
+        const inp = document.getElementById('inpHarvCookie') || inpCookie;
+        const cookieVal = inp ? inp.value.trim() : '';
+        if (!cookieVal) {
+          alert(currentLang === 'zh' ? '请先粘贴Cookie字符串！' : 'Vui lòng dán chuỗi Cookie Facebook vào ô trước khi lưu!');
+          if (inp) inp.focus();
+          return;
+        }
+        appendHarvTerminalLog('[*] Đang lưu Cookie Facebook lên Server...', 'info');
+        try {
+          let res = null;
+          let fetchErr = null;
+          try {
+            res = await fetch(`${API_BASE}/api/save-cookie`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ cookie: cookieVal })
+            });
+          } catch (e1) {
+            fetchErr = e1;
+          }
+
+          // Fallback to PHP API on Apache if /api/ not rewritten (Only when 404 or connection failed)
+          if (!res || res.status === 404) {
+            try {
+              res = await fetch(`${API_BASE}/api.php?route=save-cookie`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cookie: cookieVal })
+              });
+            } catch (e2) {
+              if (!res) throw new Error(`Không thể kết nối Server: ${fetchErr ? fetchErr.message : ''} | ${e2.message}`);
+            }
+          }
+
+          if (!res) throw new Error('Máy chủ không phản hồi khi lưu Cookie!');
+          const rawText = await res.text();
+          let json = null;
+          try {
+            json = JSON.parse(rawText);
+          } catch (_) {
+            throw new Error(`HTTP ${res.status}: ${rawText.substring(0, 150)}`);
+          }
+
+          if (json.status === 'ok') {
+            const uidTxt = json.c_user ? ` (UID: ${json.c_user})` : '';
+            appendHarvTerminalLog(`[✓] Đã lưu Cookie Facebook lên Server thành công! ${uidTxt}`, 'success');
+            showToast('✅ Đã lưu Cookie Facebook lên Server!');
+            if (inp) inp.value = '';
+
+            // Cập nhật ngay lập tức badge sang màu xanh
+            if (badge) {
+              badge.textContent = `✓ Đã có Cookie trên Server${uidTxt}`;
+              badge.style.background = 'rgba(5, 150, 105, 0.15)';
+              badge.style.color = 'var(--emerald)';
+              badge.style.borderColor = 'rgba(5, 150, 105, 0.3)';
+            }
+            checkHarvCookieStatus();
+          } else {
+            appendHarvTerminalLog(`[X LỖI] Lưu Cookie thất bại: ${json.message || 'Không xác định'}`, 'error');
+            alert('Lỗi lưu Cookie: ' + (json.message || 'Không xác định'));
+          }
+        } catch (err) {
+          appendHarvTerminalLog(`[X] Lỗi gửi Cookie lên Server: ${err.message}`, 'error');
+        }
+      }
+      window.saveHarvCookie = saveHarvCookie;
+
+      // Unified event delegation via document listener handles btnCheckCookie and btnSaveCookie cleanly
+      checkHarvCookieStatus();
+
+      if (searchInp) {
+        searchInp.addEventListener('input', () => {
+          const q = searchInp.value.toLowerCase().trim();
+          if (!q) {
+            renderHarvTable(harvDataset);
+            return;
+          }
+          const filtered = harvDataset.filter(r => {
+            return (r.name && r.name.toLowerCase().includes(q)) ||
+                   (r.fb_id && String(r.fb_id).includes(q)) ||
+                   (r.subtitle && r.subtitle.toLowerCase().includes(q)) ||
+                   (r.bio && r.bio.toLowerCase().includes(q));
+          });
+          renderHarvTable(filtered);
+        });
+      }
+
+      async function startHarvesterExecution() {
+        // Tuyệt đối không return im lặng: In ngay log và đổi trạng thái RUNNING
+        appendHarvTerminalLog('[*] Đang gửi lệnh cào lên Server...', 'info');
+        isHarvRunning = true;
+        isHarvPaused = false;
+        if ($('lblHarvCurrentTask')) $('lblHarvCurrentTask').textContent = 'RUNNING';
+        if ($('lblHarvStatus')) $('lblHarvStatus').textContent = currentLang === 'zh' ? '正在连接Facebook并采集粉丝...' : 'Đang kết nối Facebook và cào người theo dõi...';
+
+        try {
+          const inp = document.getElementById('inpTargetUrlHarv') || inpTarget;
+          const targetUrl = inp ? inp.value.trim() : '';
+
+          if (!targetUrl || !targetUrl.startsWith('http')) {
+            appendHarvTerminalLog(`[⚠️ LỖI] Đường dẫn Facebook không hợp lệ: "${targetUrl || ''}". Vui lòng nhập link bắt đầu bằng https:// (Ví dụ: https://www.facebook.com/goodbreedercenter/followers)`, 'warn');
+            alert(currentLang === 'zh' ? '请输入有效的Facebook链接（包含 http:// 或 https://）！' : 'Vui lòng nhập đường dẫn Facebook hợp lệ (bắt đầu bằng https://)!');
+            if (inp) inp.focus();
+            if ($('lblHarvCurrentTask')) $('lblHarvCurrentTask').textContent = 'IDLE';
+            if ($('lblHarvStatus')) $('lblHarvStatus').textContent = 'Vui lòng nhập URL Facebook hợp lệ';
+            isHarvRunning = false;
+            return;
+          }
+
+          const scope = document.getElementById('selScopeHarv')?.value || 'followers';
+          const limit = Number(document.getElementById('selLimitHarv')?.value) || 100;
+          const runModeEl = document.querySelector('input[name="harvRunMode"]:checked');
+          const runMode = runModeEl ? runModeEl.value : 'server';
+
+          appendHarvTerminalLog(`🚀 KHỞI ĐỘNG BỘ CÀO: Target = ${targetUrl} (Scope: ${scope}, Limit: ${limit}, Mode: ${runMode})`, 'info');
+
+          if (runMode === 'tab') {
+            appendHarvTerminalLog(`[🖥️ Browser Tab] Đang mở tab mới ${targetUrl} để cào trực tiếp...`, 'info');
+            window.open(targetUrl, '_blank');
+            showToast(currentLang === 'zh' ? '已在新标签页打开Facebook目标页，系统已监听数据事件！' : 'Đã mở tab mới để cào Facebook. Hệ thống đang đồng bộ dữ liệu thời gian thực!');
+          }
+
+          // Trigger server-side scraping engine via /api/harvest-followers
+          appendHarvTerminalLog(`[*] Đang gửi yêu cầu cào tới máy chủ API: ${API_BASE}/api/harvest-followers...`, 'info');
+          let resp = null;
+          let fetchErr = null;
+          try {
+            resp = await fetch(`${API_BASE}/api/harvest-followers`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: targetUrl, scope, limit })
+            });
+          } catch (e1) {
+            fetchErr = e1;
+          }
+
+          // Fallback to PHP API on Apache if /api/ not rewritten (Only fallback when 404 Not Found or connection dropped)
+          if (!resp || resp.status === 404) {
+            try {
+              appendHarvTerminalLog(`[*] Đang thử kênh PHP Fallback: ${API_BASE}/api.php?route=harvest-followers...`, 'info');
+              resp = await fetch(`${API_BASE}/api.php?route=harvest-followers`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: targetUrl, scope, limit })
+              });
+            } catch (e2) {
+              if (!resp) throw new Error(`Lỗi kết nối Server: ${fetchErr ? fetchErr.message : ''} | ${e2.message}`);
+            }
+          }
+
+          if (!resp) throw new Error('Máy chủ không phản hồi (No response from server)');
+
+          const rawText = await resp.text();
+          let resJson = null;
+          try {
+            resJson = JSON.parse(rawText);
+          } catch (_) {
+            throw new Error(`HTTP ${resp.status} - Phản hồi không phải JSON: ${rawText.substring(0, 300)}`);
+          }
+
+          // Xử lý mã lỗi HTTP 400 hoặc status === 'error' -> Hiển thị message ngay và DỪNG LẠI (Không gọi lại lần 2)
+          if (resp.status >= 400 || resJson.status === 'error') {
+            const errMsg = resJson.message || `Lỗi máy chủ (HTTP ${resp.status})`;
+            appendHarvTerminalLog(`[⚠️ LỖI CÀO] ${errMsg}`, 'error');
+            if ($('lblHarvStatus')) $('lblHarvStatus').textContent = errMsg;
+            if (resJson.code === 'FB_LOGIN_REQUIRED' || errMsg.toLowerCase().includes('đăng nhập') || errMsg.toLowerCase().includes('cookie')) {
+              appendHarvTerminalLog(`⚠️ [YÊU CẦU ĐĂNG NHẬP] Facebook chặn khách vãng lai. Vui lòng dán Cookie Facebook vào ô "🔑 Cấu hình Cookie Facebook trên Server" phía trên và bấm "Lưu Cookie Lên Server"!`, 'warn');
+              alert(`⚠️ Facebook yêu cầu đăng nhập để xem danh sách Follower!\n\nVui lòng dán Cookie Facebook (c_user=...; xs=...) vào ô "🔑 Cấu hình Cookie Facebook trên Server" phía trên và bấm "Lưu Cookie Lên Server" để Server cào trực tiếp.`);
+              const cCard = document.getElementById('cardHarvCookie');
+              if (cCard) {
+                cCard.scrollIntoView({ behavior: 'smooth' });
+                cCard.style.boxShadow = '0 0 16px rgba(239, 68, 68, 0.5)';
+                const inpC = document.getElementById('inpHarvCookie');
+                if (inpC) inpC.focus();
+              }
+            } else {
+              showToast(currentLang === 'zh' ? `采集失败: ${errMsg}` : `Lỗi: ${errMsg}`);
+            }
+            return;
+          }
+
+          if (resJson.status === 'ok' && Array.isArray(resJson.data)) {
+            let added = 0;
+            resJson.data.forEach(item => {
+              const exist = harvDataset.some(d => (item.fb_id && d.fb_id === item.fb_id) || (item.url && d.url === item.url));
+              if (!exist) {
+                harvDataset.push(item);
+                added++;
+              }
+            });
+
+            renderHarvTable();
+            updateHarvKpis();
+
+            appendHarvTerminalLog(`[✓ THÀNH CÔNG] Đã cào được ${resJson.count || resJson.data.length} hồ sơ (${added} mới) với 100% UID số từ ${resJson.host_title || targetUrl}!`, 'success');
+            if ($('lblHarvStatus')) $('lblHarvStatus').textContent = currentLang === 'zh' ? `采集成功！共获取 ${resJson.count || resJson.data.length} 份档案。` : `✅ Đã cào thành công ${resJson.count || resJson.data.length} hồ sơ!`;
+            showToast(currentLang === 'zh' ? `✅ 成功采集 ${resJson.count || resJson.data.length} 份粉丝档案！` : `✅ Đã cào thành công ${resJson.count || resJson.data.length} hồ sơ!`);
+          } else if (resJson.code === 'FB_LOGIN_REQUIRED' || (resJson.message && resJson.message.toLowerCase().includes('đăng nhập'))) {
+            appendHarvTerminalLog(`⚠️ [YÊU CẦU ĐĂNG NHẬP] Facebook chặn khách vãng lai. Vui lòng dán Cookie Facebook vào ô trên và bấm "Lưu Cookie Lên Server"!`, 'warn');
+            alert(`⚠️ Facebook yêu cầu đăng nhập để xem danh sách Follower!\n\nVui lòng dán Cookie Facebook (c_user=...; xs=...) vào ô "🔑 Cấu hình Cookie Facebook trên Server" phía trên và bấm "Lưu Cookie Lên Server" để Server cào trực tiếp.`);
+            const cCard = document.getElementById('cardHarvCookie');
+            if (cCard) {
+              cCard.scrollIntoView({ behavior: 'smooth' });
+              cCard.style.boxShadow = '0 0 16px rgba(239, 68, 68, 0.5)';
+              const inpC = document.getElementById('inpHarvCookie');
+              if (inpC) inpC.focus();
+            }
+          } else {
+            appendHarvTerminalLog(`[!] Máy chủ phản hồi (HTTP ${resp.status}): ${resJson.message || JSON.stringify(resJson)}`, 'warn');
+            if ($('lblHarvStatus')) $('lblHarvStatus').textContent = resJson.message || 'Chưa nhận được dữ liệu';
+          }
+        } catch (err) {
+          appendHarvTerminalLog(`[X LỖI CÀO FOLLOWER] ${err.message}`, 'error');
+          if ($('lblHarvStatus')) $('lblHarvStatus').textContent = `Lỗi: ${err.message}`;
+        } finally {
+          isHarvRunning = false;
+          if ($('lblHarvCurrentTask')) $('lblHarvCurrentTask').textContent = 'FINISHED';
+        }
+      }
+      window.startHarvesterExecution = startHarvesterExecution;
+
+      function stopHarvesterExecution() {
+        isHarvRunning = false;
+        appendHarvTerminalLog(`[⏹] Đã dừng quá trình cào theo yêu cầu của người dùng.`, 'warn');
+        if ($('lblHarvStatus')) $('lblHarvStatus').textContent = 'Đã dừng';
+        if ($('lblHarvCurrentTask')) $('lblHarvCurrentTask').textContent = 'STOPPED';
+        showToast(currentLang === 'zh' ? '已停止采集！' : 'Đã dừng thu thập!');
+      }
+      window.stopHarvesterExecution = stopHarvesterExecution;
+
+      function clearHarvesterExecution() {
+        harvDataset = [];
+        renderHarvTable();
+        updateHarvKpis();
+        const inp = document.getElementById('inpTargetUrlHarv') || inpTarget;
+        if (inp) inp.value = '';
+        appendHarvTerminalLog(`[🧹] Đã xóa sạch dữ liệu cào.`, 'info');
+        showToast(currentLang === 'zh' ? '已清空采集列表！' : 'Đã xóa trắng danh sách cào!');
+      }
+      window.clearHarvesterExecution = clearHarvesterExecution;
+
+      // Button event listeners are managed via unified document delegation below to eliminate duplicate executions
+
+      if (btnExportExcel) {
+        btnExportExcel.addEventListener('click', () => {
+          if (harvDataset.length === 0) {
+            alert(currentLang === 'zh' ? '列表为空，无法导出！' : 'Danh sách trống, không có dữ liệu để xuất Excel!');
+            return;
+          }
+          try {
+            if (typeof XLSX !== 'undefined') {
+              const ws = XLSX.utils.json_to_sheet(harvDataset);
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, "Followers");
+              XLSX.writeFile(wb, `Facebook_Followers_Harvested_${Date.now()}.xlsx`);
+              showToast('✅ Đã xuất tệp Excel thành công!');
+            } else {
+              const blob = new Blob([JSON.stringify(harvDataset, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `Facebook_Followers_${Date.now()}.json`;
+              a.click();
+              showToast('✅ Đã xuất tệp!');
+            }
+          } catch (e) {
+            alert('Lỗi xuất tệp: ' + e.message);
+          }
+        });
+      }
+
+      if (btnExportJson) {
+        btnExportJson.addEventListener('click', () => {
+          if (harvDataset.length === 0) {
+            alert('Chưa có dữ liệu để xuất JSON!');
+            return;
+          }
+          const blob = new Blob([JSON.stringify(harvDataset, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `step1_followers_raw_${Date.now()}.json`;
+          a.click();
+          showToast('✅ Đã xuất tệp JSON thành công!');
+        });
+      }
+
+      if (btnPushStep1) {
+        btnPushStep1.addEventListener('click', () => {
+          if (harvDataset.length === 0) {
+            alert(currentLang === 'zh' ? '暂无数据，请先采集或导入！' : 'Chưa có dữ liệu! Vui lòng cào hoặc nạp tệp trước khi đẩy.');
+            return;
+          }
+          rawFollowers = [...harvDataset];
+          if (typeof renderRawFollowerPreview === 'function') {
+            renderRawFollowerPreview(rawFollowers.slice(0, 48));
+          }
+          switchTab(1);
+          showToast(currentLang === 'zh' ? `✅ 已成功移送 ${harvDataset.length} 份档案至第1步！` : `✅ Đã chuyển ${harvDataset.length} hồ sơ sang Bước 1 (Lọc AI)!`);
+          appendTerminalLog(`📥 [Harvester Bridge] Đã nạp ${harvDataset.length} hồ sơ người theo dõi từ tab Cào sang Bước 1 AI Vision Filter!`);
+        });
+      }
+
+      if (btnPushCrm) {
+        btnPushCrm.addEventListener('click', () => {
+          if (harvDataset.length === 0) {
+            alert('Chưa có dữ liệu để đẩy vào Master CRM!');
+            return;
+          }
+          let added = 0;
+          harvDataset.forEach((item, idx) => {
+            const nextStt = `LEAD-US-${(crmLeads.length + 1).toString().padStart(6, '0')}`;
+            const lead = {
+              stt: nextStt,
+              name: item.name || 'Dog Breeder',
+              fb_id: item.fb_id || '',
+              url: item.url || '',
+              owner: 'Chủ trại / Quản lý chuồng trại (Breeder Owner)',
+              phone: '',
+              email: '',
+              website: '',
+              city: '',
+              state: 'US',
+              zip: '',
+              country: 'United States',
+              cat: 'Dog Breeder / Commercial Kennel (B2B)',
+              cat_code: 'breeder',
+              amz_cat: 'Amazon link not found',
+              amz_link: '',
+              product_fit: 'Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)',
+              score: 85,
+              rank_tier: 'Tier S',
+              sales_action: '🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày',
+              avatar_url: item.avatar_url || '',
+              avatar: item.avatar_url || '',
+              avatar_type: 'dog',
+              avatar_label: '🐶 Chó cưng (Dog)',
+              ai_vision_result: 'Lead từ Follower Harvester'
+            };
+            const exist = crmLeads.find(cl => (lead.fb_id && cl.fb_id === lead.fb_id) || (lead.name && cl.name === lead.name));
+            if (!exist) {
+              crmLeads.unshift(lead);
+              added++;
+            }
+          });
+          renderCrmTable(crmLeads);
+          updateCrmKpis(crmLeads);
+          syncFunnelFromCrmLeads();
+          switchTab(2);
+          showToast(`⚡ Đã chuyển thành công ${added} hồ sơ mới vào Master CRM Funnel!`);
+        });
+      }
+    }
+
     // Start
-    window.addEventListener('DOMContentLoaded', () => { setAppTheme(); loadDefaultData(); });
+    function bootstrapApp() {
+      setAppTheme();
+      loadDefaultData();
+      initFollowerHarvesterTool();
+
+      // Check query parameter ?tool=uid | contact | owner
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const toolParam = urlParams.get('tool');
+        if (toolParam) {
+          switchTab(toolParam);
+        }
+      } catch (_) {}
+
+      // Initialize Standalone Tools (UID, Contact/Address, Owner)
+      try {
+        initStandaloneTools((newLeads) => {
+          if (Array.isArray(newLeads) && newLeads.length > 0) {
+            newLeads.forEach(nl => {
+              const exist = crmLeads.find(cl => (cl.fb_id && cl.fb_id === nl.fb_id) || (cl.name && cl.name === nl.name));
+              if (exist) {
+                Object.assign(exist, nl);
+              } else {
+                crmLeads.push(nl);
+              }
+            });
+            if (typeof renderCrmTable === 'function') renderCrmTable();
+            if (typeof renderFilteredFunnelTable === 'function') renderFilteredFunnelTable();
+            showToast(`✓ Đã đẩy thành công ${newLeads.length} hồ sơ vào Master CRM!`);
+            switchTab(2);
+          }
+        });
+      } catch (err) {
+        console.warn('Lỗi khởi tạo Standalone Tools:', err);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', bootstrapApp);
+    } else {
+      bootstrapApp();
+    }
 
 
     // =========================================================================
@@ -5559,11 +6085,47 @@
     document.addEventListener('click', (e) => {
       if (e.target.closest('#tabBtn1')) { switchTab(1); return; }
       if (e.target.closest('#tabBtn2')) { switchTab(2); return; }
+      if (e.target.closest('#tabBtnHarvester')) { switchTab('harvester'); return; }
+      if (e.target.closest('#tabBtnUid')) { switchTab('uid'); return; }
+      if (e.target.closest('#tabBtnContact')) { switchTab('contact'); return; }
+      if (e.target.closest('#tabBtnOwner')) { switchTab('owner'); return; }
       if (e.target.closest('#btnThemeLight')) { setAppTheme('light'); return; }
       if (e.target.closest('#btnThemeDark')) { setAppTheme('dark'); return; }
       if (e.target.closest('#btnAppLangVi')) { setAppLang('vi'); return; }
       if (e.target.closest('#btnAppLangZh')) { setAppLang('zh'); return; }
       if (e.target.closest('#btnRetryServerConn')) { retryServerConnection(); return; }
+
+      // Follower Harvester buttons (Single Execution with preventDefault & stopPropagation)
+      if (e.target.closest('#btnStartHarv')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.startHarvesterExecution === 'function') window.startHarvesterExecution();
+        return;
+      }
+      if (e.target.closest('#btnStopHarv')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.stopHarvesterExecution === 'function') window.stopHarvesterExecution();
+        return;
+      }
+      if (e.target.closest('#btnClearHarv')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.clearHarvesterExecution === 'function') window.clearHarvesterExecution();
+        return;
+      }
+      if (e.target.closest('#btnSaveHarvCookie')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.saveHarvCookie === 'function') window.saveHarvCookie();
+        return;
+      }
+      if (e.target.closest('#btnCheckHarvCookie')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window.checkHarvCookieStatus === 'function') window.checkHarvCookieStatus();
+        return;
+      }
 
       // Step 1 buttons
       if (e.target.closest('#btnRunPipeline')) { startStep1Pipeline(); return; }
@@ -5614,6 +6176,115 @@
     // Nhận sự kiện từ Content Script Bridge (khi trang chạy từ http://127.0.0.1:8000)
     window.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'PET_LEAD_STEP2_EVENT' && event.data.payload) {
-        handleStep2RemoteEvent(event.data.payload);
+        handleStep2DirectMessage(event.data.payload);
       }
     });
+
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+      chrome.runtime.onMessage.addListener((msg) => {
+        if (msg && msg.action && msg.action.startsWith('STEP2_')) {
+          handleStep2DirectMessage(msg);
+        }
+      });
+    }
+
+    function handleStep2DirectMessage(msg) {
+      if (!msg || !msg.action) return;
+
+      if (msg.action === 'STEP2_LOG') {
+        const l = msg.log || {};
+        appendTerminalLogStep2({
+          stage: l.stage || 'TIẾN ĐỘ',
+          text: l.text || '',
+          level: l.level || 'info'
+        });
+      }
+      else if (msg.action === 'STEP2_PROGRESS') {
+        const cur = msg.current || 0;
+        const tot = msg.total || 0;
+        const pct = msg.percent !== undefined ? msg.percent : Math.round((cur / Math.max(1, tot)) * 100);
+        const fill = document.getElementById('bulkProgressFill');
+        if (fill) fill.style.width = `${pct}%`;
+        const lblPct = document.getElementById('lblScanPercent');
+        if (lblPct) lblPct.textContent = `${pct}%`;
+        const lblCnt = document.getElementById('lblScrapedCountStep2');
+        if (lblCnt) lblCnt.textContent = cur;
+        const lblTot = document.getElementById('lblTotalQueueStep2');
+        if (lblTot) lblTot.textContent = tot;
+        const lblStat = document.getElementById('lblScanStatus');
+        if (lblStat && msg.status) lblStat.textContent = msg.status;
+      }
+      else if (msg.action === 'STEP2_LEAD_DONE') {
+        const item = msg.lead || {};
+        if (item && (item.fb_id || item.url || item.name)) {
+          const prevRow = document.getElementById('bulkLeadPreviewRow');
+          if (prevRow) prevRow.style.display = 'flex';
+          const bName = document.getElementById('bulkLeadName');
+          if (bName) bName.textContent = item.name || 'Dog Breeder';
+          const bOwner = document.getElementById('bulkLeadOwner');
+          if (bOwner) bOwner.textContent = `Chủ trại: ${item.owner || item.owner_name || 'Dog Breeder'}`;
+          const bFbid = document.getElementById('bulkLeadFbid');
+          if (bFbid) bFbid.textContent = `ID: ${item.fb_id || item.profile_id || '---'}`;
+          const bAv = document.getElementById('bulkLeadAvatar');
+          if (bAv && item.avatar_url) bAv.src = item.avatar_url;
+
+          const exIdx = crmLeads.findIndex(l => (item.fb_id && l.fb_id === item.fb_id) || (item.url && l.url === item.url));
+          if (exIdx !== -1) {
+            crmLeads[exIdx] = { ...crmLeads[exIdx], ...item, stt: crmLeads[exIdx].stt };
+          } else {
+            crmLeads.unshift(item);
+          }
+
+          renderCrmTable(crmLeads);
+          updateCrmKpis(crmLeads);
+          syncFunnelFromCrmLeads();
+        }
+      }
+      else if (msg.action === 'STEP2_ALL_DONE') {
+        isDirectScrapingRunning = false;
+        isDirectScrapingPaused = false;
+        const btnStart = document.getElementById('btnStartDirectScrape');
+        const btnPause = document.getElementById('btnPauseDirectScrape');
+        const btnResume = document.getElementById('btnResumeDirectScrape');
+        if (btnStart) btnStart.style.display = 'inline-flex';
+        if (btnPause) btnPause.style.display = 'none';
+        if (btnResume) btnResume.style.display = 'none';
+
+        const txtBulk = document.getElementById('txtBulkLinks');
+        const fromInp = document.getElementById('fromLineStep2');
+        const toInp = document.getElementById('toLineStep2');
+        if (txtBulk) txtBulk.disabled = false;
+        if (fromInp) fromInp.disabled = false;
+        if (toInp) toInp.disabled = false;
+
+        const fill = document.getElementById('bulkProgressFill');
+        if (fill) fill.style.width = '100%';
+        const lblPct = document.getElementById('lblScanPercent');
+        if (lblPct) lblPct.textContent = '100%';
+
+        const doneMsg = currentLang === 'zh' ? '🎉 采集完成！' : `🎉 HOÀN TẤT BƯỚC 2: Đã bóc tách thành công toàn bộ hồ sơ!`;
+        const lblStat = document.getElementById('lblScanStatus');
+        if (lblStat) lblStat.textContent = doneMsg;
+
+        appendTerminalLogStep2({
+          stage: 'HỆ THỐNG',
+          text: `🎉 HOÀN TẤT BƯỚC 2: ĐÃ BÓC TÁCH HOÀN TOÀN CÁC HỒ SƠ!`,
+          level: 'success'
+        });
+
+        playCompletionChime();
+        showToast(doneMsg);
+      }
+      else if (msg.action === 'STEP2_PAUSED') {
+        isDirectScrapingRunning = false;
+        isDirectScrapingPaused = true;
+        const btnPause = document.getElementById('btnPauseDirectScrape');
+        const btnResume = document.getElementById('btnResumeDirectScrape');
+        if (btnPause) btnPause.style.display = 'none';
+        if (btnResume) {
+          btnResume.style.display = 'inline-flex';
+          const cur = msg.currentIndex || (directScrapeCurrentIdx + 1);
+          btnResume.querySelector('span:last-child').textContent = `TIẾP TỤC CÀO (Dòng ${cur})`;
+        }
+      }
+    }

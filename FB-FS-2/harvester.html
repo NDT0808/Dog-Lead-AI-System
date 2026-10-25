@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐾 Pet Lead AI - FB Follower Harvester (Standalone UI)</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-card: #f8fafc;
+      --surface-hover: #f1f5f9;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-glow: rgba(79, 70, 229, 0.25);
+      --emerald: #059669;
+      --emerald-glow: rgba(5, 150, 105, 0.25);
+      --amber: #d97706;
+      --rose: #e11d48;
+      --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --card-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    [data-theme="dark"] {
+      --bg: #090d16;
+      --surface: #0f172a;
+      --surface-card: #1e293b;
+      --surface-hover: #334155;
+      --border: #1e293b;
+      --border-strong: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.35);
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      background-image: radial-gradient(1100px 520px at 8% -6%, #e8edff 0%, transparent 60%),
+        radial-gradient(900px 460px at 100% 0%, #e6fbf4 0%, transparent 58%),
+        radial-gradient(800px 460px at 50% 110%, #fff4e6 0%, transparent 60%);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 60px;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    [data-theme="dark"] body {
+      background-image: radial-gradient(1100px 520px at 8% -6%, #1e1b4b 0%, transparent 60%),
+        radial-gradient(900px 460px at 100% 0%, #064e3b 0%, transparent 58%),
+        radial-gradient(800px 460px at 50% 110%, #1e293b 0%, transparent 60%);
+    }
+
+    /* Navbar */
+    .navbar {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 12px 28px;
+    }
+    [data-theme="dark"] .navbar {
+      background: rgba(15, 23, 42, 0.92);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .nav-container {
+      max-width: 1560px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #0284c7, #4f46e5);
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+    .brand-text h1 {
+      font-size: 16.5px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-text p {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-btn {
+      text-decoration: none;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 9px;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .nav-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 10px var(--primary-glow);
+    }
+
+    .theme-switch-box, .lang-switch-box {
+      display: flex;
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      padding: 3px;
+      border-radius: 10px;
+      gap: 3px;
+    }
+    .nav-pill-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      font-size: 11.5px;
+      font-weight: 700;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-pill-btn:hover { color: var(--text); background: var(--surface-hover); }
+    .nav-pill-btn.active { background: var(--primary); color: #fff; }
+
+    /* Container */
+    .container {
+      max-width: 1560px;
+      margin: 24px auto 0;
+      padding: 0 24px;
+    }
+
+    /* KPI Ribbon */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-2px); }
+    .kpi-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .kpi-icon-blue { background: rgba(2, 132, 199, 0.12); color: #0284c7; }
+    .kpi-icon-indigo { background: rgba(79, 70, 229, 0.12); color: #4f46e5; }
+    .kpi-icon-emerald { background: rgba(5, 150, 105, 0.12); color: #059669; }
+    .kpi-icon-amber { background: rgba(217, 119, 6, 0.12); color: #d97706; }
+    .kpi-val { font-size: 26px; font-weight: 800; font-family: var(--mono); }
+    .kpi-lbl { font-size: 11.5px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-top: 2px; }
+
+    /* Work Layout Grid (2 Columns) */
+    .work-grid {
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 1180px) {
+      .work-grid { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: var(--card-shadow);
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-title {
+      font-size: 15px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .url-textarea {
+      width: 100%;
+      height: 140px;
+      background: var(--surface-card);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+      outline: none;
+      resize: vertical;
+      line-height: 1.6;
+      transition: border-color 0.2s;
+    }
+    .url-textarea:focus { border-color: var(--primary); }
+
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 10px 0 16px;
+      align-items: center;
+    }
+    .chip-btn {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip-btn:hover { background: var(--primary); color: #fff; }
+
+    .setting-group {
+      margin-bottom: 14px;
+    }
+    .setting-lbl {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .select-input, .text-input {
+      width: 100%;
+      background: var(--surface-card);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 12.5px;
+      color: var(--text);
+      font-family: var(--font);
+      outline: none;
+    }
+
+    /* Run Modes Radio Cards */
+    .mode-card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .mode-card {
+      background: var(--surface-card);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mode-card.active {
+      border-color: var(--primary);
+      background: rgba(79, 70, 229, 0.08);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+    .mode-card-title {
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .mode-card-desc {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    .btn-main-run {
+      width: 100%;
+      background: linear-gradient(135deg, #0284c7, #4f46e5);
+      color: #fff;
+      border: none;
+      padding: 13px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 18px rgba(2, 132, 199, 0.35);
+      transition: all 0.2s;
+    }
+    .btn-main-run:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+    .btn-main-run:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .sub-btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .btn-sub {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 9px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    .btn-sub:hover:not(:disabled) {
+      background: var(--surface-hover);
+      border-color: var(--border-strong);
+    }
+    .btn-sub:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Progress Box */
+    .progress-box {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+    .progress-bar-wrap {
+      height: 8px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0284c7, #10b981);
+      border-radius: 99px;
+      transition: width 0.2s ease;
+    }
+
+    /* Terminal Console */
+    .terminal-console {
+      background: #090d16;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .terminal-topbar {
+      background: #0f172a;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1e293b;
+    }
+    .terminal-dots { display: flex; gap: 6px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+    .terminal-title {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+    .terminal-body {
+      padding: 12px 16px;
+      height: 130px;
+      overflow-y: auto;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      line-height: 1.6;
+      color: #38bdf8;
+    }
+
+    /* Table */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+    }
+    .table-toolbar {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .search-box {
+      background: var(--surface-card);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 7px 12px;
+      font-size: 12px;
+      color: var(--text);
+      width: 260px;
+      outline: none;
+    }
+    .table-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-act {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      padding: 7px 12px;
+      border-radius: 9px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    .btn-act:hover { background: var(--surface-hover); border-color: var(--primary); }
+    .btn-act.emerald { background: rgba(5, 150, 105, 0.12); color: var(--emerald); border-color: rgba(5, 150, 105, 0.35); }
+    .btn-act.emerald:hover { background: var(--emerald); color: #fff; }
+    .btn-act.primary { background: rgba(79, 70, 229, 0.12); color: var(--primary); border-color: rgba(79, 70, 229, 0.35); }
+    .btn-act.primary:hover { background: var(--primary); color: #fff; }
+
+    .leads-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+    .leads-table th {
+      background: var(--surface-card);
+      padding: 10px 14px;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .leads-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .leads-table tr:hover { background: var(--surface-hover); }
+
+    .avatar-sm {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--emerald);
+      box-shadow: 0 0 6px rgba(5, 150, 105, 0.2);
+    }
+    .fbid-badge {
+      font-family: var(--mono);
+      font-weight: 700;
+      color: var(--primary);
+      background: rgba(79, 70, 229, 0.1);
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+    .profile-link {
+      color: #0284c7;
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .profile-link:hover { text-decoration: underline; }
+
+    .empty-state {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-state-icon { font-size: 40px; margin-bottom: 8px; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--emerald);
+      color: var(--text);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 9999;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-logo">🐾</div>
+        <div class="brand-text">
+          <h1>
+            <span id="txtBrandTitle">Pet Lead AI • FB Follower Harvester</span>
+            <span style="font-size:11px; background:rgba(2,132,199,0.15); color:#0284c7; padding:2px 8px; border-radius:99px; border:1px solid rgba(2,132,199,0.3);">STANDALONE TOOL</span>
+          </h1>
+          <p id="txtBrandDesc">Thu thập người theo dõi Facebook độc lập không cần extension máy local & hỗ trợ cào ngầm Cloud/Server</p>
+        </div>
+      </div>
+
+      <div class="nav-links">
+        <a href="dashboard.html" class="nav-btn" title="Về All-In-One Dashboard">⚡ Dashboard Tổng</a>
+        <a href="step1_vision_harvester.html" class="nav-btn" title="Bước 1: Lọc AI Thị Giác">🐶 Bước 1: AI Vision</a>
+        <a href="step2_profile_enricher.html" class="nav-btn" title="Bước 2: Phễu Bóc Tách Hồ Sơ">🎯 Bước 2: CRM Funnel</a>
+        <a href="timesheet.html" class="nav-btn" title="Bảng Chấm Công Khách Hàng">📅 Chấm Công</a>
+        <a href="market_report.html" class="nav-btn" title="Báo Cáo Phân Tích Thị Trường">📊 Thị Trường</a>
+
+        <!-- Theme & Lang -->
+        <div class="theme-switch-box">
+          <button class="nav-pill-btn active" id="btnThemeLight">☀️ Sáng</button>
+          <button class="nav-pill-btn" id="btnThemeDark">🌙 Tối</button>
+        </div>
+        <div class="lang-switch-box">
+          <button class="nav-pill-btn active" id="btnLangVi">🇻🇳 VI</button>
+          <button class="nav-pill-btn" id="btnLangZh">🇨🇳 中文</button>
+        </div>
+
+        <div id="lblServerStatus" style="font-size:11.5px; color:var(--emerald); font-weight:700; background:rgba(5,150,105,0.12); border:1px solid rgba(5,150,105,0.3); padding:5px 12px; border-radius:99px;">
+          ● SERVER SẴN SÀNG
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- 4 KPI Ribbon -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon-box kpi-icon-blue">🔗</div>
+        <div>
+          <div class="kpi-val" id="kpiTotalLinks">0</div>
+          <div class="kpi-lbl" id="lblKpiLinks">Tổng Link Nạp</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-box kpi-icon-indigo">👥</div>
+        <div>
+          <div class="kpi-val" id="kpiTotalScraped">0</div>
+          <div class="kpi-lbl" id="lblKpiScraped">Người Đã Cào</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-box kpi-icon-emerald">🖼️</div>
+        <div>
+          <div class="kpi-val" id="kpiTotalAvatars">0</div>
+          <div class="kpi-lbl" id="lblKpiAvatars">Có Avatar HD</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-box kpi-icon-amber">🆔</div>
+        <div>
+          <div class="kpi-val" id="kpiTotalNumeric">0</div>
+          <div class="kpi-lbl" id="lblKpiNumeric">100% ID Số</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Work Area: 2 Columns -->
+    <div class="work-grid">
+      
+      <!-- Left Column: Input and Parameters -->
+      <aside class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>📋</span>
+            <span id="txtPanelInputTitle">Liên Kết Mục Tiêu Cần Cào</span>
+          </div>
+          <span style="font-size:11px; color:var(--text-muted); font-weight:700;">Facebook URL</span>
+        </div>
+
+        <textarea 
+          class="url-textarea" 
+          id="urlInputTextarea" 
+          placeholder="Dán link Facebook cần cào vào đây (mỗi dòng 1 link)&#10;Ví dụ:&#10;https://www.facebook.com/Cavicajunkennels/followers&#10;https://www.facebook.com/officialgooddog/followers"></textarea>
+
+        <div class="quick-chips">
+          <span style="font-size:11px; font-weight:700; color:var(--text-muted);" id="lblSample">Mẫu:</span>
+          <button class="chip-btn" id="chipCavicajun">+ Cavicajunkennels</button>
+          <button class="chip-btn" id="chipGooddog">+ officialgooddog</button>
+          <button class="chip-btn" id="chipClearInput">🧹 Xóa trắng</button>
+        </div>
+
+        <!-- Facebook Cookie Configuration on Server -->
+        <div class="setting-group" id="cookieConfigCard" style="background: rgba(79, 70, 229, 0.05); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span class="setting-lbl" style="margin-bottom: 0; color: var(--text); font-weight: 800; display: flex; align-items: center; gap: 5px;">
+              <span>🔑</span> <span>Cookie Facebook Server</span>
+            </span>
+            <span id="badgeServerCookie" style="font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: rgba(245, 158, 11, 0.15); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3);">
+              ⏳ Đang kiểm tra...
+            </span>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; line-height: 1.4;">
+            Cần thiết để Server vượt qua Login Wall của Facebook khi cào ngầm Headless.
+          </div>
+          <textarea id="inpServerCookie" class="url-textarea" style="height: 60px; font-size: 11px; padding: 8px 10px; margin-bottom: 6px;" placeholder="Dán c_user=...; xs=... hoặc JSON cookie vào đây"></textarea>
+          <div style="display: flex; justify-content: flex-end; gap: 6px;">
+            <button class="chip-btn" id="btnCheckCookie" style="padding: 4px 8px; font-size: 11px;">🔄 Kiểm tra</button>
+            <button class="chip-btn" id="btnSaveCookie" style="background: var(--primary); color: #fff; padding: 4px 12px; font-size: 11px; font-weight: 700;">💾 Lưu Cookie Lên Server</button>
+          </div>
+        </div>
+
+        <!-- Mode Select -->
+        <div class="setting-group">
+          <span class="setting-lbl" id="lblCrawlMode">Chế Độ Thực Thi Cào (Execution Mode)</span>
+          <div class="mode-card-grid">
+            <div class="mode-card active" id="modeCardServer" onclick="selectRunMode('server')">
+              <div class="mode-card-title">
+                <span>🚀</span>
+                <span id="lblModeServer">Cloud / Server Mode</span>
+              </div>
+              <div class="mode-card-desc" id="lblModeServerDesc">Cào ngầm trên máy chủ, KHÔNG cần extension máy local, giống Apify.</div>
+            </div>
+            <div class="mode-card" id="modeCardTab" onclick="selectRunMode('tab')">
+              <div class="mode-card-title">
+                <span>🌐</span>
+                <span id="lblModeTab">Bật Tab Độc Lập</span>
+              </div>
+              <div class="mode-card-desc" id="lblModeTabDesc">Mở tab độc lập tự động duyệt và chuyển dữ liệu về dashboard.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+          <div class="setting-group" style="margin-bottom:0;">
+            <span class="setting-lbl" id="lblScope">Phạm Vi (Scope)</span>
+            <select class="select-input" id="crawlScopeSelect">
+              <option value="followers">Người theo dõi (/followers)</option>
+              <option value="following">Đang theo dõi (/following)</option>
+              <option value="all">Cả hai (All Follows)</option>
+            </select>
+          </div>
+          <div class="setting-group" style="margin-bottom:0;">
+            <span class="setting-lbl" id="lblLimit">Giới Hạn Số Hồ Sơ</span>
+            <select class="select-input" id="crawlLimitSelect">
+              <option value="50">50 hồ sơ</option>
+              <option value="100" selected>100 hồ sơ</option>
+              <option value="250">250 hồ sơ</option>
+              <option value="500">500 hồ sơ</option>
+              <option value="0">Tối đa / Không giới hạn</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <button class="btn-main-run" id="btnStartHarvest">
+          <span>▶️</span>
+          <span id="txtBtnStart">BẮT ĐẦU CÀO DỮ LIỆU</span>
+        </button>
+
+        <div class="sub-btn-row">
+          <button class="btn-sub" id="btnPauseHarvest" disabled>
+            <span>⏸</span>
+            <span id="txtBtnPause">Tạm dừng</span>
+          </button>
+          <button class="btn-sub" id="btnStopHarvest" disabled>
+            <span>⏹</span>
+            <span id="txtBtnStop">Dừng</span>
+          </button>
+          <button class="btn-sub" id="btnClearData">
+            <span>🗑️</span>
+            <span id="txtBtnClear">Xóa sạch</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Right Column: Progress, Terminal & Results Table -->
+      <section>
+        
+        <!-- Progress Bar -->
+        <div class="progress-box">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; font-weight:700;" id="txtProgressStatus">Sẵn sàng thực thi</span>
+            <span style="font-size:12px; font-weight:800; font-family:var(--mono);" id="txtProgressPercent">0%</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted);">
+            <span id="txtProgressDetail">Đang chờ lệnh từ người dùng</span>
+            <span id="txtProgressCount">0 / 0</span>
+          </div>
+        </div>
+
+        <!-- Terminal Console -->
+        <div class="terminal-console">
+          <div class="terminal-topbar">
+            <div class="terminal-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="terminal-title">> LIVE HARVESTER LOG CONSOLE (STANDALONE ENGINE)</span>
+            <span style="font-size:10.5px; color:#64748b; font-family:var(--mono);" id="txtConsoleClock">--:--:--</span>
+          </div>
+          <div class="terminal-body" id="terminalLogBody">
+            <div>[INIT] Harvester Standalone Engine loaded. Ready to crawl without extension.</div>
+          </div>
+        </div>
+
+        <!-- Results Table Card -->
+        <div class="table-card">
+          <div class="table-toolbar">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:14px; font-weight:800;" id="txtTableHeading">Danh Sách Người Theo Dõi Thu Thập Được</span>
+              <span id="lblTableRowCount" style="font-size:11.5px; font-weight:700; color:var(--emerald); background:rgba(5,150,105,0.12); padding:2px 8px; border-radius:99px;">0 hồ sơ</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="text" class="search-box" id="tableSearchInput" placeholder="Tìm theo tên, FB ID, link..." />
+              <div class="table-actions">
+                <button class="btn-act emerald" id="btnExportExcel" title="Tải xuống tệp Excel">📥 Excel</button>
+                <button class="btn-act" id="btnExportJson" title="Tải xuống tệp JSON">📄 JSON</button>
+                <button class="btn-act primary" id="btnPushStep1" title="Chuyển dữ liệu sang Bước 1 Lọc AI Thị Giác">🐶 Đẩy Sang Bước 1</button>
+                <button class="btn-act primary" id="btnPushCrm" title="Chuyển trực tiếp vào CRM">⚡ Đẩy Vào CRM</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="overflow-x:auto; max-height:480px;">
+            <table class="leads-table">
+              <thead>
+                <tr>
+                  <th style="width:45px;">STT</th>
+                  <th style="width:55px;">Avatar</th>
+                  <th>Tên Hồ Sơ / Trại Cún</th>
+                  <th>Facebook ID (Số)</th>
+                  <th>Liên Kết Facebook</th>
+                  <th>Chuyên Mục / Bio</th>
+                  <th>Từ Khóa Cún</th>
+                  <th style="width:60px;">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="harvesterTableBody">
+                <tr>
+                  <td colspan="8" class="empty-state">
+                    <div class="empty-state-icon">📥</div>
+                    <div id="txtEmptyTableMsg">Chưa có dữ liệu. Dán danh sách link Facebook bên trái và nhấn "BẮT ĐẦU CÀO DỮ LIỆU".</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="appToast">Thông báo hệ thống</div>
+
+  <script>
+    let currentLang = 'vi';
+    let currentTheme = 'light';
+    let currentMode = 'server';
+    let isRunning = false;
+    let isPaused = false;
+    let harvestedData = [];
+
+    const I18N = {
+      vi: {
+        brandTitle: "Pet Lead AI • FB Follower Harvester",
+        brandDesc: "Thu thập người theo dõi Facebook độc lập không cần extension máy local & hỗ trợ cào ngầm Cloud/Server",
+        txtPanelInputTitle: "Liên Kết Mục Tiêu Cần Cào",
+        lblSample: "Mẫu:",
+        lblCrawlMode: "Chế Độ Thực Thi Cào (Execution Mode)",
+        lblModeServer: "Cloud / Server Mode",
+        lblModeServerDesc: "Cào ngầm trên máy chủ, KHÔNG cần extension máy local, giống Apify.",
+        lblModeTab: "Bật Tab Độc Lập",
+        lblModeTabDesc: "Mở tab độc lập tự động duyệt và chuyển dữ liệu về dashboard.",
+        lblScope: "Phạm Vi (Scope)",
+        lblLimit: "Giới Hạn Số Hồ Sơ",
+        txtBtnStart: "BẮT ĐẦU CÀO DỮ LIỆU",
+        txtBtnPause: "Tạm dừng",
+        txtBtnResume: "Tiếp tục",
+        txtBtnStop: "Dừng",
+        txtBtnClear: "Xóa sạch",
+        txtTableHeading: "Danh Sách Người Theo Dõi Thu Thập Được",
+        txtEmptyTableMsg: "Chưa có dữ liệu. Dán danh sách link Facebook bên trái và nhấn 'BẮT ĐẦU CÀO DỮ LIỆU'."
+      },
+      zh: {
+        brandTitle: "Pet Lead AI • Facebook 粉丝独立采集器",
+        brandDesc: "独立采集 Facebook 粉丝/正在关注列表，本地无需安装浏览器插件，支持服务端云端自动抓取",
+        txtPanelInputTitle: "目标采集链接",
+        lblSample: "示例:",
+        lblCrawlMode: "采集执行模式 (Execution Mode)",
+        lblModeServer: "云端服务器模式 (Cloud / Server)",
+        lblModeServerDesc: "直接由服务器后台无头抓取，无需本地插件，体验与 Apify 一致。",
+        lblModeTab: "开启独立标签页 (Popout Tab)",
+        lblModeTabDesc: "开启独立浏览器标签页自动挖掘，并将结果实时回传。",
+        lblScope: "采集范围 (Scope)",
+        lblLimit: "抓取数量上限",
+        txtBtnStart: "开始采集数据",
+        txtBtnPause: "暂停",
+        txtBtnResume: "继续",
+        txtBtnStop: "停止",
+        txtBtnClear: "清空",
+        txtTableHeading: "实时采集粉丝成果列表",
+        txtEmptyTableMsg: "暂无数据。请在左侧粘贴 Facebook 链接并点击“开始采集数据”。"
+      }
+    };
+
+    function getBackendApiBase() {
+      if (window.location.protocol.startsWith('http')) {
+        return `${window.location.protocol}//${window.location.host}`;
+      }
+      return 'http://127.0.0.1:8000';
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('appToast');
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    function logTerminal(msg) {
+      const b = document.getElementById('terminalLogBody');
+      if (!b) return;
+      const d = new Date();
+      const timeStr = d.toTimeString().split(' ')[0];
+      const div = document.createElement('div');
+      div.innerHTML = `<span style="color:#64748b;">[${timeStr}]</span> ${msg}`;
+      b.appendChild(div);
+      b.scrollTop = b.scrollHeight;
+    }
+
+    function selectRunMode(mode) {
+      currentMode = mode;
+      document.getElementById('modeCardServer').classList.toggle('active', mode === 'server');
+      document.getElementById('modeCardTab').classList.toggle('active', mode === 'tab');
+      logTerminal(`Đã chuyển sang chế độ: <b>${mode === 'server' ? 'Server Cloud Mode (Apify Style)' : 'Popout Tab Runner'}</b>`);
+    }
+
+    function applyI18n() {
+      const t = I18N[currentLang] || I18N.vi;
+      for (const [k, v] of Object.entries(t)) {
+        const el = document.getElementById(k);
+        if (el) el.textContent = v;
+      }
+    }
+
+    // Render Table
+    function renderTable() {
+      const tbody = document.getElementById('harvesterTableBody');
+      const q = (document.getElementById('tableSearchInput').value || '').trim().toLowerCase();
+      document.getElementById('lblTableRowCount').textContent = `${harvestedData.length} hồ sơ`;
+
+      let filtered = harvestedData;
+      if (q) {
+        filtered = filtered.filter(item => 
+          (item.name && item.name.toLowerCase().includes(q)) ||
+          (item.fb_id && item.fb_id.includes(q)) ||
+          (item.url && item.url.toLowerCase().includes(q))
+        );
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="empty-state">
+              <div class="empty-state-icon">📥</div>
+              <div>${harvestedData.length === 0 ? (I18N[currentLang].txtEmptyTableMsg) : 'Không tìm thấy kết quả phù hợp.'}</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((r, i) => {
+        const avatar = r.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.name || 'User')}&background=4f46e5&color=fff`;
+        const kwHtml = (r.keywords_found || ['dog']).map(k => `<span style="font-size:10px; background:rgba(5,150,105,0.12); color:#059669; padding:2px 6px; border-radius:5px; margin-right:3px; font-weight:700;">${k}</span>`).join('');
+        return `
+          <tr>
+            <td style="color:var(--text-muted); font-weight:700;">#${r.stt || (i + 1)}</td>
+            <td>
+              <img src="${avatar}" class="avatar-sm" onerror="this.src='https://ui-avatars.com/api/?name=Lead&background=0284c7&color=fff'" />
+            </td>
+            <td>
+              <div style="font-weight:800; color:var(--text);">${r.name || 'Facebook User'}</div>
+              <div style="font-size:11px; color:var(--text-muted);">${r.subtitle || 'Người theo dõi'}</div>
+            </td>
+            <td>
+              <span class="fbid-badge">${r.fb_id || 'Chưa có'}</span>
+            </td>
+            <td>
+              <a href="${r.url || '#'}" target="_blank" class="profile-link">🔗 Xem Trang</a>
+            </td>
+            <td>
+              <div style="font-size:11.5px; color:var(--text-muted); max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                ${r.bio || r.category || 'N/A'}
+              </div>
+            </td>
+            <td>${kwHtml}</td>
+            <td>
+              <button class="btn-sub" onclick="deleteSingleRow(${i})" title="Xóa hồ sơ này" style="padding:4px 8px; font-size:10.5px; color:var(--rose);">🗑️</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      updateKPIs();
+    }
+
+    function deleteSingleRow(idx) {
+      harvestedData.splice(idx, 1);
+      renderTable();
+      showToast('Đã xóa 1 hồ sơ.');
+    }
+
+    function updateKPIs() {
+      const total = harvestedData.length;
+      const withAvatar = harvestedData.filter(r => r.avatar_url && !r.avatar_url.includes('ui-avatars.com')).length;
+      const withNumId = harvestedData.filter(r => r.fb_id && /^\d+$/.test(r.fb_id)).length;
+
+      document.getElementById('kpiTotalScraped').textContent = total;
+      document.getElementById('kpiTotalAvatars').textContent = withAvatar;
+      document.getElementById('kpiTotalNumeric').textContent = withNumId;
+    }
+
+    // Execution Core
+    async function executeHarvester() {
+      const ta = document.getElementById('urlInputTextarea');
+      const lines = ta.value.split('\n').map(l => l.trim()).filter(l => l.startsWith('http'));
+      if (lines.length === 0) {
+        alert(currentLang === 'vi' ? 'Vui lòng dán ít nhất 1 đường dẫn Facebook hợp lệ!' : '请先粘贴至少一个有效的 Facebook 链接！');
+        return;
+      }
+
+      document.getElementById('kpiTotalLinks').textContent = lines.length;
+      isRunning = true;
+      isPaused = false;
+      document.getElementById('btnStartHarvest').disabled = true;
+      document.getElementById('btnPauseHarvest').disabled = false;
+      document.getElementById('btnStopHarvest').disabled = false;
+
+      const limit = parseInt(document.getElementById('crawlLimitSelect').value, 10);
+      const scope = document.getElementById('crawlScopeSelect').value;
+
+      logTerminal(`🚀 <b>BẮT ĐẦU CÀO:</b> Tổng ${lines.length} link, Chế độ: ${currentMode.toUpperCase()}, Giới hạn: ${limit || 'Vô hạn'}`);
+      document.getElementById('txtProgressStatus').textContent = 'Đang kết nối máy chủ & thu thập...';
+      document.getElementById('progressBarFill').style.width = '20%';
+      document.getElementById('txtProgressPercent').textContent = '20%';
+
+      if (currentMode === 'tab') {
+        // Popout tab mode
+        for (let i = 0; i < lines.length; i++) {
+          if (!isRunning) break;
+          const u = lines[i];
+          logTerminal(`🌐 Mở tab cào độc lập: <a href="${u}" target="_blank" style="color:#38bdf8;">${u}</a>`);
+          window.open(u, '_blank');
+          await new Promise(r => setTimeout(r, 2000));
+        }
+      }
+
+      // Call Server API
+      const apiBase = getBackendApiBase();
+      for (let i = 0; i < lines.length; i++) {
+        if (!isRunning) break;
+        const targetUrl = lines[i];
+        logTerminal(`[*] Đang gửi yêu cầu cào tới máy chủ: <code>${targetUrl}</code>...`);
+        
+        try {
+          let resp = null;
+          try {
+            resp = await fetch(`${apiBase}/api/harvest-followers`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: targetUrl, limit, scope })
+            });
+          } catch (_) {}
+
+          // Fallback to PHP API on Apache if /api/ not rewritten
+          if (!resp || !resp.ok) {
+            resp = await fetch(`${apiBase}/api.php?route=harvest-followers`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: targetUrl, limit, scope })
+            });
+          }
+
+          if (!resp.ok && resp.status !== 401) throw new Error(`HTTP ${resp.status}`);
+          const resJson = await resp.json();
+
+          if (resJson.status === 'ok' && Array.isArray(resJson.data)) {
+            const newItems = resJson.data;
+            logTerminal(`[✓] Thu thập thành công <b>+${newItems.length}</b> người theo dõi từ ${resJson.host_title || targetUrl}`);
+            
+            // Deduplicate
+            const map = new Map();
+            harvestedData.forEach(r => map.set(r.fb_id || r.url, r));
+            newItems.forEach(r => map.set(r.fb_id || r.url, r));
+            harvestedData = Array.from(map.values());
+
+            renderTable();
+          } else if (resJson.code === 'FB_LOGIN_REQUIRED' || (resJson.message && resJson.message.includes('đăng nhập'))) {
+            logTerminal(`⚠️ <b>[CẢNH BÁO ĐĂNG NHẬP]</b> Facebook chặn khách vãng lai. Vui lòng nạp Cookie Facebook vào ô "🔑 Cookie Facebook Server" bên trái và bấm "Lưu Cookie Lên Server"!`);
+            alert(`⚠️ Facebook yêu cầu đăng nhập để xem danh sách Follower!\n\nVui lòng dán Cookie Facebook (c_user=...; xs=...) vào ô "🔑 Cookie Facebook Server" bên trái và bấm "Lưu Cookie Lên Server" để Server cào trực tiếp.`);
+            const cCard = document.getElementById('cookieConfigCard');
+            if (cCard) {
+              cCard.scrollIntoView({ behavior: 'smooth' });
+              cCard.style.boxShadow = '0 0 16px rgba(239, 68, 68, 0.5)';
+              const inp = document.getElementById('inpServerCookie');
+              if (inp) inp.focus();
+            }
+          } else {
+            logTerminal(`[!] Máy chủ trả về: ${resJson.message || 'Không có dữ liệu'}`);
+          }
+        } catch (err) {
+          logTerminal(`[X] Lỗi kết nối tới máy chủ (${apiBase}): ${err.message}`);
+        }
+
+        const pct = Math.round(((i + 1) / lines.length) * 100);
+        document.getElementById('progressBarFill').style.width = `${pct}%`;
+        document.getElementById('txtProgressPercent').textContent = `${pct}%`;
+        document.getElementById('txtProgressCount').textContent = `${i + 1} / ${lines.length}`;
+      }
+
+      isRunning = false;
+      document.getElementById('btnStartHarvest').disabled = false;
+      document.getElementById('btnPauseHarvest').disabled = true;
+      document.getElementById('btnStopHarvest').disabled = true;
+      document.getElementById('txtProgressStatus').textContent = 'Hoàn tất cào dữ liệu!';
+      logTerminal(`🎉 <b>HOÀN TẤT:</b> Đã cào và lưu trữ thành công ${harvestedData.length} hồ sơ!`);
+      showToast(`Đã cào hoàn tất ${harvestedData.length} hồ sơ!`);
+    }
+
+    // Export Excel
+    function exportToExcel() {
+      if (harvestedData.length === 0) {
+        alert('Chưa có dữ liệu để xuất Excel!');
+        return;
+      }
+      try {
+        const rows = harvestedData.map((r, i) => ({
+          'STT': i + 1,
+          'Tên Hồ Sơ': r.name || '',
+          'Facebook ID (Số)': r.fb_id || '',
+          'Facebook URL': r.url || '',
+          'Avatar HD': r.avatar_url || '',
+          'Phụ đề / Vị trí': r.subtitle || '',
+          'Tiểu sử (Bio)': r.bio || '',
+          'Chuyên mục': r.category || '',
+          'Từ khóa giống chó': (r.keywords_found || []).join(', '),
+          'Thời gian cào': r.scraped_at || ''
+        }));
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Followers_Harvested");
+        XLSX.writeFile(wb, `FB_Followers_${new Date().toISOString().slice(0,10)}.xlsx`);
+        showToast('✓ Đã xuất tệp Excel thành công!');
+      } catch (e) {
+        alert('Lỗi xuất Excel: ' + e.message);
+      }
+    }
+
+    // Export JSON
+    function exportToJson() {
+      if (harvestedData.length === 0) {
+        alert('Chưa có dữ liệu để xuất JSON!');
+        return;
+      }
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(harvestedData, null, 2));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `FB_Followers_${Date.now()}.json`);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      showToast('✓ Đã xuất tệp JSON thành công!');
+    }
+
+    // Push to Step 1
+    async function pushToStep1() {
+      if (harvestedData.length === 0) {
+        alert('Chưa có dữ liệu để đẩy sang Bước 1!');
+        return;
+      }
+      const apiBase = getBackendApiBase();
+      try {
+        const resp = await fetch(`${apiBase}/api/upload-raw`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: `step1_followers_raw_${Date.now()}.json`,
+            data: harvestedData
+          })
+        });
+        showToast('✓ Đã đẩy thành công dữ liệu sang Bước 1!');
+        setTimeout(() => {
+          window.location.href = 'step1_vision_harvester.html';
+        }, 800);
+      } catch (e) {
+        alert('Lỗi khi đẩy dữ liệu: ' + e.message);
+      }
+    }
+
+    // Push to CRM
+    async function pushToCrm() {
+      if (harvestedData.length === 0) {
+        alert('Chưa có dữ liệu để đẩy vào CRM!');
+        return;
+      }
+      const apiBase = getBackendApiBase();
+      try {
+        await fetch(`${apiBase}/api/save-crm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: harvestedData })
+        });
+        showToast('✓ Đã đẩy thành công dữ liệu vào Master CRM!');
+      } catch (e) {
+        alert('Lỗi khi lưu CRM: ' + e.message);
+      }
+    }
+
+    // Cookie Server Management
+    async function checkServerCookieStatus() {
+      const apiBase = getBackendApiBase();
+      try {
+        let res = null;
+        try { res = await fetch(`${apiBase}/api/cookie-status`); } catch (_) {}
+        if (!res || !res.ok) {
+          res = await fetch(`${apiBase}/api.php?route=cookie-status`);
+        }
+        if (res && res.ok) {
+          const data = await res.json();
+          const badge = document.getElementById('badgeServerCookie');
+          if (badge) {
+            if (data.has_cookie) {
+              badge.textContent = `🟢 Sẵn sàng (UID: ${data.c_user || 'OK'})`;
+              badge.style.background = 'rgba(5, 150, 105, 0.15)';
+              badge.style.color = 'var(--emerald)';
+              badge.style.borderColor = 'rgba(5, 150, 105, 0.3)';
+            } else {
+              badge.textContent = '⚠️ Chưa có Cookie';
+              badge.style.background = 'rgba(239, 68, 68, 0.15)';
+              badge.style.color = 'var(--rose)';
+              badge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    async function saveServerCookie() {
+      const inp = document.getElementById('inpServerCookie');
+      const cookieVal = inp ? inp.value.trim() : '';
+      if (!cookieVal) {
+        alert('Vui lòng dán chuỗi Cookie Facebook vào ô trước khi lưu!');
+        return;
+      }
+      const apiBase = getBackendApiBase();
+      logTerminal('[*] Đang lưu Cookie Facebook lên Server...');
+      try {
+        let res = null;
+        try {
+          res = await fetch(`${apiBase}/api/save-cookie`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cookie: cookieVal })
+          });
+        } catch (_) {}
+        if (!res || !res.ok) {
+          res = await fetch(`${apiBase}/api.php?route=save-cookie`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cookie: cookieVal })
+          });
+        }
+        const json = await res.json();
+        if (json.status === 'ok') {
+          logTerminal(`[✓] Đã lưu Cookie Facebook lên Server thành công! ${json.c_user ? '(UID: ' + json.c_user + ')' : ''}`);
+          showToast('✅ Đã lưu Cookie Facebook lên Server!');
+          if (inp) inp.value = '';
+          checkServerCookieStatus();
+        } else {
+          alert('Lỗi lưu Cookie: ' + (json.message || 'Không xác định'));
+        }
+      } catch (err) {
+        logTerminal(`[X] Lỗi gửi Cookie lên Server: ${err.message}`);
+      }
+    }
+
+    // Initializer
+    document.addEventListener('DOMContentLoaded', () => {
+      checkServerCookieStatus();
+      const btnCheckC = document.getElementById('btnCheckCookie');
+      if (btnCheckC) btnCheckC.onclick = checkServerCookieStatus;
+      const btnSaveC = document.getElementById('btnSaveCookie');
+      if (btnSaveC) btnSaveC.onclick = saveServerCookie;
+      // Clock
+      setInterval(() => {
+        const el = document.getElementById('txtConsoleClock');
+        if (el) el.textContent = new Date().toTimeString().split(' ')[0];
+      }, 1000);
+
+      // Samples
+      document.getElementById('chipCavicajun').onclick = () => {
+        const ta = document.getElementById('urlInputTextarea');
+        ta.value = (ta.value ? ta.value + '\n' : '') + 'https://www.facebook.com/Cavicajunkennels/followers';
+      };
+      document.getElementById('chipGooddog').onclick = () => {
+        const ta = document.getElementById('urlInputTextarea');
+        ta.value = (ta.value ? ta.value + '\n' : '') + 'https://www.facebook.com/officialgooddog/followers';
+      };
+      document.getElementById('chipClearInput').onclick = () => {
+        document.getElementById('urlInputTextarea').value = '';
+      };
+
+      // Actions
+      document.getElementById('btnStartHarvest').onclick = executeHarvester;
+      document.getElementById('btnStopHarvest').onclick = () => {
+        isRunning = false;
+        logTerminal('[!] Người dùng đã bấm dừng tác vụ.');
+        showToast('Đã dừng cào.');
+      };
+      document.getElementById('btnClearData').onclick = () => {
+        if (confirm('Bạn có chắc chắn muốn xóa sạch danh sách vừa cào?')) {
+          harvestedData = [];
+          renderTable();
+          showToast('Đã xóa sạch dữ liệu.');
+        }
+      };
+
+      document.getElementById('btnExportExcel').onclick = exportToExcel;
+      document.getElementById('btnExportJson').onclick = exportToJson;
+      document.getElementById('btnPushStep1').onclick = pushToStep1;
+      document.getElementById('btnPushCrm').onclick = pushToCrm;
+      document.getElementById('tableSearchInput').oninput = renderTable;
+
+      // Theme toggle
+      document.getElementById('btnThemeLight').onclick = () => {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.getElementById('btnThemeLight').classList.add('active');
+        document.getElementById('btnThemeDark').classList.remove('active');
+      };
+      document.getElementById('btnThemeDark').onclick = () => {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('btnThemeDark').classList.add('active');
+        document.getElementById('btnThemeLight').classList.remove('active');
+      };
+
+      // Lang toggle
+      document.getElementById('btnLangVi').onclick = () => {
+        currentLang = 'vi';
+        document.getElementById('btnLangVi').classList.add('active');
+        document.getElementById('btnLangZh').classList.remove('active');
+        applyI18n();
+      };
+      document.getElementById('btnLangZh').onclick = () => {
+        currentLang = 'zh';
+        document.getElementById('btnLangZh').classList.add('active');
+        document.getElementById('btnLangVi').classList.remove('active');
+        applyI18n();
+      };
+
+      // Load cached raw file if available
+      const apiBase = getBackendApiBase();
+      fetch(`${apiBase}/api/latest-raw`)
+        .then(r => r.json())
+        .then(res => {
+          if (res.status === 'ok' && Array.isArray(res.data) && res.data.length > 0) {
+            harvestedData = res.data;
+            renderTable();
+            logTerminal(`[LOAD] Đã tự động nạp ${res.data.length} hồ sơ gần nhất từ <code>${res.filename}</code>`);
+          }
+        })
+        .catch(() => {});
+    });
+  </script>
+</body>
+</html>

@@ -1,25 +1,26 @@
 @echo off
 chcp 65001 >nul
-echo ========================================================
-echo  🐾 PET LEAD AI - TOOL 1: FB MULTI-LINK HARVESTER
-echo  Mo Giao Dien Trắng (Light Mode) Song Ngu Viet - Trung
-echo ========================================================
+title 🐾 PET LEAD AI - TOOL 1: FB FOLLOWER HARVESTER (STANDALONE UI)
+color 0b
+
+echo =================================================================
+echo  🐾 PET LEAD AI - TOOL 1: FB FOLLOWER HARVESTER (STANDALONE)
+echo  Giao Diện Thu Thập Follower Facebook Độc Lập (0%% Extension Local)
+echo =================================================================
+echo.
+echo [*] Dang mo Giao Dien Cao Follower doc lap tren trinh duyet...
+echo [*] Link Web: http://localhost:8000/harvester.html (hoac tren Server)
 echo.
 
-set EXT_ID=feemmahkfnimfhpghjajmhbiphfkepnk
-set EXT_URL=chrome-extension://%EXT_ID%/harvester_dashboard.html
-set LOCAL_HTML=%~dp0fb_following_scraper\harvester_dashboard.html
+set STANDALONE_HTML=%~dp0FB-FS-2\harvester.html
+if exist "%STANDALONE_HTML%" (
+    start "" "%STANDALONE_HTML%"
+) else (
+    start "" "http://localhost:8000/harvester.html"
+)
 
-echo Dang mo giao dien Tool 1 tren Google Chrome...
-start "" chrome "%EXT_URL%"
-
-echo.
-echo ========================================================
-echo  LƯU Ý QUAN TRỌNG:
-echo  1. Neu Chrome bao "Khong tim thay", hay vao: chrome://extensions/
-echo     va an nut "Tai lai" (🔄) de Chrome nhan Extension.
-echo  2. Hoac ban co the bam thang vao bieu tuong Extension tren Chrome
-echo     roi chon "📋 Mo Bang Cao Da Link (Tool 1 UI Trang)".
-echo ========================================================
+echo [✓] Da mo giao dien thanh cong!
+echo Ban co the dan link Facebook truc tiep va chon Cao tren Server (Apify style)
+echo ma KHONG CAN cai dat bat ky tien ich extension nao tren may local!
 echo.
 timeout /t 3 >nul

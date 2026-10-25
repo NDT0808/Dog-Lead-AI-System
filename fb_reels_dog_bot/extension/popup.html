@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dog Bot Pro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700&display=swap');
+
+        body {
+            width: 360px;
+            margin: 0;
+            padding: 16px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        h2 {
+            margin: 0 0 16px;
+            font-size: 20px;
+            text-align: center;
+            font-weight: 700;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .dev-badge {
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-box {
+            font-family: 'Fira Code', monospace;
+            background: #020617;
+            border-left: 3px solid #38bdf8;
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #10b981;
+            margin-bottom: 16px;
+            word-wrap: break-word;
+        }
+
+        .timer-container {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px dashed #334155;
+            display: none;
+        }
+
+        .timer-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .timer-bg {
+            background: #334155;
+            border-radius: 6px;
+            height: 12px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .timer-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            transition: width 0.1s linear;
+        }
+
+        .pred-bar {
+            margin: 12px 0;
+        }
+
+        .pred-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .bar-bg {
+            background: #334155;
+            border-radius: 4px;
+            height: 10px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fill-puppy {
+            background: #ec4899;
+        }
+
+        .fill-adult {
+            background: #38bdf8;
+        }
+
+        .fill-none {
+            background: #94a3b8;
+        }
+
+        /* Form Settings */
+        .settings {
+            margin-bottom: 16px;
+        }
+
+        .setting-group {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .setting-group label {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .setting-group input {
+            width: 60px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: #38bdf8;
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .setting-group .range-inputs {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #38bdf8;
+            color: #0f172a;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background: #7dd3fc;
+            transform: translateY(-2px);
+        }
+
+        .btn.off {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn.off:hover {
+            background: #f87171;
+        }
+
+        .btn-save {
+            background: #10b981;
+            margin-bottom: 12px;
+        }
+
+        .btn-save:hover {
+            background: #34d399;
+        }
+
+        .dev-footer {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 11px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>🐶 FB Reels Bot <span class="dev-badge">DEV PRO</span></h2>
+
+    <div class="status-box" id="status-text">> Đang kết nối tới trang...</div>
+
+    <div class="card">
+        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; font-weight: 700;">
+            ⚙️ Config / Settings</div>
+        <div class="settings">
+            <div class="setting-group">
+                <label>Threshold (%)</label>
+                <input type="number" id="cfg-threshold" value="50" min="10" max="99">
+            </div>
+            <div class="setting-group">
+                <label>Delay Dog (s)</label>
+                <div class="range-inputs">
+                    <input type="number" id="cfg-dog-min" value="10"> - <input type="number" id="cfg-dog-max"
+                        value="15">
+                </div>
+            </div>
+            <div class="setting-group">
+                <label>Delay Rác (s)</label>
+                <div class="range-inputs">
+                    <input type="number" id="cfg-none-min" value="2"> - <input type="number" id="cfg-none-max"
+                        value="7">
+                </div>
+            </div>
+            <div class="setting-group">
+                <label>Follow Limit / Session</label>
+                <input type="number" id="cfg-session-limit" value="20" min="1" max="100">
+            </div>
+            <div class="setting-group">
+                <label>Like Limit / Session</label>
+                <input type="number" id="cfg-like-limit" value="100" min="1" max="500">
+            </div>
+            <div class="setting-group">
+                <label>Follow Rate (x videos)</label>
+                <div class="range-inputs">
+                    <input type="number" id="cfg-int-min" value="3"> - <input type="number" id="cfg-int-max" value="7">
+                </div>
+            </div>
+            <div class="setting-group">
+                <label>Like Rate (%)</label>
+                <input type="number" id="cfg-like-rate" value="70" min="0" max="100">
+            </div>
+        </div>
+        <button class="btn btn-save" id="save-btn" style="width: 100%; font-size: 12px; padding: 8px;">💾 LƯU CẤU
+            HÌNH</button>
+    </div>
+
+    <div class="card">
+        <div
+            style="font-size: 12px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; display: flex; justify-content: space-between;">
+            <span>Live Stats</span>
+            <span style="display: flex; gap: 8px;">
+                <span id="follow-counter" style="color: #10b981;">0/20 FL</span>
+                <span id="like-counter" style="color: #f43f5e;">0/100 LK</span>
+            </span>
+        </div>
+        <div class="pred-bar">
+            <div class="pred-label"><span style="color: #38bdf8">Adult Dog</span><span id="pct-adult">0%</span></div>
+            <div class="bar-bg">
+                <div class="bar-fill fill-adult" id="bar-adult"></div>
+            </div>
+        </div>
+        <div class="pred-bar">
+            <div class="pred-label"><span style="color: #ec4899">Puppy</span><span id="pct-puppy">0%</span></div>
+            <div class="bar-bg">
+                <div class="bar-fill fill-puppy" id="bar-puppy"></div>
+            </div>
+        </div>
+        <div class="pred-bar">
+            <div class="pred-label"><span style="color: #94a3b8">Non Dog (Rác)</span><span id="pct-none">0%</span></div>
+            <div class="bar-bg">
+                <div class="bar-fill fill-none" id="bar-none"></div>
+            </div>
+        </div>
+
+        <div class="timer-container" id="timer-box">
+            <div class="timer-label"><span>Dwell Time (Chờ lướt)</span><span id="timer-text">0.0s</span></div>
+            <div class="timer-bg">
+                <div class="timer-fill" id="timer-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn" id="toggle-btn">⏸️ TẠM DỪNG BOT</button>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

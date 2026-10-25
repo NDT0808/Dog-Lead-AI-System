@@ -23,6 +23,14 @@
     </div>
 
     <div class="header-actions">
+      <!-- Cổng liên thông -->
+      <a href="index.html" class="btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;" title="Về Cổng Điều Hành Trung Tâm (Trang Bìa)">
+        <span>🏠</span> <span>Trang Bìa / 首页</span>
+      </a>
+      <a href="timesheet.html" class="btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;" title="Xem Bảng Chấm Công Hoạt Động (Bước 3)">
+        <span>📅</span> <span>Chấm Công / 考勤</span>
+      </a>
+
       <!-- Bộ chuyển đổi ngôn ngữ -->
       <div class="lang-switch">
         <button type="button" id="langVi" class="lang-btn active">🇻🇳 Tiếng Việt</button>
@@ -164,64 +172,121 @@
     </div>
   </div>
 
-  <!-- Table Card -->
-  <div class="table-card">
-    <div class="filter-bar">
-      <!-- Search Input -->
-      <div class="search-input-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm theo Tên chủ trại, Tên trại, SĐT, Email, Thành phố, FB ID / 按主理人、犬舍名称、电话筛选...">
+  <!-- Navigation Tabs: Master CRM Table vs Daily Activity Ledger Matrix -->
+  <div class="dash-tabs-bar">
+    <button type="button" class="tab-btn active" id="tabBtnCrmTable">
+      <span>📋</span> <span id="txtTabCrm">Danh Sách Hồ Sơ CRM / 客户档案总表</span>
+    </button>
+    <button type="button" class="tab-btn" id="tabBtnLedgerTable">
+      <span>📅</span> <span id="txtTabLedger">Bảng Chấm Công Hoạt Động (Timesheet Ledger) / 每日考勤打卡</span>
+      <span class="tab-badge" id="badgeLedgerActiveCount">210 Leads</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: MASTER CRM TABLE -->
+  <div id="viewCrmTable">
+    <div class="table-card">
+      <div class="filter-bar">
+        <!-- Search Input -->
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm theo Tên chủ trại, Tên trại, SĐT, Email, Thành phố, FB ID / 按主理人、犬舍名称、电话筛选...">
+        </div>
+
+        <!-- Filters -->
+        <select id="filterAmazon" class="filter-select">
+          <option value="ALL">Kênh Amazon: Tất cả / 亚马逊渠道: 全部</option>
+          <option value="HAS_AMAZON">Có kênh bán Amazon / 已开通亚马逊</option>
+          <option value="TARGET">★ Mục tiêu TARGET (Cỏ/Đồ chơi/Potty) / 重点目标</option>
+          <option value="NO_AMAZON">Chưa có link Amazon / 暂无亚马逊链接</option>
+        </select>
+
+        <select id="filterTier" class="filter-select">
+          <option value="ALL">Xếp hạng: Tất cả Tier / 客户等级: 全部</option>
+          <option value="TIER_S">Tier S (Rất cao: 75đ - 98đ) / 特优</option>
+          <option value="TIER_A">Tier A (Cao: 60đ - 74đ) / 优质</option>
+          <option value="TIER_B">Tier B (Tiêu chuẩn / 标准潜客)</option>
+        </select>
+
+        <button type="button" id="btnFilterAddNewLead" class="btn-primary" style="padding:6px 14px; font-size:12px; font-weight:700; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; cursor:pointer;" title="Thêm hồ sơ khách hàng mới vào CRM / 新增潜客档案">
+          <span>➕</span> <span id="txtBtnFilterAddNew">Thêm hồ sơ / 新增潜客</span>
+        </button>
+
+        <div style="font-size:12px; font-weight:700; color:var(--text-muted); white-space:nowrap; margin-left:auto;">
+          <span id="txtShowingCount">Hiển thị / 显示:</span> <strong style="color:#0284c7;" id="filteredCount">0</strong> / <span id="totalRowCount">0</span>
+        </div>
       </div>
 
-      <!-- Filters -->
-      <select id="filterAmazon" class="filter-select">
-        <option value="ALL">Kênh Amazon: Tất cả / 亚马逊渠道: 全部</option>
-        <option value="HAS_AMAZON">Có kênh bán Amazon / 已开通亚马逊</option>
-        <option value="TARGET">★ Mục tiêu TARGET (Cỏ/Đồ chơi/Potty) / 重点目标</option>
-        <option value="NO_AMAZON">Chưa có link Amazon / 暂无亚马逊链接</option>
-      </select>
-
-      <select id="filterTier" class="filter-select">
-        <option value="ALL">Xếp hạng: Tất cả Tier / 客户等级: 全部</option>
-        <option value="TIER_S">Tier S (Rất cao: 75đ - 98đ) / 特优</option>
-        <option value="TIER_A">Tier A (Cao: 60đ - 74đ) / 优质</option>
-        <option value="TIER_B">Tier B (Tiêu chuẩn / 标准潜客)</option>
-      </select>
-
-      <button type="button" id="btnFilterAddNewLead" class="btn-primary" style="padding:6px 14px; font-size:12px; font-weight:700; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; cursor:pointer;" title="Thêm hồ sơ khách hàng mới vào CRM / 新增潜客档案">
-        <span>➕</span> <span id="txtBtnFilterAddNew">Thêm hồ sơ / 新增潜客</span>
-      </button>
-
-      <div style="font-size:12px; font-weight:700; color:var(--text-muted); white-space:nowrap; margin-left:auto;">
-        <span id="txtShowingCount">Hiển thị / 显示:</span> <strong style="color:#0284c7;" id="filteredCount">0</strong> / <span id="totalRowCount">0</span>
+      <!-- Responsive Table -->
+      <div class="table-responsive">
+        <table class="crm-table">
+          <thead>
+            <tr>
+              <th id="thStt">STT<span class="th-sub">序号</span></th>
+              <th id="thAvatar" style="text-align:center;">Ảnh Đại Diện<span class="th-sub">头像 (Avatar)</span></th>
+              <th id="thOwner">Tên Chủ Trại<span class="th-sub">主理人 (Owner)</span></th>
+              <th id="thName">Tên Trại / Trang<span class="th-sub">犬舍 / 企业</span></th>
+              <th id="thFbId">Facebook ID<span class="th-sub">数字社交ID</span></th>
+              <th id="thContact">SĐT & Email<span class="th-sub">电话 & 邮箱</span></th>
+              <th id="thWebsite">Website Chính Thức<span class="th-sub">官方网站</span></th>
+              <th id="thAmazon">Kênh Bán Amazon<span class="th-sub">亚马逊渠道</span></th>
+              <th id="thLocation">Vị Trí (City, State)<span class="th-sub">地理位置</span></th>
+              <th id="thPublish">Bài Đăng Gần Nhất<span class="th-sub">最新发帖</span></th>
+              <th id="thReelsInsights">🎬 Hậu Trường Reels<span class="th-sub">Reels爆款透视</span></th>
+              <th id="thCategory">Nhóm Khách Hàng<span class="th-sub">客户分类</span></th>
+              <th id="thProduct">Sản Phẩm Phù Hợp<span class="th-sub">推荐匹配产品</span></th>
+              <th id="thTier">Xếp Hạng & Điểm<span class="th-sub">评级与得分</span></th>
+              <th id="thActions" style="text-align:center;">Thao Tác<span class="th-sub">操作</span></th>
+            </tr>
+          </thead>
+          <tbody id="crmTableBody">
+            <!-- Rendered dynamically by dashboard.js -->
+          </tbody>
+        </table>
       </div>
     </div>
+  </div>
 
-    <!-- Responsive Table -->
-    <div class="table-responsive">
-      <table class="crm-table">
-        <thead>
-          <tr>
-            <th id="thStt">STT<span class="th-sub">序号</span></th>
-            <th id="thAvatar" style="text-align:center;">Ảnh Đại Diện<span class="th-sub">头像 (Avatar)</span></th>
-            <th id="thOwner">Tên Chủ Trại<span class="th-sub">主理人 (Owner)</span></th>
-            <th id="thName">Tên Trại / Trang<span class="th-sub">犬舍 / 企业</span></th>
-            <th id="thFbId">Facebook ID<span class="th-sub">数字社交ID</span></th>
-            <th id="thContact">SĐT & Email<span class="th-sub">电话 & 邮箱</span></th>
-            <th id="thWebsite">Website Chính Thức<span class="th-sub">官方网站</span></th>
-            <th id="thAmazon">Kênh Bán Amazon<span class="th-sub">亚马逊渠道</span></th>
-            <th id="thLocation">Vị Trí (City, State)<span class="th-sub">地理位置</span></th>
-            <th id="thPublish">Bài Đăng Gần Nhất<span class="th-sub">最新发帖</span></th>
-            <th id="thCategory">Nhóm Khách Hàng<span class="th-sub">客户分类</span></th>
-            <th id="thProduct">Sản Phẩm Phù Hợp<span class="th-sub">推荐匹配产品</span></th>
-            <th id="thTier">Xếp Hạng & Điểm<span class="th-sub">评级与得分</span></th>
-            <th id="thActions" style="text-align:center;">Thao Tác<span class="th-sub">操作</span></th>
-          </tr>
-        </thead>
-        <tbody id="crmTableBody">
-          <!-- Rendered dynamically by dashboard.js -->
-        </tbody>
-      </table>
+  <!-- TAB 2: ACTIVITY LEDGER & ATTENDANCE MATRIX -->
+  <div id="viewLedgerTable" style="display:none;">
+    <div class="table-card">
+      <div class="filter-bar">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="ledgerSearchInput" class="search-input" placeholder="Lọc theo Tên trại, Chủ trại, SĐT, FB_ID... / 按主理人、电话、FB ID筛选...">
+        </div>
+
+        <select id="ledgerWindowSelect" class="filter-select">
+          <option value="14">Hiển thị: 14 ngày gần nhất / 显示最近14天</option>
+          <option value="7">Hiển thị: 7 ngày gần nhất / 最近7天</option>
+          <option value="30">Hiển thị: 30 ngày (Cả tháng) / 最近30天</option>
+          <option value="ALL">Hiển thị: Toàn bộ lịch sử / 全部历史</option>
+        </select>
+
+        <button type="button" id="btnExportLedgerExcel" class="btn-emerald" style="padding:6px 14px; font-size:12px; font-weight:700; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; cursor:pointer;" title="Xuất Bảng Ma Trận Điểm Danh Khách Hàng Excel màu sắc / 导出考勤打卡Excel">
+          <span>📊</span> <span>Xuất Excel Chấm Công / 导出考勤表</span>
+        </button>
+
+        <button type="button" id="btnSyncLedgerToday" class="btn-primary" style="padding:6px 14px; font-size:12px; font-weight:700; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; cursor:pointer;" title="Điểm danh lại hôm nay từ CRM / 同步今日打卡">
+          <span>🔄</span> <span>Điểm danh hôm nay / 同步打卡</span>
+        </button>
+
+        <div style="font-size:12px; font-weight:700; color:var(--text-muted); white-space:nowrap; margin-left:auto;">
+          <span>Tổng số trại đang theo dõi:</span> <strong style="color:#0284c7;" id="ledgerLeadCount">0</strong>
+        </div>
+      </div>
+
+      <!-- Responsive Table Ledger Matrix -->
+      <div class="table-responsive">
+        <table class="crm-table ledger-table">
+          <thead id="ledgerTableHead">
+            <!-- Injected dynamically by dashboard.js with dynamic dates -->
+          </thead>
+          <tbody id="ledgerTableBody">
+            <!-- Injected dynamically by dashboard.js -->
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -365,6 +430,136 @@
           <button type="submit" class="btn-primary" id="btnModalSave">💾 Lưu Thay Đổi Ngay</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal RAG Telesale Copilot (Kịch Bản Gọi Giờ Vàng) -->
+  <div id="modalTelesalePitch" class="modal-backdrop" style="display:none;">
+    <div class="modal-dialog" style="max-width:650px;">
+      <div class="modal-header" style="background:linear-gradient(90deg, #1e293b, #0f172a); color:#f59e0b;">
+        <div class="modal-title" style="display:flex; align-items:center; gap:8px; font-size:15px; font-weight:800;">
+          <span>🔥</span> <span>RAG Sales Copilot: Kịch Bản Telesale & Khung Giờ Vàng</span>
+        </div>
+        <button type="button" class="modal-close" id="btnTelesaleModalClose" style="color:#fff;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding:18px 24px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding:10px 14px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
+          <img id="telesaleAvatar" src="" class="avatar-cell" style="width:48px; height:48px; border-radius:50%;" />
+          <div style="flex:1;">
+            <div style="font-weight:800; font-size:14px; color:#0f172a;" id="telesaleOwnerName">Lisa Z. (Lisa's Golden Retrievers)</div>
+            <div style="font-size:12px; color:#64748b; margin-top:2px;">
+              📞 <span id="telesalePhone" style="font-family:var(--font-mono); font-weight:700; color:#0284c7;">+1-xxx</span> | 
+              ⏰ Đăng gần nhất: <strong id="telesaleLatestPost" style="color:#059669;">22/10 04:18 (Reels)</strong>
+            </div>
+            <div style="font-size:11.5px; color:#b45309; margin-top:2px;">
+              ⭐ Khung giờ vàng online hay đăng bài: <strong id="telesaleGoldenHour">16:00 - 18:00 (US CST)</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Câu Mở Đầu Cuộc Gọi (Telesale Icebreaker Hook):</span>
+            <span style="font-size:11px; color:#0284c7; font-weight:600;">✨ Tự động sinh từ Meta RAG</span>
+          </label>
+          <textarea id="telesaleHookText" class="form-textarea" rows="5" style="font-size:13px; line-height:1.5; font-weight:600; color:#1e293b; background:#fffbeb; border-color:#fde68a;" readonly></textarea>
+        </div>
+
+        <div class="form-group" style="margin-top:12px;">
+          <label class="form-label">Gói Sản Phẩm Đề Xuất (Product Bundle):</label>
+          <input type="text" id="telesaleProductFit" class="form-input" style="font-weight:700; color:#059669;" readonly value="Take-Home Puppy Starter Kit V3 + Khay Potty 3 lớp + Cỏ huấn luyện">
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:11.5px; color:#64748b;">Mẹo: Gọi ngay khi thấy khách vừa chấm công (đăng bài &lt; 1h)</span>
+        <div style="display:flex; gap:10px;">
+          <button type="button" class="btn-secondary" id="btnTelesaleCancel">Đóng</button>
+          <button type="button" class="btn-primary" id="btnCopyTelesaleHook" style="background:#f59e0b; border-color:#d97706;">
+            <span>📋</span> <span id="txtBtnCopyPitch">Sao Chép Kịch Bản / 复制话术</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  <!-- Modal Soi Hậu Trường Reels Viral (Reverse Engineering Reels Algorithm) -->
+  <div id="modalReelInsights" class="modal-backdrop" style="display:none;">
+    <div class="modal-dialog" style="max-width:680px;">
+      <div class="modal-header" style="background:linear-gradient(90deg, #ea580c, #9a3412); color:#fff;">
+        <div class="modal-title" style="display:flex; align-items:center; gap:8px; font-size:15px; font-weight:800;">
+          <span>🎬</span> <span id="txtModalReelTitle">Giải Mã Ngược Hậu Trường Facebook Reels / 逆向工程Reels算法透视</span>
+        </div>
+        <button type="button" class="modal-close" id="btnReelModalClose" style="color:#fff;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding:20px 24px;">
+        <!-- Card Thông tin Fanpage / Chủ trại -->
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; padding:12px 14px; background:#fff7ed; border-radius:8px; border:1px solid #ffedd5;">
+          <img id="reelModalAvatar" src="" class="avatar-cell" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid #ea580c;" />
+          <div style="flex:1;">
+            <div style="font-weight:800; font-size:14.5px; color:#9a3412;" id="reelModalOwnerName">Sleepy Puppy Kennels</div>
+            <div style="font-size:12px; color:#64748b; margin-top:2px;">
+              🆔 <span id="reelModalFbId" style="font-family:var(--font-mono); font-weight:700; color:#ea580c;">#100063922191947</span> • 
+              🔗 <span id="reelModalCategory" style="color:#0284c7; font-weight:600;">Dog Breeder / Thương mại</span>
+            </div>
+          </div>
+          <div>
+            <a id="btnReelDirectUrl" href="#" target="_blank" rel="noopener noreferrer" class="btn-primary" style="background:#ea580c; border-color:#c2410c; font-size:11.5px; padding:6px 12px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+              <span>▶️ Xem Trên FB Reels</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 4 Lưới Chỉ Số Vàng Viral -->
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:16px;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; text-align:center;">
+            <div style="font-size:10.5px; color:#64748b; font-weight:700; text-transform:uppercase;">Ngày Xuất Bản</div>
+            <div id="reelModalPublishDate" style="font-size:12px; font-weight:800; color:#0f172a; margin-top:4px;">28/09/2026</div>
+          </div>
+          <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:8px; padding:10px; text-align:center;">
+            <div style="font-size:10.5px; color:#b45309; font-weight:700; text-transform:uppercase;">Tuổi Thọ Viral</div>
+            <div id="reelModalViralBadge" style="font-size:12px; font-weight:800; color:#b45309; margin-top:4px;">🔥 Bền bỉ (25 ngày)</div>
+          </div>
+          <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px; text-align:center;">
+            <div style="font-size:10.5px; color:#1d4ed8; font-weight:700; text-transform:uppercase;">Thời Lượng Vàng</div>
+            <div id="reelModalDuration" style="font-size:13px; font-weight:800; color:#1d4ed8; margin-top:4px;">15s</div>
+          </div>
+          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px; text-align:center;">
+            <div style="font-size:10.5px; color:#15803d; font-weight:700; text-transform:uppercase;">Lượt Xem/Phát</div>
+            <div id="reelModalPlayCount" style="font-size:13px; font-weight:800; color:#15803d; margin-top:4px;">12,450</div>
+          </div>
+        </div>
+
+        <!-- Khung Hook / Caption -->
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Hook Chữ Đầu Tiên & Nội Dung Reel (Caption):</span>
+            <button type="button" id="btnCopyReelCaption" style="font-size:11px; color:#ea580c; font-weight:700; background:none; border:none; cursor:pointer;">
+              📋 Sao chép Hook
+            </button>
+          </label>
+          <textarea id="reelModalCaption" class="form-textarea" rows="3" style="font-size:12.5px; line-height:1.5; font-weight:600; color:#1e293b; background:#f8fafc;" readonly></textarea>
+        </div>
+
+        <!-- Khung Hashtags Xu Hướng -->
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label">Hashtags Thúc Đẩy Thuật Toán Phân Phối (Algorithm Hashtags):</label>
+          <input type="text" id="reelModalHashtags" class="form-input" style="font-size:12px; font-weight:600; color:#0284c7; background:#f8fafc;" readonly value="#puppies #doglover #viralreels">
+        </div>
+
+        <!-- Khung Góc Nhìn Chiến Lược Dành Cho Sếp & R&D -->
+        <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:12px 14px; font-size:12px; line-height:1.5; color:#92400e;">
+          <strong>💡 Ứng dụng Bắt Chước Thuật Toán (Marketing & Content R&D):</strong>
+          <div style="margin-top:4px;" id="reelModalStrategyTip">
+            Thuật toán Facebook Reels tiếp tục phân phối video này sau 25 ngày nhờ thời lượng ngắn & câu Hook kích thích bình luận. Hãy mượn cấu trúc Hook này và gắn thẻ sản phẩm Cỏ Huấn Luyện / Khay Potty để tăng độ lan tỏa tự nhiên.
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:11.5px; color:#64748b;">Dữ liệu trích xuất từ cấu trúc ngầm EntVideoCreationStory của Facebook</span>
+        <button type="button" class="btn-secondary" id="btnReelModalCloseBottom">Đóng / 关闭</button>
+      </div>
     </div>
   </div>
 

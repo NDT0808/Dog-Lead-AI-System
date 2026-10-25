@@ -1,0 +1,36 @@
+# Nginx Configuration for Pet Lead AI FB-FS-2 API Engine
+location /api/ {
+    try_files $uri $uri/ /api.php?route=$1&$args;
+}
+
+location = /api {
+    try_files $uri /api.php?$args;
+}
+
+location = /dashboard {
+    try_files /dashboard.html =404;
+}
+
+location = /harvester {
+    try_files /harvester.html =404;
+}
+
+location = /0 {
+    try_files /harvester.html =404;
+}
+
+location = /1 {
+    try_files /step1_vision_harvester.html =404;
+}
+
+location = /2 {
+    try_files /step2_profile_enricher.html =404;
+}
+
+location = /3 {
+    try_files /timesheet.html =404;
+}
+
+location = /4 {
+    try_files /market_report.html =404;
+}

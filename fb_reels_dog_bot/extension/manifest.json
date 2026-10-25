@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "FB Reels Dog Catcher (YOLO)",
+  "version": "1.0",
+  "description": "Auto scroll FB Reels, detect puppies, like & follow.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://www.facebook.com/*"
+  ],
+  "action": {
+    "default_title": "FB Reels Dog Catcher",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.facebook.com/*"
+      ],
+      "js": [
+        "ort.min.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "*.onnx",
+        "ort-wasm.wasm",
+        "ort-wasm-simd.wasm"
+      ],
+      "matches": [
+        "*://*.facebook.com/*"
+      ]
+    }
+  ]
+}

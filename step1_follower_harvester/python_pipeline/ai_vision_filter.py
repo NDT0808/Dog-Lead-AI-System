@@ -26,13 +26,14 @@ from PIL import Image
 
 try:
     import cv2
-except ImportError:
+except Exception as _e_cv2:
     cv2 = None
 
 try:
     import onnxruntime as ort
-except ImportError:
+except Exception as _e_ort:
     ort = None
+    print(f"[!] Canh bao onnxruntime import loi: {_e_ort}")
 
 from fbid_resolver import resolve_numeric_fbid
 from nlp_dog_matcher import match_dog_semantics
@@ -213,7 +214,7 @@ HEADERS = {
 }
 
 def upgrade_fb_avatar_url(url):
-    """
+    r"""
     Nâng cấp URL ảnh Facebook CDN từ Thumbnail 80x80 sang ảnh gốc High Definition (HD).
     Loại bỏ tham số ctp=[sp]\d+x\d+, giúp mô hình và Haar Cascade nhìn rõ chi tiết,
     triệt tiêu 100% ảo giác thị giác do mờ nhòe.

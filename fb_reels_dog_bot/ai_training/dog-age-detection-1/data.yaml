@@ -1,0 +1,14 @@
+names:
+- adult_dog
+- non-dog
+- puppy-dog
+nc: 3
+roboflow:
+  license: CC BY 4.0
+  project: dog-age-detection-dge5h-hvcwo-7chtz-ginjf-jad2b-r1o0d-nyk1g-etmsy
+  url: https://universe.roboflow.com/ndt-clryb/dog-age-detection-dge5h-hvcwo-7chtz-ginjf-jad2b-r1o0d-nyk1g-etmsy/dataset/1
+  version: 1
+  workspace: ndt-clryb
+test: ../test/images
+train: ../train/images
+val: ../valid/images

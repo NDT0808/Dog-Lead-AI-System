@@ -12,11 +12,19 @@ let statusMessage = "Sẵn sàng";
 let currentTaskId = null;
 let isProcessing = false;
 let nextTimer = null;
+let currentWatchdogTimer = null;
 
 function clearNextTimer() {
   if (nextTimer) {
     clearTimeout(nextTimer);
     nextTimer = null;
+  }
+}
+
+function clearWatchdogTimer() {
+  if (currentWatchdogTimer) {
+    clearTimeout(currentWatchdogTimer);
+    currentWatchdogTimer = null;
   }
 }
 
@@ -81,7 +89,9 @@ async function sendToDashboard(action, data) {
   try {
     const tabs = await chrome.tabs.query({});
     for (const t of tabs) {
-      if (t.url && (t.url.includes('dashboard.html') || t.url.includes('8000') || t.url.includes('localhost'))) {
+      // Chỉ gửi tab message cho Web Dashboard ngoài (127.0.0.1:8000, localhost:3007...),
+      // TUYỆT ĐỐI KHÔNG gửi tab message cho extension page (chrome-extension://) vì runtime.sendMessage() bên dưới đã gửi rồi -> Chống lặp log 100%!
+      if (t.url && !t.url.startsWith('chrome-extension://') && (t.url.includes('8000') || t.url.includes('localhost') || t.url.includes('3007') || t.url.includes('5500'))) {
         try {
           await chrome.tabs.sendMessage(t.id, payload);
         } catch (_) {}
@@ -97,7 +107,7 @@ async function sendToDashboard(action, data) {
 // =========================================================================
 // THẨM ĐỊNH LINK AMAZON CHUẨN XÁC & LOẠI TRỪ 100% LINK HỆ THỐNG RÁC
 // =========================================================================
-function sanitizeAndValidateAmazonUrl(rawUrl) {
+function sanitizeSingleAmazonUrl(rawUrl) {
   if (!rawUrl || typeof rawUrl !== 'string') return null;
   let url = rawUrl.trim();
 
@@ -115,14 +125,13 @@ function sanitizeAndValidateAmazonUrl(rawUrl) {
     return null;
   }
 
-  // YÊU CẦU 3: Loại bỏ các URL hệ thống rác của Amazon:
-  // /ap/register, /ap/signin, /gp/cart, /cart/, /gp/help/, /gp/navigation, /customer-preferences, privacy, preferences
+  // Loại bỏ các URL hệ thống rác của Amazon
   const garbagePatterns = [
     /\/ap\/(?:signin|register|forgotpassword)/i,
-    /\/gp\/(?:cart|help|navigation|css|your-account)/i,
+    /\/gp\/(?:cart|help|navigation|css|your-account)\b/i,
     /\/(?:cart|sign-in|register|account-status)\b/i,
     /\/customer-preferences\b/i,
-    /\b(?:privacy|preferences|help)\b/i
+    /openid\.(?:mode|return_to)/i
   ];
   for (const pat of garbagePatterns) {
     if (pat.test(url)) return null;
@@ -151,6 +160,16 @@ function sanitizeAndValidateAmazonUrl(rawUrl) {
   } catch (_) {
     return null;
   }
+}
+
+function sanitizeAndValidateAmazonUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
+  if (rawUrl.includes(',')) {
+    const parts = rawUrl.split(',').map(p => sanitizeSingleAmazonUrl(p.trim())).filter(Boolean);
+    const unique = Array.from(new Set(parts));
+    return unique.length > 0 ? unique.join(', ') : null;
+  }
+  return sanitizeSingleAmazonUrl(rawUrl);
 }
 
 const US_STATE_CODES = new Set([
@@ -702,6 +721,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
   else if (msg.action === 'STOP_AUTO') {
     clearNextTimer();
+    clearWatchdogTimer();
     isProcessing = false;
     currentTaskId = null;
     isAutoRunning = false;
@@ -712,6 +732,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
   else if (msg.action === 'CLEAR_DATA') {
     clearNextTimer();
+    clearWatchdogTimer();
     isProcessing = false;
     currentTaskId = null;
     allData = [];
@@ -817,6 +838,27 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       currentTaskId = null;
       isProcessing = false;
 
+      // YÊU CẦU 1: CHUẨN HÓA LOGIC WEBSITE VÀ AMAZON_URL (SỬA RACE CONDITION & ĐẢO CHỖ)
+      // Nếu website trên Facebook là link Amazon Storefront / Wishlist / Product
+      if (/(?:amazon\.[a-z.]+|amzn\.to|a\.co)\//i.test(item.website)) {
+        const validAmzFromWeb = sanitizeAndValidateAmazonUrl(item.website);
+        if (validAmzFromWeb) {
+          if (!item.amazon_url) {
+            item.amazon_url = validAmzFromWeb;
+          } else if (!item.amazon_url.includes(validAmzFromWeb)) {
+            item.amazon_url = `${validAmzFromWeb}, ${item.amazon_url}`;
+          }
+          item.has_amazon = true;
+          item.amazon_channel = 'Selling on Amazon (Target)';
+          item.amz_cat = 'Pet Toys / Artificial Grass / Pet Toilets';
+        }
+      }
+
+      // Blacklist website: Bỏ gmail.com, mail.google.com, facebook.com
+      if (/^(?:https?:\/\/)?(?:www\.)?(?:gmail\.com|mail\.google\.com|facebook\.com|fb\.com|instagram\.com)\/?$/i.test(item.website)) {
+        item.website = '';
+      }
+
       // YÊU CẦU 2 & 4: LÀM SẠCH VÀ CHUẨN HÓA CÁC BIẾN AMAZON Ở ĐẦU MỖI TASKID ĐỂ TRÁNH BLEED DATA (STT 68 -> STT 69)
       const sanitizedAmz = sanitizeAndValidateAmazonUrl(item.amazon_url);
       item.amazon_url = sanitizedAmz || '';
@@ -825,7 +867,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       item.amz_cat = item.has_amazon ? 'Pet Toys / Artificial Grass / Pet Toilets' : 'Chưa phát hiện link Amazon';
 
       const rawWeb = (item.website || '').trim();
-      const hasExternalWebsite = rawWeb.startsWith('http') && !/facebook\.com|fb\.com|instagram\.com/i.test(rawWeb);
+      // TUYỆT ĐỐI KHÔNG mở trang Amazon trong Website Inspector để tránh dính "0 Cart We're showing you items that ship to Vietnam..."
+      const hasExternalWebsite = rawWeb.startsWith('http') && !/facebook\.com|fb\.com|instagram\.com|amazon\.[a-z.]+|amzn\.to|a\.co/i.test(rawWeb);
 
       // Nếu có Website ngoài: Chuyển hướng trực tiếp tab trình duyệt vào trang web của họ để quét tên chủ trại
       if (hasExternalWebsite && !item.websiteInspected) {
@@ -888,13 +931,28 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
                 }
               });
             }
-            if (inspectRes && inspectRes.phone && !item.phone) item.phone = inspectRes.phone;
+            if (inspectRes && inspectRes.phone && !item.phone) item.phone = cleanPhone(inspectRes.phone);
             if (inspectRes && inspectRes.email && !item.email) item.email = inspectRes.email;
-            if (inspectRes && inspectRes.address && !item.address) item.address = cleanAddressText(inspectRes.address);
-            if (inspectRes && inspectRes.city && !item.city) item.city = inspectRes.city;
-            if (inspectRes && inspectRes.state && !item.state) item.state = inspectRes.state;
-            if (inspectRes && inspectRes.zip && !item.zip) item.zip = inspectRes.zip;
-            if (inspectRes && inspectRes.country && (!item.country || item.country === 'United States')) item.country = inspectRes.country;
+            if (inspectRes && inspectRes.address && !item.address) {
+              const cleanA = cleanAddressText(inspectRes.address);
+              if (cleanA && !/cart|ship to vietnam|snoozed|live website inspector|quick add|recommendations|imdb/i.test(cleanA)) {
+                item.address = cleanA;
+              }
+            }
+            if (inspectRes && inspectRes.city && !item.city && !/cart|imdb|movies|recommendations|running and playing/i.test(inspectRes.city)) {
+              item.city = inspectRes.city;
+            }
+            if (inspectRes && inspectRes.state && !item.state && !/^(?:TV|SV|DM|HU|VI|00)$/i.test(inspectRes.state)) {
+              item.state = inspectRes.state;
+            }
+            if (inspectRes && inspectRes.zip && !item.zip && !/^12345|00000$/.test(inspectRes.zip)) {
+              item.zip = inspectRes.zip;
+            }
+            if (inspectRes && inspectRes.country && (!item.country || item.country === 'United States')) {
+              if (inspectRes.country !== 'Vietnam') {
+                item.country = inspectRes.country;
+              }
+            }
           } catch (err) {
             console.warn('[BG] Lỗi inspect website:', err);
           } finally {
@@ -946,6 +1004,32 @@ function processNext() {
   let targetUrl = urlList[currentIndex];
   let taskId = `${currentIndex}_${Date.now()}`;
   currentTaskId = taskId;
+
+  clearWatchdogTimer();
+  // WATCHDOG TIMER (22 GIÂY): Chống treo tiến trình 100%. Nếu tab FB bị chậm, dính checkpoint hoặc lỗi mạng, tự động skip an toàn sang hồ sơ tiếp theo!
+  currentWatchdogTimer = setTimeout(() => {
+    if (isAutoRunning && currentTaskId === taskId) {
+      console.warn(`[BG Watchdog] ⚠️ Hồ sơ STT ${currentIndex + 1} (${targetUrl}) xử lý quá lâu (> 22s). Tự động bỏ qua để tiến trình không bị đứng!`);
+      sendToDashboard('STEP2_LOG', {
+        log: {
+          stage: 'CẢNH BÁO',
+          text: `[Dòng ${currentIndex + 1}] ⚠️ Hồ sơ phản hồi quá lâu (> 22s), tự động lưu kết quả an toàn và tiếp tục dòng kế tiếp...`,
+          level: 'warn'
+        }
+      });
+      const timeoutItem = {
+        stt: currentIndex + 1,
+        url: targetUrl,
+        name: 'Trang phản hồi chậm',
+        publishTime: 'Chưa bóc tách (Timeout)',
+        publishTimestamp: '',
+        relativeTime: ''
+      };
+      currentTaskId = null;
+      isProcessing = false;
+      finishProfileItem(timeoutItem);
+    }
+  }, 22000);
 
   statusMessage = `Đang mở dòng ${currentIndex + 1}/${endIndex + 1}: ${targetUrl}`;
   saveState();
@@ -1274,6 +1358,7 @@ function exportJsonLeadUs() {
 }
 
 function finishProfileItem(item) {
+  clearWatchdogTimer();
   if (!item.owner || !isValidOwnerCandidate(item.owner) || item.owner.includes('Manager') || item.owner === 'Kennel Owner' || item.owner === 'Breeder Owner') {
     const emailOwner = extractOwnerFromEmailPrefix(item.email);
     if (emailOwner && isValidOwnerCandidate(emailOwner)) {
@@ -1333,45 +1418,50 @@ function finishProfileItem(item) {
     resolvedAvatar = `https://ui-avatars.com/api/?name=${fallbackInitials}&background=0284c7&color=fff&size=128&bold=true`;
   }
 
-  item.avatar_url = resolvedAvatar;
-  item.avatar = resolvedAvatar;
+  let pubIso = '';
+  if (item.publishTimestamp) {
+    try {
+      pubIso = new Date(Number(item.publishTimestamp) * 1000).toISOString();
+    } catch (_) {}
+  }
+  const isPerson = isValidOwnerCandidate(item.owner);
+  const cleanOwner = item.owner || (isPerson ? item.name : (item.name ? `Team ${item.name}` : 'There'));
 
   const leadRecord = {
     stt: leadId,
+    taskId: item.taskId || `task_${currentIndex + 1}`,
     lead_id: leadId,
-    name: item.name || 'Facebook User',
-    owner: item.owner || item.name || 'Facebook User',
-    owner_confidence: item.ownerConfidence || 'Tier 3 - Facebook Page Fallback',
     fb_id: item.fb_id || '',
-    phone: item.phone || '',
-    email: item.email || '',
-    website: item.website || '',
-    instagram: item.instagram || '',
+    name: item.name || 'Facebook User',
+    url: item.url || '',
+    avatar: resolvedAvatar,
+    bio: item.bio || '',
+    owner: cleanOwner,
+    owner_is_person: isPerson,
+    owner_confidence: item.ownerConfidence || (isPerson ? 'Tier 1 - Verified' : 'Default Fallback'),
+    address: item.address || '',
     city: item.city || '',
     state: item.state || '',
     zip: item.zip || '',
-    address: item.address || '',
     country: item.country || 'United States',
-    bio: item.bio || '',
-    publish_time: item.publishTime || '',
-    publishTime: item.publishTime || '',
-    publish_human: item.publishTime || '',
-    publishTimestamp: item.publishTimestamp || '',
-    relative_time: item.relativeTime || '',
-    relativeTime: item.relativeTime || '',
-    url: item.url || '',
-    avatar_url: resolvedAvatar,
-    avatar: resolvedAvatar,
-    activity_status: item.activityStatus || '✓ TÍCH CỰC (Trại đang hoạt động)',
-    has_website: !!(item.website && item.website.startsWith('http') && !/facebook\.com|instagram\.com/i.test(item.website)),
+    phone: cleanPhone(item.phone || ''),
+    email: item.email || '',
+    website: item.website || (item.amazon_url ? item.amazon_url.split(',')[0].trim() : ''),
+    websiteInspected: Boolean(item.website && !/(?:amazon\.[a-z.]+|amzn\.to|a\.co)/i.test(item.website)),
+    instagram: item.instagram || '',
     has_amazon: Boolean(item.has_amazon && item.amazon_url),
     amazon_url: item.amazon_url || '',
     amazon_channel: (item.has_amazon && item.amazon_url) ? 'Selling on Amazon (Target)' : 'Amazon link not found',
     amz_cat: (item.has_amazon && item.amazon_url) ? 'Pet Toys / Artificial Grass / Pet Toilets' : 'Chưa phát hiện link Amazon',
+    publishTimestamp: item.publishTimestamp || '',
+    publishTime: item.publishTime || '',
+    publishTimeISO: pubIso,
+    activity_status: item.activityStatus || '✓ TÍCH CỰC (Trại đang hoạt động)',
+    relativeTime: item.relativeTime || '',
     score: score,
     rank_tier: tier,
-    product_fit: item.has_amazon ? 'B2B Wholesale: Thảm Cỏ Huấn Luyện + Pet Potty + Toys Bundle' : 'Take-Home Puppy Starter Kit V2/V3',
-    sales_action: item.has_amazon ? 'Khai thác ngách phụ kiện/cỏ trên Amazon' : 'Telesale: Gửi catalogue cỏ nhân tạo & khay potty 3 lớp'
+    sales_action: (item.has_amazon && item.amazon_url) ? 'Khai thác ngách phụ kiện/cỏ trên Amazon' : 'Telesale: Gửi catalogue Take-Home Kit in logo độc quyền',
+    product_fit: (item.has_amazon && item.amazon_url) ? 'B2B Wholesale: Thảm Cỏ Huấn Luyện + Pet Potty + Toys Bundle' : 'Take-Home Puppy Starter Kit V2/V3'
   };
 
   sendToDashboard('STEP2_LEAD_DONE', { lead: leadRecord });

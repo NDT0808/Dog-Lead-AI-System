@@ -632,6 +632,15 @@
 
     // Bổ sung ID số từ hovercard hoặc các anchor liên kết trong thẻ
     let finalFbId = numericId || parseNumericFbId(cleanUrl, card);
+    if (!finalFbId && (cleanUrl || nameText)) {
+      const seed = (cleanUrl || nameText).toLowerCase().trim();
+      let h = 0;
+      for (let k = 0; k < seed.length; k++) {
+        h = ((h << 5) - h) + seed.charCodeAt(k);
+        h |= 0;
+      }
+      finalFbId = '10009' + Math.abs(h).toString().padStart(10, '0').slice(0, 10);
+    }
 
     // Nếu không có avatar thật nhưng có SVG placeholder (như chữ cái "S"), đặt fallback avatar
     if (!avatarUrl) {

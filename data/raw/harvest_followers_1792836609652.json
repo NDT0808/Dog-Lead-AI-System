@@ -1,0 +1,50 @@
+[
+  {
+    "stt": 1,
+    "name": "WhatsApp",
+    "fb_id": "100091539545583",
+    "url": "https://api.whatsapp.com/send",
+    "avatar_url": "https://ui-avatars.com/api/?name=WhatsApp&background=2563eb&color=fff&size=200",
+    "subtitle": "Người theo dõi",
+    "bio": "Hồ sơ người theo dõi trang cún cưng",
+    "category": "Dog Breeder / Commercial Kennel",
+    "keywords_found": [
+      "dog",
+      "puppy",
+      "kennel"
+    ],
+    "scraped_at": "2026-10-24T10:10:09.651Z"
+  },
+  {
+    "stt": 2,
+    "name": "Bark Busters Home Dog Training Southern New England",
+    "fb_id": "100091558095874",
+    "url": "https://www.facebook.com/barkbustersofsouthernnewengland",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/300434151_477523717684617_7767256410394659938_n.png?stp=cp0_dst-png&cstp=mx400x400&_nc_cat=101&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=30Vm8-ikJDoQ7kNvwH38oip&_nc_oc=Adot-zgtKmBMRpC-yYP4Iz9DUvMj5Sr3HwtA61bO0pys5ukAGxn4EtBjFK8qd4fq_r8&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=bWYsK5WE3ER1vrkh8bynqg&_nc_ss=7b2a8&oh=00_AQPF1ZBQ5xyyl_2T4F7T7xUzQYnQ-nOVs0lsm5bzKigtNA&oe=6AE26364",
+    "subtitle": "Người theo dõi",
+    "bio": "Hồ sơ người theo dõi trang cún cưng",
+    "category": "Dog Breeder / Commercial Kennel",
+    "keywords_found": [
+      "dog",
+      "puppy",
+      "kennel"
+    ],
+    "scraped_at": "2026-10-24T10:10:09.651Z"
+  },
+  {
+    "stt": 3,
+    "name": "Paw Partner Dog Training & Grooming",
+    "fb_id": "100091133209724",
+    "url": "https://www.facebook.com/Pawpartnerdogtraining",
+    "avatar_url": "https://scontent.fsgn8-4.fna.fbcdn.net/v/t39.30808-1/289516482_888473415428481_3389800284129711074_n.jpg?stp=cp0_dst-jpg_tt6&cstp=mx1440x1429&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=edd80f&_nc_ohc=o3HlKi3pVvUQ7kNvwGBZwSp&_nc_oc=AdrVCRnVi0dABgI4cbbzuC4Yl8bTpqbksuxYer0GW9RLybMY74XdLGlMp0aEKCiN12g&_nc_zt=24&_nc_ht=scontent.fsgn8-4.fna&_nc_gid=bWYsK5WE3ER1vrkh8bynqg&_nc_ss=7b2a8&oh=00_AQOKu9iFUUFn1z92Qk2jXjQBJds8rSi3J6kecMe1-bq2ag&oe=6AE26434",
+    "subtitle": "AKC Farm Dog Judge tại AKC Farm Dog Judge",
+    "bio": "Hồ sơ người theo dõi trang cún cưng",
+    "category": "Dog Breeder / Commercial Kennel",
+    "keywords_found": [
+      "dog",
+      "puppy",
+      "kennel"
+    ],
+    "scraped_at": "2026-10-24T10:10:09.651Z"
+  }
+]

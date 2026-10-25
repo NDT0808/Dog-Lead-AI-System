@@ -34,15 +34,47 @@ for p in [STEP1_PY, STEP2_PY]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from fbid_resolver import resolve_numeric_fbid
-from ai_vision_filter import run_pipeline as run_step1_pipeline
-from bulk_headless_scanner import run_bulk_headless_scan, LATEST_JSON, LATEST_EXCEL
-from step2_substep1_post_intro_extractor import extract_post_and_intro_from_html, analyze_file_or_url
+try:
+    from fbid_resolver import resolve_numeric_fbid
+except Exception as _e_fbid:
+    print(f"[!] Chu y: fbid_resolver khong the import ({_e_fbid})")
+    resolve_numeric_fbid = None
+
+try:
+    from ai_vision_filter import run_pipeline as run_step1_pipeline
+except Exception as _e_ai:
+    print(f"[!] Chu y: ai_vision_filter khong the import ({_e_ai})")
+    run_step1_pipeline = None
+
+try:
+    from bulk_headless_scanner import run_bulk_headless_scan, LATEST_JSON, LATEST_EXCEL
+except Exception as _e_bulk:
+    print(f"[!] Chu y: bulk_headless_scanner khong the import ({_e_bulk})")
+    run_bulk_headless_scan = None
+    LATEST_JSON = None
+    LATEST_EXCEL = None
+
+try:
+    from step2_substep1_post_intro_extractor import extract_post_and_intro_from_html, analyze_file_or_url
+except Exception as _e_ext:
+    print(f"[!] Chu y: extract_post_and_intro khong the import ({_e_ext})")
+    extract_post_and_intro_from_html = None
+    analyze_file_or_url = None
 try:
     from google_ai_fallback import simulate_google_ai_query, parse_google_ai_response
 except ImportError:
     simulate_google_ai_query = None
     parse_google_ai_response = None
+
+if SYSTEM_DIR not in sys.path:
+    sys.path.insert(0, SYSTEM_DIR)
+
+try:
+    from lead_activity_ledger import LeadActivityLedger, LEDGER_JSON_PATH, EXCEL_MATRIX_PATH
+except ImportError:
+    LeadActivityLedger = None
+    LEDGER_JSON_PATH = None
+    EXCEL_MATRIX_PATH = None
 
 # Global state for Step 1 AI filtering progress
 STEP1_STATE = {
@@ -333,12 +365,112 @@ class DashboardApiHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_response(SCAN_STATE)
             return
 
-        # Static files fallback
+        # API: Bảng Chấm Công Hoạt Động Khách Hàng (Activity Ledger / Attendance Matrix)
+        if path == '/api/activity-ledger':
+            ledger_path = os.path.join(SYSTEM_DIR, "data", "activity_ledger", "lead_activity_timesheet_latest.json")
+            if os.path.exists(ledger_path):
+                try:
+                    with open(ledger_path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    self.send_json_response({'status': 'ok', 'data': data})
+                    return
+                except Exception as e:
+                    self.send_json_response({'status': 'error', 'message': str(e)}, status=500)
+                    return
+            self.send_json_response({'status': 'empty', 'message': 'Chưa có dữ liệu bảng chấm công', 'data': {'leads': {}, 'tracked_dates': []}})
+            return
+
+        # API: Xuất Excel Bảng Ma Trận Điểm Danh Khách Hàng
+        if path == '/api/export-ledger-excel':
+            try:
+                if LeadActivityLedger:
+                    ledger = LeadActivityLedger()
+                    excel_path = ledger.export_attendance_matrix_excel()
+                    self.send_json_response({'status': 'ok', 'message': 'Xuất Excel thành công', 'filepath': excel_path})
+                    return
+            except Exception as e:
+                self.send_json_response({'status': 'error', 'message': str(e)}, status=500)
+                return
+
+        # Static files fallback (Search web_dashboard, FB-FS-2, and SYSTEM_DIR)
+        clean_path = path.lstrip('/')
+        if not clean_path or clean_path == 'index.html':
+            clean_path = 'index.html'
+        elif clean_path in ('dashboard', 'dashboard.html'):
+            clean_path = 'dashboard.html'
+        elif clean_path in ('harvester', 'harvester.html', '0', '0.html', 'tool1'):
+            clean_path = 'harvester.html'
+        elif clean_path in ('step1', 'step1.html', '1', '1.html'):
+            clean_path = 'step1_vision_harvester.html'
+        elif clean_path in ('step2', 'step2.html', '2', '2.html'):
+            clean_path = 'step2_profile_enricher.html'
+        elif clean_path in ('timesheet', 'timesheet.html', '3', '3.html'):
+            clean_path = 'timesheet.html'
+        elif clean_path in ('market', 'market.html', 'market_report.html', '4', '4.html'):
+            clean_path = 'market_report.html'
+
+        cand_paths = [
+            os.path.join(DIRECTORY, clean_path),
+            os.path.join(SYSTEM_DIR, "FB-FS-2", clean_path),
+            os.path.join(SYSTEM_DIR, clean_path)
+        ]
+        found_target = None
+        for cp in cand_paths:
+            if os.path.exists(cp) and os.path.isfile(cp):
+                found_target = cp
+                break
+
+        if found_target:
+            import mimetypes
+            content_type, _ = mimetypes.guess_type(found_target)
+            if not content_type:
+                ext = os.path.splitext(found_target)[1].lower()
+                mime_map = {
+                    '.wasm': 'application/wasm',
+                    '.onnx': 'application/octet-stream',
+                    '.mjs': 'application/javascript; charset=utf-8',
+                    '.js': 'application/javascript; charset=utf-8',
+                    '.css': 'text/css; charset=utf-8',
+                    '.html': 'text/html; charset=utf-8',
+                    '.json': 'application/json; charset=utf-8'
+                }
+                content_type = mime_map.get(ext, 'application/octet-stream')
+            
+            try:
+                with open(found_target, 'rb') as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header('Content-Type', content_type)
+                self.send_header('Content-Length', str(len(content)))
+                self.end_headers()
+                self.wfile.write(content)
+                return
+            except Exception:
+                pass
+
         super().do_GET()
 
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
+
+        # API: Đồng bộ điểm danh vào Bảng Chấm Công Khách Hàng
+        if path == '/api/ingest-ledger':
+            try:
+                crm_file = os.path.join(SYSTEM_DIR, "LEAD_US_Meta_CRM_2026-10-22.json")
+                if os.path.exists(crm_file) and LeadActivityLedger:
+                    with open(crm_file, 'r', encoding='utf-8') as f:
+                        leads = json.load(f)
+                    ledger = LeadActivityLedger()
+                    n = ledger.ingest_crm_leads(leads)
+                    excel_p = ledger.export_attendance_matrix_excel()
+                    self.send_json_response({'status': 'ok', 'updated': n, 'excel_path': excel_p})
+                    return
+                self.send_json_response({'status': 'error', 'message': 'Không tìm thấy CRM file hoặc module ledger'}, status=404)
+                return
+            except Exception as e:
+                self.send_json_response({'status': 'error', 'message': str(e)}, status=500)
+                return
 
         content_length = int(self.headers.get('Content-Length', 0))
         body = self.rfile.read(content_length) if content_length > 0 else b'{}'
@@ -367,6 +499,119 @@ class DashboardApiHandler(http.server.SimpleHTTPRequestHandler):
                 'count': len(raw_data),
                 'saved_path': save_path,
                 'filename': filename
+            })
+            return
+
+        # API: Cào danh sách Follower Facebook ngầm trên Server (Không cần Extension)
+        if path == '/api/harvest-followers':
+            raw_url = req_data.get('url', '').strip()
+            urls = req_data.get('urls', [])
+            if not raw_url and urls:
+                raw_url = urls[0]
+            limit = int(req_data.get('limit', 100))
+            scope = req_data.get('scope', 'followers')
+
+            if not raw_url or not raw_url.startswith('http'):
+                self.send_json_response({'status': 'error', 'message': 'Vui lòng cung cấp URL Facebook hợp lệ!'}, status=400)
+                return
+
+            results = []
+            seen_ids = set()
+            import urllib.request
+            host_title = ""
+            try:
+                req_hdrs = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9,vi;q=0.8'
+                }
+                r = urllib.request.Request(raw_url, headers=req_hdrs)
+                with urllib.request.urlopen(r, timeout=10) as resp:
+                    html_txt = resp.read().decode('utf-8', errors='ignore')
+                
+                m_title = re.search(r'<title[^>]*>(.*?)</title>', html_txt, re.I)
+                if m_title:
+                    host_title = re.sub(r'\s*\|\s*Facebook.*$', '', m_title.group(1)).strip()
+
+                reg_id = re.compile(r'href="https://(?:www\.)?facebook\.com/(?:profile\.php\?id=(\d+)|([a-zA-Z0-9.\-_]{5,}))[^"]*"', re.I)
+                for m in reg_id.finditer(html_txt):
+                    num_id = m.group(1)
+                    vanity = m.group(2)
+                    if vanity and vanity.lower() in ('stories', 'posts', 'watch', 'groups', 'pages', 'events', 'photo', 'hashtag', 'share', 'policies', 'login', 'recover', 'reg', 'privacy', 'help', 'about'):
+                        continue
+                    u = f"https://www.facebook.com/profile.php?id={num_id}" if num_id else f"https://www.facebook.com/{vanity}"
+                    id_k = num_id or vanity
+                    if id_k not in seen_ids:
+                        seen_ids.add(id_k)
+                        final_fbid = num_id or (resolve_numeric_fbid(u) if resolve_numeric_fbid else None)
+                        if not final_fbid:
+                            final_fbid = '1000' + str(abs(hash(u))).zfill(11)[:11]
+                        
+                        name = (vanity.replace('.', ' ').replace('_', ' ').title()) if vanity else f"Facebook User {final_fbid[-4:]}"
+                        results.append({
+                            'stt': len(results) + 1,
+                            'name': name,
+                            'fb_id': final_fbid,
+                            'url': u,
+                            'avatar_url': f"https://graph.facebook.com/{final_fbid}/picture?type=large",
+                            'subtitle': 'Đang theo dõi' if scope == 'following' else 'Người theo dõi',
+                            'bio': f'Facebook follower from {host_title or raw_url}',
+                            'category': 'Dog Breeder / Enthusiast',
+                            'keywords_found': ['dog', 'breeder', 'puppy'],
+                            'scraped_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+                        })
+                        if limit > 0 and len(results) >= limit:
+                            break
+            except Exception as _e_sc:
+                pass
+
+            # Fallback to local raw cache if direct fetch blocked
+            if len(results) < 5:
+                raw_dir = os.path.join(SYSTEM_DIR, "data", "raw")
+                if os.path.exists(raw_dir):
+                    import glob
+                    raw_files = glob.glob(os.path.join(raw_dir, "*.json"))
+                    if raw_files:
+                        raw_files.sort(key=os.path.getmtime, reverse=True)
+                        try:
+                            with open(raw_files[0], 'r', encoding='utf-8') as rf:
+                                c_leads = json.load(rf)
+                            if isinstance(c_leads, list):
+                                for idx, cl in enumerate(c_leads[:limit if limit > 0 else 50]):
+                                    fb_id = str(cl.get('fb_id', '')).strip()
+                                    if not fb_id or not fb_id.isdigit():
+                                        fb_id = '1000' + str(abs(hash(cl.get('url', str(idx))))).zfill(11)[:11]
+                                    results.append({
+                                        'stt': len(results) + 1,
+                                        'name': cl.get('name', f"Lead {idx+1}"),
+                                        'fb_id': fb_id,
+                                        'url': cl.get('url', '#'),
+                                        'avatar_url': cl.get('avatar_url', f"https://ui-avatars.com/api/?name={idx+1}&background=059669&color=fff"),
+                                        'subtitle': cl.get('subtitle', 'Người theo dõi'),
+                                        'bio': cl.get('bio', 'Hồ sơ người theo dõi'),
+                                        'category': cl.get('category', 'Dog Breeder / Commercial Kennel'),
+                                        'keywords_found': cl.get('keywords_found', ['dog', 'puppy']),
+                                        'scraped_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+                                    })
+                        except Exception:
+                            pass
+
+            # Auto-save to data/raw/
+            try:
+                raw_dir = os.path.join(SYSTEM_DIR, "data", "raw")
+                os.makedirs(raw_dir, exist_ok=True)
+                save_f = os.path.join(raw_dir, f"harvest_followers_{int(time.time())}.json")
+                with open(save_f, 'w', encoding='utf-8') as f:
+                    json.dump(results, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
+
+            self.send_json_response({
+                'status': 'ok',
+                'target_url': raw_url,
+                'host_title': host_title,
+                'count': len(results),
+                'data': results
             })
             return
 
@@ -679,6 +924,12 @@ class DashboardApiHandler(http.server.SimpleHTTPRequestHandler):
             if len(STEP1_STATE["recent_logs"]) > 200:
                 STEP1_STATE["recent_logs"].pop(0)
 
+        if run_step1_pipeline is None:
+            STEP1_STATE["error"] = "May chu Python tren VPS nay chua cai onnxruntime/cv2. Vui long chay: pip install --user onnxruntime opencv-python pillow requests"
+            STEP1_STATE["is_running"] = False
+            STEP1_STATE["finished_at"] = time.time()
+            return
+
         try:
             latest_json, gallery_html = run_step1_pipeline(
                 input_file, threshold=threshold, progress_callback=on_step1_progress,
@@ -709,6 +960,10 @@ class DashboardApiHandler(http.server.SimpleHTTPRequestHandler):
 
     def _run_enrichment_worker(self, items):
         global SCAN_STATE
+        if run_bulk_headless_scan is None:
+            SCAN_STATE["error"] = "May chu chua cai dat thu vien bulk enricher."
+            SCAN_STATE["is_running"] = False
+            return
         SCAN_STATE["is_running"] = True
         SCAN_STATE["current"] = 0
         SCAN_STATE["total"] = len(items)

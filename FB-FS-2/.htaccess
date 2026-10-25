@@ -1,0 +1,26 @@
+# Apache Rewrite Rules for Pet Lead AI FB-FS-2 API Engine
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Enable CORS
+    <IfModule mod_headers.c>
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
+        Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, *"
+        Header set Access-Control-Allow-Private-Network "true"
+    </IfModule>
+
+    # Route /api/* to api.php?route=*
+    RewriteRule ^api/(.*)$ api.php?route=$1 [QSA,L]
+    RewriteRule ^api$ api.php [QSA,L]
+
+    # Route clean aliases
+    RewriteRule ^dashboard$ dashboard.html [L]
+    RewriteRule ^harvester$ harvester.html [L]
+    RewriteRule ^0$ harvester.html [L]
+    RewriteRule ^1$ step1_vision_harvester.html [L]
+    RewriteRule ^2$ step2_profile_enricher.html [L]
+    RewriteRule ^3$ timesheet.html [L]
+    RewriteRule ^4$ market_report.html [L]
+</IfModule>

@@ -1,0 +1,72 @@
+{
+  "manifest_version": 3,
+  "name": "Pet Lead AI - Master Suite (All-In-One Lead Intelligence)",
+  "version": "3.5.0",
+  "description": "Tiện ích hợp nhất trích xuất Người theo dõi Facebook, lọc AI thị giác, quét bóc tách Người đại diện / Chủ trại, Địa chỉ US, Email, SĐT và Facebook ID (UID). Hỗ trợ chạy toàn bộ phễu hoặc từng bước độc lập.",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "scripting",
+    "storage",
+    "unlimitedStorage",
+    "downloads",
+    "clipboardRead",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://facebook.com/*",
+    "https://www.facebook.com/*",
+    "https://*.facebook.com/*",
+    "https://*.fbcdn.net/*",
+    "https://*.fna.fbcdn.net/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Pet Lead AI - Master Suite"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://facebook.com/*",
+        "https://www.facebook.com/*",
+        "https://*.facebook.com/*",
+        "http://127.0.0.1:8000/*",
+        "http://localhost:8000/*",
+        "http://127.0.0.1/*",
+        "http://localhost/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "dashboard.html",
+        "dashboard.js",
+        "modules/*",
+        "lib/*",
+        "assets/*",
+        "models/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "externally_connectable": {
+    "matches": [
+      "http://127.0.0.1:8000/*",
+      "http://localhost:8000/*",
+      "http://127.0.0.1/*",
+      "http://localhost/*"
+    ]
+  }
+}
