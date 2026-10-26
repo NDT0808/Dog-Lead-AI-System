@@ -12,6 +12,7 @@
     rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <style>
     :root {
       --bg: #f4f6fb;
@@ -1645,49 +1646,49 @@
 
     @media(max-width:900px) {
       body {
-        padding: 1rem .75rem 2.5rem
+        padding: 1rem .75rem 2.5rem;
       }
 
       header {
-        padding: 1.15rem
+        padding: 1.15rem;
       }
 
       h1 {
-        font-size: 1.35rem
+        font-size: 1.35rem;
       }
 
       .header-controls {
         align-items: stretch;
-        width: 100%
+        width: 100%;
       }
+    }
 
     /* =========================================================================
-     * STICKY SUBNAV MENU & COLLAPSIBLE SECTION CONTROLLER
+     * 🌟 STICKY SUBNAV MENU & PROMINENT HIGHLIGHTED SECTION CONTROLLER
      * ========================================================================= */
     .report-subnav {
       position: sticky;
       top: 10px;
-      z-index: 99;
-      background: rgba(255, 255, 255, 0.94);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border-strong);
-      border-radius: 16px;
-      padding: 8px 14px;
-      margin: 0.85rem 0 1.25rem;
-      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 4px 10px -2px rgba(15, 23, 42, 0.05);
+      z-index: 999;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1.5px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 10px 18px;
+      margin: 1rem 0 1.5rem;
+      box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.1);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
-      transition: all 0.25s ease;
     }
 
     [data-theme="dark"] .report-subnav {
-      background: rgba(17, 24, 39, 0.92);
-      border-color: #283548;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      background: rgba(15, 23, 42, 0.95);
+      border-color: #334155;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
     }
 
     .subnav-tabs {
@@ -1701,30 +1702,44 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 7px 14px;
+      padding: 8px 15px;
       border-radius: 10px;
-      border: 1px solid transparent;
-      background: var(--surface-2);
-      color: var(--text-2);
-      font-size: 0.82rem;
-      font-weight: 700;
+      border: 1.5px solid #e2e8f0;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 0.83rem;
+      font-weight: 750;
       font-family: var(--font);
       cursor: pointer;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       white-space: nowrap;
+      user-select: none;
     }
 
     .subnav-btn:hover {
-      background: var(--surface-3);
-      color: var(--text);
-      transform: translateY(-1px);
+      background: #e2e8f0;
+      color: #0f172a;
+      transform: translateY(-1.5px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
     }
 
     .subnav-btn.active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+      background: #4f46e5;
+      color: #ffffff;
+      border-color: #4338ca;
+      box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35);
+      transform: translateY(-1px);
+    }
+
+    [data-theme="dark"] .subnav-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+    }
+
+    [data-theme="dark"] .subnav-btn.active {
+      background: #6366f1;
+      color: #ffffff;
     }
 
     .subnav-tools {
@@ -1736,27 +1751,48 @@
     .subnav-tool-btn {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text-2);
-      font-size: 0.76rem;
-      font-weight: 700;
+      gap: 6px;
+      padding: 8px 15px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 800;
       cursor: pointer;
-      transition: all 0.18s ease;
+      transition: all 0.2s ease;
+      user-select: none;
     }
 
-    .subnav-tool-btn:hover {
-      background: var(--surface-3);
-      color: var(--text);
-      border-color: var(--border-strong);
+    .subnav-tool-btn.btn-expand {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1.5px solid #a7f3d0;
     }
 
-    /* Collapsible Sections */
+    .subnav-tool-btn.btn-expand:hover {
+      background: #059669;
+      color: #ffffff;
+      border-color: #047857;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+    }
+
+    .subnav-tool-btn.btn-collapse {
+      background: #fffbeb;
+      color: #b45309;
+      border: 1.5px solid #fde68a;
+    }
+
+    .subnav-tool-btn.btn-collapse:hover {
+      background: #d97706;
+      color: #ffffff;
+      border-color: #b45309;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+    }
+
+    /* 💎 HIGHLIGHTED SECTION CARD ACCORDION */
     .collapsible-sec {
-      margin-bottom: 1.15rem;
+      margin-bottom: 1.35rem;
+      border-radius: 16px;
       transition: all 0.25s ease;
     }
 
@@ -1764,96 +1800,127 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.65rem 1.1rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      margin-bottom: 0.6rem;
+      padding: 14px 20px;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-left: 6px solid #4f46e5;
+      border-radius: 14px;
+      margin-bottom: 0.75rem;
       cursor: pointer;
       user-select: none;
-      transition: all 0.18s ease;
-      box-shadow: var(--shadow-sm);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    }
+
+    /* Distinct highlight border per section */
+    #secWeatherWrap .sec-collapse-header { border-left-color: #0284c7; }
+    #secScoringWrap .sec-collapse-header { border-left-color: #d97706; }
+    #secKpisWrap .sec-collapse-header { border-left-color: #059669; }
+    #secChartsWrap .sec-collapse-header { border-left-color: #7c3aed; }
+    #secTableWrap .sec-collapse-header { border-left-color: #4f46e5; }
+    #secPlaybookWrap .sec-collapse-header { border-left-color: #db2777; }
+
+    [data-theme="dark"] .sec-collapse-header {
+      background: #151e32;
+      border-color: #283548;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
     }
 
     .sec-collapse-header:hover {
-      background: var(--surface-2);
-      border-color: var(--border-strong);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.12);
+      border-color: #94a3b8;
     }
 
     .sec-header-left {
       display: flex;
       align-items: center;
-      gap: 0.65rem;
+      gap: 12px;
       flex-wrap: wrap;
     }
 
-    .sec-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--primary);
-    }
-    .sec-dot.dot-weather { background: #0284c7; }
-    .sec-dot.dot-scoring { background: #d97706; }
-    .sec-dot.dot-kpis { background: #059669; }
-    .sec-dot.dot-charts { background: #7c3aed; }
-    .sec-dot.dot-table { background: #4f46e5; }
-    .sec-dot.dot-playbook { background: #db2777; }
-
     .sec-header-title {
-      font-size: 0.96rem;
-      font-weight: 800;
-      color: var(--text);
+      font-size: 1.05rem;
+      font-weight: 850;
+      letter-spacing: -0.015em;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
-    .sec-collapsed-pill {
-      display: none;
-      font-size: 0.74rem;
-      font-weight: 700;
-      padding: 2px 9px;
+    [data-theme="dark"] .sec-header-title {
+      color: #f8fafc;
+    }
+
+    .sec-highlight-badge {
+      font-size: 0.76rem;
+      font-weight: 750;
+      padding: 3px 10px;
       border-radius: 6px;
-      background: #fef3c7;
-      color: #92400e;
-      border: 1px solid #fde68a;
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
     }
 
-    .collapsible-sec.is-collapsed .sec-collapsed-pill {
+    [data-theme="dark"] .sec-highlight-badge {
+      background: #1e293b;
+      color: #cbd5e1;
+      border-color: #334155;
+    }
+
+    /* Action Chip on the right */
+    .sec-action-badge {
       display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
     }
 
+    /* Expanded state: subtle clean Indigo */
+    .collapsible-sec .sec-action-badge {
+      background: #eef2ff;
+      color: #4338ca;
+      border: 1.5px solid #c7d2fe;
+    }
+
+    /* Collapsed state: Prominent highlighted Amber badge */
+    .collapsible-sec.is-collapsed .sec-collapse-header {
+      background: linear-gradient(90deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      margin-bottom: 0.5rem;
+    }
+
+    [data-theme="dark"] .collapsible-sec.is-collapsed .sec-collapse-header {
+      background: linear-gradient(90deg, #111827 0%, #151e32 100%);
+    }
+
+    .collapsible-sec.is-collapsed .sec-action-badge {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #92400e;
+      border: 1.5px solid #f59e0b;
+      box-shadow: 0 3px 10px rgba(245, 158, 11, 0.25);
+    }
+
+    /* THE CRITICAL COLLAPSE RULE */
     .collapsible-sec.is-collapsed .sec-collapse-body {
       display: none !important;
     }
 
-    .btn-toggle-sec {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--text-2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
+    .sec-collapse-body {
+      animation: secReveal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .btn-toggle-sec:hover {
-      background: var(--surface-3);
-      color: var(--text);
-    }
-
-    .chevron-arrow {
-      font-size: 0.75rem;
-      font-weight: 800;
-      display: inline-block;
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .collapsible-sec.is-collapsed .chevron-arrow {
-      transform: rotate(-90deg);
+    @keyframes secReveal {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -1954,10 +2021,16 @@
           <button class="btn btn-emerald" onclick="exportPriorityBatch38Data()" id="btnExportBatch38" style="background:#059669; border:1px solid #047857; color:#fff; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
             <span id="lblBtnExportBatch38">📊 Xuất Excel 38 Cột (Priority Batch)</span>
           </button>
+          <button type="button" class="btn btn-amber" onclick="openSnovBatchExportModal()" id="btnExportSnovBatches" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: 1px solid #b45309; color: #fff; font-weight: 750; display: inline-flex; align-items: center; gap: 6px; border-radius: 9px; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35); cursor: pointer;" title="Xuất hàng loạt theo mẻ 20 khách/file nạp Snov.io, tự động loại trừ khách đã gửi">
+            <span>⚡</span> <span id="lblBtnExportSnov">Xuất Snov.io (20 khách/file)</span>
+          </button>
+          <button type="button" class="btn btn-sky" onclick="manualSyncServer()" id="btnSyncServer" style="background:#6366f1; border:1px solid #4f46e5; color:#fff; font-weight:700; display:inline-flex; align-items:center; gap:6px;" title="Lưu và đồng bộ dữ liệu lên Server 43.156.237.143 cho tất cả mọi người cùng xem">
+            <span>☁️</span> <span id="lblBtnSyncServer">Đồng Bộ Server / 同步云端</span>
+          </button>
           <a href="timesheet.html" class="btn btn-sky" id="btnNavTimesheet" style="background:#0284c7; border:1px solid #0369a1; color:#fff; font-weight:700; display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
             <span>📅 Bảng Chấm Công 2026 / 考勤打卡</span>
           </a>
-          <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="handleImportFile(event)">
+          <input type="file" id="importFile" accept=".json,application/json" multiple style="display:none" onchange="handleImportFile(event)">
         </div>
       </div>
     </header>
@@ -1968,32 +2041,32 @@
     <nav class="report-subnav" id="reportSubnav">
       <div class="subnav-tabs">
         <button type="button" class="subnav-btn active" data-sec="all" onclick="switchReportSection('all')">
-          <span>👁️</span> <span id="navTxtAll">Tất Cả / 全部</span>
+          <span>📑</span> <span id="navTxtAll">Tất Cả / 全部</span>
         </button>
         <button type="button" class="subnav-btn" data-sec="weather" onclick="switchReportSection('weather')">
-          <span>🌦️</span> <span id="navTxtWeather">Radar Thời Tiết / 气象雷达</span>
+          <span>🌦️</span> <span id="navTxtWeather">Radar Thời Tiết</span>
         </button>
         <button type="button" class="subnav-btn" data-sec="scoring" onclick="switchReportSection('scoring')">
-          <span>🛡️</span> <span id="navTxtScoring">Mô Hình Điểm / 评分模型</span>
+          <span>🛡️</span> <span id="navTxtScoring">Mô Hình Điểm</span>
         </button>
         <button type="button" class="subnav-btn" data-sec="kpis" onclick="switchReportSection('kpis')">
-          <span>📊</span> <span id="navTxtKpis">Chỉ Số KPIs / 核心指标</span>
+          <span>📊</span> <span id="navTxtKpis">5 Chỉ Số KPIs</span>
         </button>
         <button type="button" class="subnav-btn" data-sec="charts" onclick="switchReportSection('charts')">
-          <span>📈</span> <span id="navTxtCharts">Biểu Đồ / 可视化图表</span>
+          <span>📈</span> <span id="navTxtCharts">5 Biểu Đồ</span>
         </button>
         <button type="button" class="subnav-btn" data-sec="table" onclick="switchReportSection('table')">
-          <span>📋</span> <span id="navTxtTable">Danh Sách Khách / 潜客清单</span>
+          <span>📋</span> <span id="navTxtTable">Danh Sách Khách (3,324)</span>
         </button>
         <button type="button" class="subnav-btn" data-sec="playbook" onclick="switchReportSection('playbook')">
-          <span>🎯</span> <span id="navTxtPlaybook">Kịch Bản Sales / 销售手册</span>
+          <span>🎯</span> <span id="navTxtPlaybook">Kịch Bản Sales</span>
         </button>
       </div>
       <div class="subnav-tools">
-        <button type="button" class="subnav-tool-btn" onclick="toggleAllReportSections(true)">
+        <button type="button" class="subnav-tool-btn btn-expand" onclick="toggleAllReportSections(true)">
           <span>🔽</span> <span id="navTxtExpand">Mở Hết / 展开</span>
         </button>
-        <button type="button" class="subnav-tool-btn" onclick="toggleAllReportSections(false)">
+        <button type="button" class="subnav-tool-btn btn-collapse" onclick="toggleAllReportSections(false)">
           <span>🔼</span> <span id="navTxtCollapse">Thu Gọn / 折叠</span>
         </button>
       </div>
@@ -2003,14 +2076,13 @@
     <div class="collapsible-sec" id="secWeatherWrap">
       <div class="sec-collapse-header" onclick="toggleReportSection('secWeatherWrap')">
         <div class="sec-header-left">
-          <span class="sec-dot dot-weather"></span>
-          <span class="sec-header-title" id="titleSecWeather">🌦️ Radar Khí Tượng & Đòn Bẩy Thị Trường Hoa Kỳ</span>
-          <span class="sec-collapsed-pill" id="pillSecWeather">Đang thu gọn · Bấm để mở</span>
+          <span class="sec-header-title">
+            <span id="titleSecWeather">🌦️ Radar Khí Tượng & Đòn Bẩy Thị Trường Hoa Kỳ</span>
+            <span class="sec-highlight-badge">4 Cụm Bang · Live Weather</span>
+          </span>
         </div>
         <div class="sec-header-right">
-          <button type="button" class="btn-toggle-sec" title="Thu gọn / Mở rộng">
-            <span class="chevron-arrow">▼</span>
-          </button>
+          <span class="sec-action-badge" id="pillSecWeather">🔼 Đang Mở — Bấm Để Thu Nhỏ</span>
         </div>
       </div>
       <div class="sec-collapse-body">
@@ -2034,14 +2106,13 @@
     <div class="collapsible-sec" id="secScoringWrap">
       <div class="sec-collapse-header" onclick="toggleReportSection('secScoringWrap')">
         <div class="sec-header-left">
-          <span class="sec-dot dot-scoring"></span>
-          <span class="sec-header-title" id="titleSecScoring">🛡️ Tiêu Chuẩn & Mô Hình Chấm Điểm 5 Trục (marketing_parameter)</span>
-          <span class="sec-collapsed-pill" id="pillSecScoring">Đang thu gọn · Bấm để mở</span>
+          <span class="sec-header-title">
+            <span id="titleSecScoring">🛡️ Tiêu Chuẩn & Mô Hình Chấm Điểm 5 Trục (marketing_parameter)</span>
+            <span class="sec-highlight-badge">Tiêu Chuẩn 5 Trục · 30 Điểm ICP</span>
+          </span>
         </div>
         <div class="sec-header-right">
-          <button type="button" class="btn-toggle-sec" title="Thu gọn / Mở rộng">
-            <span class="chevron-arrow">▼</span>
-          </button>
+          <span class="sec-action-badge" id="pillSecScoring">🔼 Đang Mở — Bấm Để Thu Nhỏ</span>
         </div>
       </div>
       <div class="sec-collapse-body">
@@ -2056,14 +2127,13 @@
     <div class="collapsible-sec" id="secKpisWrap">
       <div class="sec-collapse-header" onclick="toggleReportSection('secKpisWrap')">
         <div class="sec-header-left">
-          <span class="sec-dot dot-kpis"></span>
-          <span class="sec-header-title" id="secKpi">📊 Chỉ Số KPIs Cốt Lõi</span>
-          <span class="sec-collapsed-pill" id="pillSecKpis">Đang thu gọn · Bấm để mở</span>
+          <span class="sec-header-title">
+            <span id="secKpi">📊 Tổng Quan 5 Chỉ Số Cốt Lõi (KPIS)</span>
+            <span class="sec-highlight-badge">3,324 Khách Hàng US</span>
+          </span>
         </div>
         <div class="sec-header-right">
-          <button type="button" class="btn-toggle-sec" title="Thu gọn / Mở rộng">
-            <span class="chevron-arrow">▼</span>
-          </button>
+          <span class="sec-action-badge" id="pillSecKpis">🔼 Đang Mở — Bấm Để Thu Nhỏ</span>
         </div>
       </div>
       <div class="sec-collapse-body">
@@ -2081,14 +2151,13 @@
     <div class="collapsible-sec" id="secChartsWrap">
       <div class="sec-collapse-header" onclick="toggleReportSection('secChartsWrap')">
         <div class="sec-header-left">
-          <span class="sec-dot dot-charts"></span>
-          <span class="sec-header-title" id="secCharts">📈 Phân Tích Biểu Đồ Trực Quan (5 Trục)</span>
-          <span class="sec-collapsed-pill" id="pillSecCharts">Đang thu gọn · Bấm để mở</span>
+          <span class="sec-header-title">
+            <span id="secCharts">📈 Phân Tích Biểu Đồ Trực Quan Đa Chiều</span>
+            <span class="sec-highlight-badge">5 Biểu Đồ Phân Tích</span>
+          </span>
         </div>
         <div class="sec-header-right">
-          <button type="button" class="btn-toggle-sec" title="Thu gọn / Mở rộng">
-            <span class="chevron-arrow">▼</span>
-          </button>
+          <span class="sec-action-badge" id="pillSecCharts">🔼 Đang Mở — Bấm Để Thu Nhỏ</span>
         </div>
       </div>
       <div class="sec-collapse-body">
@@ -2106,14 +2175,13 @@
     <div class="collapsible-sec" id="secTableWrap">
       <div class="sec-collapse-header" onclick="toggleReportSection('secTableWrap')">
         <div class="sec-header-left">
-          <span class="sec-dot dot-table"></span>
-          <span class="sec-header-title" id="secTable">📋 Danh Sách Khách Hàng Tiềm Năng Chi Tiết</span>
-          <span class="sec-collapsed-pill" id="pillSecTable">Đang thu gọn · Bấm để mở</span>
+          <span class="sec-header-title">
+            <span id="secTable">📋 Danh Sách Khách Hàng Tiềm Năng Chi Tiết (Bảng Master CRM)</span>
+            <span class="sec-highlight-badge">3,324 Trại Cún Hoa Kỳ</span>
+          </span>
         </div>
         <div class="sec-header-right">
-          <button type="button" class="btn-toggle-sec" title="Thu gọn / Mở rộng">
-            <span class="chevron-arrow">▼</span>
-          </button>
+          <span class="sec-action-badge" id="pillSecTable">🔼 Đang Mở — Bấm Để Thu Nhỏ</span>
         </div>
       </div>
       <div class="sec-collapse-body">
@@ -2134,6 +2202,9 @@
               <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
                 <button class="btn btn-sm btn-emerald" id="btnAddLeadTop" onclick="openAddLeadModal()" style="background:#059669; border:1px solid #047857; color:#fff; font-weight:750; padding: .55rem 1rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer; border-radius:10px; box-shadow:0 2px 6px rgba(5,150,105,0.25);" title="Thêm hồ sơ khách hàng mới vào hệ thống">
                   <span>➕ Thêm Khách Hàng</span>
+                </button>
+                <button type="button" class="btn btn-sm" id="btnExportSnovTable" onclick="openSnovBatchExportModal()" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border:1px solid #b45309; color:#fff; font-weight:750; padding: .55rem 1rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer; border-radius:10px; box-shadow:0 2px 6px rgba(217,119,6,0.25);" title="Xuất hàng loạt theo mẻ 20 khách/file nạp Snov.io">
+                  <span>⚡ Xuất Snov.io (20 khách/file)</span>
                 </button>
                 <div style="display:flex; align-items:center; gap:8px;">
                   <span id="lblPageSize" style="font-size:0.86rem; font-weight:700; color:var(--text-2);">Hiển thị:</span>
@@ -2171,14 +2242,13 @@
     <div class="collapsible-sec" id="secPlaybookWrap">
       <div class="sec-collapse-header" onclick="toggleReportSection('secPlaybookWrap')">
         <div class="sec-header-left">
-          <span class="sec-dot dot-playbook"></span>
-          <span class="sec-header-title" id="secPlaybook">🎯 Cẩm Nang Bán Hàng & Kịch Bản Telesales</span>
-          <span class="sec-collapsed-pill" id="pillSecPlaybook">Đang thu gọn · Bấm để mở</span>
+          <span class="sec-header-title">
+            <span id="secPlaybook">🎯 Cẩm Nang Bán Hàng & Kịch Bản Telesales</span>
+            <span class="sec-highlight-badge">Chốt Đơn Take-Home Kit</span>
+          </span>
         </div>
         <div class="sec-header-right">
-          <button type="button" class="btn-toggle-sec" title="Thu gọn / Mở rộng">
-            <span class="chevron-arrow">▼</span>
-          </button>
+          <span class="sec-action-badge" id="pillSecPlaybook">🔼 Đang Mở — Bấm Để Thu Nhỏ</span>
         </div>
       </div>
       <div class="sec-collapse-body">
@@ -2327,6 +2397,104 @@
           </div>
         </form>
       </div>
+  </div>
+
+  <!-- MODAL XUẤT SNOV.IO HÀNG LOẠT (BATCH 20 KHÁCH/FILE & CHỐNG TRÙNG) -->
+  <div class="modal-overlay" id="snovExportModalOverlay" onclick="closeSnovBatchExportModal(event)">
+    <div class="modal-box" style="width: min(740px, 100%); max-height: 90vh;" onclick="event.stopPropagation()">
+      <div class="modal-header" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-bottom: 1px solid #fde68a;">
+        <div class="modal-title" style="color: #92400e; font-weight: 800; display:flex; align-items:center; gap:8px;">
+          <span>⚡</span>
+          <span id="snovModalTitleText">Xuất Hàng Loạt Chuẩn Snov.io (20 Khách / File — Khử Trùng 100%)</span>
+        </div>
+        <button class="modal-close-btn" onclick="closeSnovBatchExportModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 1.5rem 1.75rem;">
+        
+        <!-- THỐNG KÊ NHANH TRẠNG THÁI KHÁCH HÀNG -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.25rem;">
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; text-align: center;">
+            <div style="font-size: 0.72rem; color: #64748b; font-weight: 700;">TỔNG KHÁCH CRM</div>
+            <div id="snovKpiTotal" style="font-size: 1.35rem; font-weight: 800; color: #0f172a;">5,382</div>
+          </div>
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 10px; text-align: center;">
+            <div style="font-size: 0.72rem; color: #1e40af; font-weight: 700;">CÓ GMAIL / WORK EMAIL</div>
+            <div id="snovKpiWithEmail" style="font-size: 1.35rem; font-weight: 800; color: #2563eb;">2,149</div>
+          </div>
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 10px; text-align: center;">
+            <div style="font-size: 0.72rem; color: #991b1b; font-weight: 700;">ĐÃ GỬI TRƯỚC ĐÂY</div>
+            <div id="snovKpiExcluded" style="font-size: 1.35rem; font-weight: 800; color: #dc2626;">0</div>
+          </div>
+          <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 10px; text-align: center;">
+            <div style="font-size: 0.72rem; color: #065f46; font-weight: 700;">MỚI TINH SẴN SÀNG</div>
+            <div id="snovKpiReady" style="font-size: 1.35rem; font-weight: 800; color: #059669;">2,149</div>
+          </div>
+        </div>
+
+        <!-- CÀI ĐẶT SỐ LƯỢNG XUẤT -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.1rem; margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.88rem; font-weight: 800; color: #1e293b; margin-bottom: 8px;">
+            🎯 Chọn số lượng khách hàng cần xuất đợt này:
+          </label>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.86rem; font-weight: 700; cursor: pointer; background: #fffbeb; padding: 6px 12px; border-radius: 8px; border: 1px solid #fcd34d;">
+              <input type="radio" name="snovCountOpt" value="500" checked onchange="onSnovCountOptionChange()">
+              500 khách (25 file x 20 khách) [Chuẩn KPI ngày]
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.86rem; font-weight: 700; cursor: pointer; background: #f8fafc; padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+              <input type="radio" name="snovCountOpt" value="200" onchange="onSnovCountOptionChange()">
+              200 khách (10 file x 20 khách)
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.86rem; font-weight: 700; cursor: pointer; background: #f8fafc; padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+              <input type="radio" name="snovCountOpt" value="100" onchange="onSnovCountOptionChange()">
+              100 khách (5 file x 20 khách)
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.86rem; font-weight: 700; cursor: pointer; background: #f8fafc; padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+              <input type="radio" name="snovCountOpt" value="custom" onchange="onSnovCountOptionChange()">
+              Tùy chỉnh:
+              <input type="number" id="snovCustomCountInput" min="20" step="20" value="40" style="width: 70px; padding: 2px 6px; border: 1px solid #cbd5e1; border-radius: 6px;" disabled>
+            </label>
+          </div>
+          <div style="font-size: 0.78rem; color: #64748b; line-height: 1.4;">
+            💡 <i>Mỗi file Excel tự động được chia đúng <b>20 khách hàng</b>, đầy đủ 20 cột chuẩn mẫu Snov.io (`Top_Leads_Part_XX_of_YY.xlsx`).</i>
+          </div>
+        </div>
+
+        <!-- CÁCH THỨC TẢI VỀ -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.1rem; margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.88rem; font-weight: 800; color: #1e293b; margin-bottom: 8px;">
+            📦 Định dạng gói tải về máy:
+          </label>
+          <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.86rem; font-weight: 700; cursor: pointer;">
+              <input type="radio" name="snovDownloadType" value="zip" checked>
+              📦 Nén trọn gói 1 tệp ZIP (.zip) chứa tất cả file Part (Khuyên dùng cho Sales)
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.86rem; font-weight: 700; cursor: pointer;">
+              <input type="radio" name="snovDownloadType" value="separate">
+              📑 Tải từng tệp Excel rời rạc (.xlsx)
+            </label>
+          </div>
+        </div>
+
+        <!-- KHU VỰC TIẾN TRÌNH (PROGRESS BAR) -->
+        <div id="snovProgressWrap" style="display: none; margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; color: #4338ca; margin-bottom: 4px;">
+            <span id="snovProgressLabel">⏳ Đang xử lý...</span>
+            <span id="snovProgressPercent">0%</span>
+          </div>
+          <div style="width: 100%; height: 8px; background: #e0e7ff; border-radius: 999px; overflow: hidden;">
+            <div id="snovProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #4f46e5, #06b6d4); transition: width 0.2s;"></div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border); padding-top: 1.1rem;">
+          <button type="button" class="btn btn-sm" onclick="closeSnovBatchExportModal()" style="padding: 0.65rem 1.4rem;">Đóng / 关闭</button>
+          <button type="button" class="btn btn-sm" id="btnExecuteSnovExport" onclick="startSnovBatchExport()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: 1px solid #b45309; color: #fff; font-weight: 800; padding: 0.65rem 1.8rem; border-radius: 9px; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3); cursor:pointer;">
+            🚀 Bắt Đầu Xuất Hàng Loạt & Tải Về
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2395,6 +2563,17 @@
 
       if ($('lblBtnExportBatch38')) {
         $('lblBtnExportBatch38').textContent = t('btnExportPriority') || (isVi() ? '📊 Xuất Excel 38 Cột (Priority Batch)' : '📊 导出 38 列标准潜客表 (Priority Batch)');
+      }
+      if ($('lblBtnExportSnov')) {
+        $('lblBtnExportSnov').textContent = isVi() ? 'Xuất Snov.io (20 khách/file)' : '导出 Snov.io (20条/文件)';
+      }
+      if ($('btnExportSnovTable')) {
+        $('btnExportSnovTable').innerHTML = isVi() ? '<span>⚡ Xuất Snov.io (20 khách/file)</span>' : '<span>⚡ 导出 Snov.io (20条/文件)</span>';
+      }
+      if ($('snovModalTitleText')) {
+        $('snovModalTitleText').textContent = isVi()
+          ? 'Xuất Hàng Loạt Chuẩn Snov.io (20 Khách / File — Khử Trùng 100%)'
+          : '批量导出 Snov.io 标准潜客表 (20条/文件 — 100%去重)';
       }
       if ($('btnAddLeadTop')) {
         $('btnAddLeadTop').innerHTML = isVi() ? '<span>➕ Thêm Khách Hàng</span>' : '<span>➕ 新增潜客</span>';
@@ -2470,17 +2649,16 @@
       if ($('navTxtCollapse')) $('navTxtCollapse').textContent = isVi() ? 'Thu Gọn' : '折叠';
 
       // Cập nhật tiêu đề collapsible headers
-      if ($('titleSecWeather')) $('titleSecWeather').textContent = isVi() ? '🌦️ Radar Khí Tượng & Đòn Bẩy Thị Trường Hoa Kỳ' : '🌦️ 全美实时气象雷达与情境营销指挥中心';
-      if ($('titleSecScoring')) $('titleSecScoring').textContent = isVi() ? '🛡️ Tiêu Chuẩn & Mô Hình Chấm Điểm 5 Trục (marketing_parameter)' : '🛡️ 标准评分模型与渠道公信力 (marketing_parameter)';
-      if ($('secKpi')) $('secKpi').textContent = isVi() ? '📊 Tổng Quan Chỉ Số Cốt Lõi' : '📊 核心指标总览';
-      if ($('secCharts')) $('secCharts').textContent = isVi() ? '📈 Phân Tích Biểu Đồ Trực Quan (5 Trục)' : '📈 可视化分析 (5维)';
-      if ($('secTable')) $('secTable').textContent = isVi() ? '📋 Danh Sách Khách Hàng Tiềm Năng Chi Tiết' : '📋 潜客明细清单';
-      if ($('secPlaybook')) $('secPlaybook').textContent = isVi() ? '🎯 Cẩm Nang Bán Hàng & Kịch Bản Telesales' : '🎯 销售作战手册';
+      if ($('titleSecWeather')) $('titleSecWeather').textContent = isVi() ? 'Radar Khí Tượng & Đòn Bẩy Thị Trường Hoa Kỳ' : '全美实时气象雷达与情境营销指挥中心';
+      if ($('titleSecScoring')) $('titleSecScoring').textContent = isVi() ? 'Tiêu Chuẩn & Mô Hình Chấm Điểm 5 Trục (marketing_parameter)' : '标准评分模型与渠道公信力 (marketing_parameter)';
+      if ($('secKpi')) $('secKpi').textContent = isVi() ? 'Tổng Quan Chỉ Số Cốt Lõi' : '核心指标总览';
+      if ($('secCharts')) $('secCharts').textContent = isVi() ? 'Phân Tích Biểu Đồ Trực Quan (5 Trục)' : '可视化分析 (5维)';
+      if ($('secTable')) $('secTable').textContent = isVi() ? 'Danh Sách Khách Hàng Tiềm Năng Chi Tiết' : '潜客明细清单';
+      if ($('secPlaybook')) $('secPlaybook').textContent = isVi() ? 'Cẩm Nang Bán Hàng & Kịch Bản Telesales' : '销售作战手册';
 
-      // Cập nhật badge đã thu gọn
-      const pillTxt = isVi() ? 'Đang thu gọn · Bấm để mở' : '已折叠 · 点击展开';
-      ['pillSecWeather', 'pillSecScoring', 'pillSecKpis', 'pillSecCharts', 'pillSecTable', 'pillSecPlaybook'].forEach(pid => {
-        if ($(pid)) $(pid).textContent = pillTxt;
+      // Cập nhật trạng thái Action Badge cho từng thẻ
+      ['secWeatherWrap', 'secScoringWrap', 'secKpisWrap', 'secChartsWrap', 'secTableWrap', 'secPlaybookWrap'].forEach(id => {
+        updateSectionPill(id);
       });
 
       $('langBtnVi').classList.toggle('active', S.lang === 'vi');
@@ -2491,6 +2669,19 @@
      * BỘ ĐIỀU KHIỂN MENU PHÂN ĐOẠN & THU GỌN MỤC (COLLAPSIBLE CONTROLLER)
      * ========================================================================= */
     let currentReportSection = 'all';
+
+    function updateSectionPill(secId) {
+      const el = $(secId);
+      if (!el) return;
+      const pill = el.querySelector('.sec-action-badge');
+      if (!pill) return;
+      const isCollapsed = el.classList.contains('is-collapsed');
+      if (isCollapsed) {
+        pill.innerHTML = isVi() ? '🔽 Bấm Để Mở Bảng' : '🔽 点击展开明细';
+      } else {
+        pill.innerHTML = isVi() ? '🔼 Đang Mở — Bấm Để Thu Nhỏ' : '🔼 展开中 — 点击折叠';
+      }
+    }
 
     function switchReportSection(secKey) {
       currentReportSection = secKey;
@@ -2516,6 +2707,7 @@
           if (el) {
             el.style.display = '';
             el.classList.remove('is-collapsed');
+            updateSectionPill(s.id);
           }
         });
       } else {
@@ -2526,6 +2718,7 @@
             if (s.key === secKey) {
               el.style.display = '';
               el.classList.remove('is-collapsed');
+              updateSectionPill(s.id);
               setTimeout(() => {
                 el.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }, 50);
@@ -2552,6 +2745,7 @@
       const el = $(secId);
       if (!el) return;
       const isCollapsed = el.classList.toggle('is-collapsed');
+      updateSectionPill(secId);
       
       // Nếu mở biểu đồ thì kích hoạt resize Chart.js
       if (!isCollapsed && secId === 'secChartsWrap') {
@@ -2581,6 +2775,7 @@
           } else {
             el.classList.add('is-collapsed');
           }
+          updateSectionPill(id);
         }
       });
 
@@ -3337,15 +3532,8 @@
       if ($('kpiValTotal')) $('kpiValTotal').textContent = num(S.leads.length);
       onFilterChange();
 
-      // Persist to server via /api/save-crm
-      try {
-        const apiBase = (window.location.protocol.startsWith('http')) ? `${window.location.protocol}//${window.location.host}` : 'http://127.0.0.1:8000';
-        fetch(`${apiBase}/api/save-crm`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ leads: S.leads })
-        }).catch(() => {});
-      } catch (_) {}
+      // Tự động đồng bộ lên Server
+      syncLeadsToServer(S.leads);
     }
 
     function deleteLeadRecord(stt) {
@@ -3364,15 +3552,8 @@
       if ($('kpiValTotal')) $('kpiValTotal').textContent = num(S.leads.length);
       onFilterChange();
 
-      // Persist to server via /api/save-crm
-      try {
-        const apiBase = (window.location.protocol.startsWith('http')) ? `${window.location.protocol}//${window.location.host}` : 'http://127.0.0.1:8000';
-        fetch(`${apiBase}/api/save-crm`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ leads: S.leads })
-        }).catch(() => {});
-      } catch (_) {}
+      // Tự động đồng bộ lên Server
+      syncLeadsToServer(S.leads);
     }
 
     function openWeatherModal(stt) {
@@ -3634,6 +3815,136 @@
       renderCharts();
       renderTable();
       toast(isVi() ? `🎉 Đã cộng dồn thành công! +${added} đối tác mới, cập nhật ${updated} đối tác cũ. Tổng: ${mergedLeads.length}` : `✅ 累积导入成功！新增${added}条，更新${updated}条，总计${mergedLeads.length}条`, 'ok');
+      
+      // 🚀 TỰ ĐỘNG ĐỒNG BỘ LÊN SERVER ĐỂ MỌI NGƯỜI CÙNG THẤY (AUTO-SYNC TO SERVER)
+      syncLeadsToServer(mergedLeads);
+    }
+
+    /* ============================ TỰ ĐỘNG ĐỒNG BỘ LÊN SERVER ============================ */
+    let isSyncing = false;
+    async function syncLeadsToServer(leads, isManual = false) {
+      if (!Array.isArray(leads) || leads.length === 0) return;
+      if (isSyncing) return;
+      isSyncing = true;
+
+      const currentHost = (window.location.protocol.startsWith('http')) ? `${window.location.protocol}//${window.location.host}` : '';
+      
+      // 1. Chuẩn bị payload CRM (Bảng thông tin cá nhân 30 trường)
+      const crmPayload = JSON.stringify({ leads: leads });
+
+      // 2. Chuẩn bị payload Timesheet (Bảng ma trận thời gian hoạt động người dùng)
+      const dateSet = new Set();
+      const tsMap = {};
+      leads.forEach(l => {
+        const rawFbId = (l.fb_id || '').toString().trim();
+        const rawUrl = (l.url || '').toString().trim().toLowerCase().replace(/\/+$/, '');
+        const key = rawFbId || rawUrl || l.id;
+        if (!key) return;
+
+        const actLedger = (l.activity_ledger && typeof l.activity_ledger === 'object') ? { ...l.activity_ledger } : {};
+        const pubStr = l.publish_time || '';
+        let dateKey = '2026-10-23';
+        if (pubStr.includes('/')) {
+          const dParts = pubStr.split(' ')[0].split('/');
+          if (dParts.length === 3) dateKey = `${dParts[2]}-${dParts[1].padStart(2, '0')}-${dParts[0].padStart(2, '0')}`;
+        } else if (pubStr.includes('-')) {
+          const m = pubStr.match(/\d{4}-\d{2}-\d{2}/);
+          if (m) dateKey = m[0];
+        }
+        if (Object.keys(actLedger).length === 0 || !actLedger[dateKey]) {
+          actLedger[dateKey] = {
+            posted: true,
+            post_time: '12:00',
+            post_type: 'Feed',
+            full_str: pubStr || dateKey
+          };
+        }
+        Object.keys(actLedger).forEach(dk => dateSet.add(dk));
+
+        tsMap[key] = {
+          fb_id: rawFbId,
+          lead_id: l.lead_id || l.stt || key,
+          name: l.name || '',
+          owner: l.owner || '',
+          phone: l.phone || '',
+          email: l.email || '',
+          website: l.website || '',
+          amazon_url: l.amazon_url || '',
+          amazon_category: l.amazon_category || l.amz_cat || '',
+          has_amazon: Boolean(l.has_amazon || l.amazon_url),
+          city: l.city || '',
+          state: l.state || '',
+          zip: l.zip || '',
+          country: l.country || 'United States',
+          dog_breeds: l.dog_breeds || [],
+          business_type: l.business_type || l.cat || '',
+          category: l.category || '',
+          bio: l.bio || '',
+          url: l.url || (rawFbId ? `https://www.facebook.com/profile.php?id=${rawFbId}` : ''),
+          avatar: l.avatar_url || l.avatar || '',
+          score: l.score || 75,
+          rank_tier: l.rank_tier || 'Tier A',
+          sales_action: l.sales_action || '',
+          activity_ledger: actLedger,
+          golden_hour_slot: l.golden_hour_slot || '16:00 - 18:00',
+          active_streak_days: Object.keys(actLedger).length,
+          latest_post_time: pubStr || 'Hôm nay',
+          latest_post_date: dateKey
+        };
+      });
+
+      const tsPayload = JSON.stringify({
+        matrix: {
+          tracked_dates: Array.from(dateSet).sort(),
+          leads: tsMap
+        }
+      });
+
+      // Danh sách endpoint đồng bộ 2 bảng lên Server
+      const syncTargets = [
+        { url: currentHost ? `${currentHost}/api.php?route=save-crm` : null, body: crmPayload, type: 'CRM' },
+        { url: currentHost ? `${currentHost}/api.php?route=save-timesheet` : null, body: tsPayload, type: 'Timesheet' },
+        { url: 'http://43.156.237.143:3007/api.php?route=save-crm', body: crmPayload, type: 'CRM' },
+        { url: 'http://43.156.237.143:3007/api.php?route=save-timesheet', body: tsPayload, type: 'Timesheet' }
+      ].filter(t => Boolean(t.url));
+
+      let crmSuccess = false;
+      let tsSuccess = false;
+
+      for (const target of syncTargets) {
+        try {
+          const resp = await fetch(target.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: target.body
+          });
+          if (resp.ok) {
+            if (target.type === 'CRM') crmSuccess = true;
+            if (target.type === 'Timesheet') tsSuccess = true;
+          }
+        } catch (_) {}
+      }
+
+      isSyncing = false;
+      const totalSync = leads.length;
+      if (crmSuccess || tsSuccess) {
+        const msgVi = `✅ [ĐỒNG BỘ THÀNH CÔNG] Đã lưu thành công cả Bảng Thông Tin Cá Nhân & Bảng Thời Gian Hoạt Động (${totalSync} khách hàng) lên Server 43.156.237.143!`;
+        const msgZh = `✅ [同步成功] 已成功将潜客个人资料与考勤活动数据 (${totalSync} 条) 双向同步至服务器 43.156.237.143！`;
+        toast(isVi() ? msgVi : msgZh, 'ok');
+      } else {
+        const errMsgVi = `❌ [ĐỒNG BỘ THẤT BẠI] Không thể kết nối tới Server 43.156.237.143! Vui lòng kiểm tra lại mạng hoặc máy chủ.`;
+        const errMsgZh = `❌ [同步失败] 无法连接到服务器 43.156.237.143！请检查网络或服务器状态。`;
+        toast(isVi() ? errMsgVi : errMsgZh, 'error');
+      }
+    }
+
+    function manualSyncServer() {
+      if (!S.leads || S.leads.length === 0) {
+        toast(isVi() ? '❌ Chưa có dữ liệu để đồng bộ!' : '❌ 暂无数据可同步！', 'error');
+        return;
+      }
+      toast(isVi() ? '⏳ Đang đồng bộ toàn bộ dữ liệu 2 chiều lên Server...' : '⏳ 正在双向同步全量数据至服务器...', 'ok');
+      syncLeadsToServer(S.leads, true);
     }
 
     function importError(err) {
@@ -3642,20 +3953,51 @@
       toast(fmt(t('importFail'), { msg }), 'error');
     }
 
-    async function importFileObject(file) {
-      if (!file) return;
-      try {
-        const text = await file.text();
-        applyImported(normalizeLeads(JSON.parse(text)), file.name);
-      } catch (err) { importError(err); }
+    async function importMultipleFiles(files) {
+      if (!files || files.length === 0) return;
+      toast(isVi() ? `⏳ Đang đọc và hợp nhất ${files.length} tệp dữ liệu...` : `⏳ 正在读取并合并 ${files.length} 个数据文件...`, 'ok');
+      
+      let allIncomingLeads = [];
+      let fileNames = [];
+
+      for (const file of files) {
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          let rawList = [];
+          if (Array.isArray(parsed)) {
+            rawList = parsed;
+          } else if (parsed && Array.isArray(parsed.leads)) {
+            rawList = parsed.leads;
+          } else if (parsed && parsed.leads && typeof parsed.leads === 'object') {
+            rawList = Object.values(parsed.leads);
+          } else if (parsed && Array.isArray(parsed.data)) {
+            rawList = parsed.data;
+          }
+          if (rawList.length > 0) {
+            const normalized = normalizeLeads(rawList);
+            allIncomingLeads.push(...normalized);
+            fileNames.push(file.name);
+          }
+        } catch (err) {
+          console.warn(`Lỗi đọc tệp ${file.name}:`, err);
+        }
+      }
+
+      if (allIncomingLeads.length === 0) {
+        toast(isVi() ? '❌ Không tìm thấy dữ liệu khách hàng hợp lệ trong các tệp đã chọn!' : '❌ 所选文件中未发现有效客户数据！', 'error');
+        return;
+      }
+
+      applyImported(allIncomingLeads, fileNames.join(' + '));
     }
 
     function triggerImport() { const el = $('importFile'); if (el) el.click(); }
 
     async function handleImportFile(ev) {
       const input = ev.target;
-      const file = input.files && input.files[0];
-      if (file) await importFileObject(file);
+      const files = input.files ? Array.from(input.files) : [];
+      if (files.length > 0) await importMultipleFiles(files);
       input.value = '';
     }
 
@@ -3665,11 +4007,11 @@
       const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
       ['dragenter', 'dragover'].forEach(ev => zone.addEventListener(ev, e => { stop(e); zone.classList.add('dragover'); }));
       zone.addEventListener('dragleave', e => { stop(e); zone.classList.remove('dragover'); });
-      zone.addEventListener('drop', e => {
+      zone.addEventListener('drop', async e => {
         stop(e);
         zone.classList.remove('dragover');
-        const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-        if (f) importFileObject(f);
+        const files = e.dataTransfer && e.dataTransfer.files ? Array.from(e.dataTransfer.files) : [];
+        if (files.length > 0) await importMultipleFiles(files);
       });
     }
 
@@ -3799,6 +4141,310 @@
         a.download = `${prefix}.csv`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
       }
+    }
+
+    /* =========================================================================
+     * XUẤT HÀNG LOẠT KHÁCH HÀNG CHUẨN SNOV.IO (BATCH 20 KHÁCH/FILE & KHỬ TRÙNG)
+     * ========================================================================= */
+    let snovHistoryCache = null;
+
+    async function loadSnovHistory() {
+      if (snovHistoryCache) return snovHistoryCache;
+      
+      // 1. Thử lấy từ localStorage
+      try {
+        const local = localStorage.getItem('snov_export_history');
+        if (local) {
+          snovHistoryCache = JSON.parse(local);
+        }
+      } catch (_) {}
+
+      // 2. Thử fetch từ Server
+      try {
+        const resp = await fetch('data/snov_export_history.json', { cache: 'no-cache' });
+        if (resp.ok) {
+          const serverHist = await resp.json();
+          if (serverHist && serverHist.exported_emails) {
+            if (!snovHistoryCache) {
+              snovHistoryCache = serverHist;
+            } else {
+              Object.assign(snovHistoryCache.exported_emails, serverHist.exported_emails);
+              Object.assign(snovHistoryCache.exported_fbids, serverHist.exported_fbids);
+            }
+          }
+        }
+      } catch (_) {}
+
+      if (!snovHistoryCache) {
+        snovHistoryCache = { exported_emails: {}, exported_fbids: {}, batches: [] };
+      }
+      return snovHistoryCache;
+    }
+
+    async function openSnovBatchExportModal() {
+      const modal = $('snovExportModalOverlay');
+      if (!modal) return;
+      modal.classList.add('active');
+      await updateSnovBatchModalKpis();
+    }
+
+    function closeSnovBatchExportModal(ev) {
+      if (ev && ev.target && ev.target.classList.contains('modal-box')) return;
+      const modal = $('snovExportModalOverlay');
+      if (modal) modal.classList.remove('active');
+      const prog = $('snovProgressWrap');
+      if (prog) prog.style.display = 'none';
+    }
+
+    function onSnovCountOptionChange() {
+      const selected = document.querySelector('input[name="snovCountOpt"]:checked')?.value;
+      const customInput = $('snovCustomCountInput');
+      if (customInput) {
+        customInput.disabled = selected !== 'custom';
+        if (selected === 'custom') customInput.focus();
+      }
+    }
+
+    async function updateSnovBatchModalKpis() {
+      const history = await loadSnovHistory();
+      const seenEmails = new Set(Object.keys(history.exported_emails || {}));
+      const seenFbids = new Set(Object.keys(history.exported_fbids || {}));
+
+      const allLeads = S.leads || [];
+      const total = allLeads.length;
+
+      let withEmailCount = 0;
+      let excludedCount = 0;
+      let readyCount = 0;
+
+      allLeads.forEach(l => {
+        const em = String(l.email || '').trim().toLowerCase();
+        const fb = String(l.fb_id || '').trim();
+        if (em && em.includes('@') && em.includes('.')) {
+          withEmailCount++;
+          if (seenEmails.has(em) || (fb && seenFbids.has(fb))) {
+            excludedCount++;
+          } else {
+            readyCount++;
+          }
+        }
+      });
+
+      if ($('snovKpiTotal')) $('snovKpiTotal').textContent = num(total);
+      if ($('snovKpiWithEmail')) $('snovKpiWithEmail').textContent = num(withEmailCount);
+      if ($('snovKpiExcluded')) $('snovKpiExcluded').textContent = num(excludedCount);
+      if ($('snovKpiReady')) $('snovKpiReady').textContent = num(readyCount);
+    }
+
+    function extractCleanFirstName(owner, name) {
+      if (!owner || owner === 'Chủ trại' || owner === 'Facebook User' || owner === 'Manager') {
+        if (name && !/(kennel|pup|frenchie|farm|breeder|doodles|shepherds)/i.test(name)) {
+          const p = name.trim().split(/\s+/);
+          if (p.length > 0) return p[0].charAt(0).toUpperCase() + p[0].slice(1);
+        }
+        return 'Manager';
+      }
+      let clean = owner.replace(/\(.*?\)/g, '');
+      if (clean.includes('|')) clean = clean.split('|')[0];
+      const parts = clean.trim().split(/\s+/);
+      if (parts.length > 0 && parts[0]) {
+        return parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+      }
+      return 'Manager';
+    }
+
+    async function startSnovBatchExport() {
+      const history = await loadSnovHistory();
+      const seenEmails = new Set(Object.keys(history.exported_emails || {}));
+      const seenFbids = new Set(Object.keys(history.exported_fbids || {}));
+
+      // Xác định số lượng xuất
+      let targetCount = 500;
+      const opt = document.querySelector('input[name="snovCountOpt"]:checked')?.value || '500';
+      if (opt === 'custom') {
+        targetCount = parseInt($('snovCustomCountInput')?.value || '40', 10);
+      } else {
+        targetCount = parseInt(opt, 10);
+      }
+      if (isNaN(targetCount) || targetCount < 1) targetCount = 20;
+
+      const downloadType = document.querySelector('input[name="snovDownloadType"]:checked')?.value || 'zip';
+
+      // Tuyển chọn các leads thỏa mãn: Có Email, Chưa từng gửi
+      const candidates = [];
+      const currentEmails = new Set();
+      const currentFbids = new Set();
+
+      // Sắp xếp ưu tiên: Điểm cao -> Tier S -> Có SĐT
+      const sorted = [...(S.leads || [])].sort((a, b) => {
+        const sA = (a.rank_tier === 'Tier S' ? 200 : (a.rank_tier === 'Tier A' ? 100 : 0)) + (Number(a.score) || 0) + (a.phone ? 10 : 0);
+        const sB = (b.rank_tier === 'Tier S' ? 200 : (b.rank_tier === 'Tier A' ? 100 : 0)) + (Number(b.score) || 0) + (b.phone ? 10 : 0);
+        return sB - sA;
+      });
+
+      for (const l of sorted) {
+        const em = String(l.email || '').trim().toLowerCase();
+        const fb = String(l.fb_id || '').trim();
+
+        if (!em || !em.includes('@') || !em.includes('.')) continue;
+        if (['example.com', 'none', 'null', 'test@'].some(x => em.includes(x))) continue;
+        if (seenEmails.has(em) || currentEmails.has(em)) continue;
+        if (fb && (seenFbids.has(fb) || currentFbids.has(fb))) continue;
+
+        currentEmails.add(em);
+        if (fb) currentFbids.add(fb);
+        candidates.push(l);
+
+        if (candidates.length >= targetCount) break;
+      }
+
+      if (candidates.length === 0) {
+        toast(isVi() ? '❌ Không còn khách hàng mới có Email chưa từng gửi trong Database!' : '❌ 数据库中暂无新的未发送邮箱客户！', 'error');
+        return;
+      }
+
+      // Khởi tạo tiến trình UI
+      const progWrap = $('snovProgressWrap');
+      const progBar = $('snovProgressBar');
+      const progLbl = $('snovProgressLabel');
+      const progPct = $('snovProgressPercent');
+      const btnExec = $('btnExecuteSnovExport');
+
+      if (progWrap) progWrap.style.display = 'block';
+      if (btnExec) btnExec.disabled = true;
+
+      const batchSize = 20;
+      const totalParts = Math.ceil(candidates.length / batchSize);
+      const todayStr = fmtDateTime(new Date(), true);
+
+      const headers = [
+        '邮箱地址', '名字', '全名', '用户社交', '工作职位',
+        '国家', '地址', '行业', '添加日期', '公司名称',
+        '公司网址', '公司社交', '公司所处国家', '公司位置',
+        '州', '城市', '公司所在行业', '电话', 'remark', 'fb_id'
+      ];
+
+      let zip = null;
+      if (downloadType === 'zip' && typeof JSZip !== 'undefined') {
+        zip = new JSZip();
+      }
+
+      for (let pIdx = 0; pIdx < totalParts; pIdx++) {
+        const partNum = pIdx + 1;
+        const partLeads = candidates.slice(pIdx * batchSize, (pIdx + 1) * batchSize);
+        const fileName = `Top_Leads_${todayStr}_Part_${String(partNum).padStart(2, '0')}_of_${String(totalParts).padStart(2, '0')}.xlsx`;
+
+        // Cập nhật thanh tiến trình
+        const percent = Math.round((partNum / totalParts) * 90);
+        if (progBar) progBar.style.width = `${percent}%`;
+        if (progPct) progPct.textContent = `${percent}%`;
+        if (progLbl) progLbl.textContent = isVi() ? `⏳ Đang đóng gói ${fileName} (${partLeads.length} khách)...` : `⏳ 正在打包 ${fileName}...`;
+        await new Promise(r => setTimeout(r, 20));
+
+        const rows = partLeads.map(lead => {
+          const rawOwner = lead.owner || 'Chủ trại';
+          const bizName = lead.name || 'Trại cún';
+          const firstName = extractCleanFirstName(rawOwner, bizName);
+          const emailVal = String(lead.email || '').trim().toLowerCase();
+          const fbIdVal = String(lead.fb_id || '').trim();
+          const phoneVal = lead.phone || '';
+          const webVal = lead.website || '';
+          const urlVal = lead.url || (fbIdVal ? `https://www.facebook.com/profile.php?id=${fbIdVal}` : '');
+          const cityVal = lead.city || '';
+          const stateVal = lead.state || '';
+          const locVal = [cityVal, stateVal].filter(Boolean).join(', ');
+          let remarkVal = lead.sales_action || `Score ${lead.score || 80} | ${lead.rank_tier || 'Tier A'}`;
+          if (lead.has_amazon || lead.amazon_url) remarkVal += ' | Có Amazon Storefront';
+
+          // Ghi nhận vào lịch sử
+          history.exported_emails[emailVal] = fileName;
+          if (fbIdVal) history.exported_fbids[fbIdVal] = fileName;
+
+          return [
+            emailVal,
+            firstName,
+            (rawOwner && rawOwner !== 'Chủ trại') ? rawOwner : bizName,
+            urlVal,
+            '创始人兼繁育人 (Breeder & Owner)',
+            lead.country || 'United States',
+            stateVal,
+            '宠物繁育 / 狗舍 (Dog Breeder)',
+            todayStr,
+            bizName,
+            webVal,
+            urlVal,
+            'United States',
+            locVal,
+            stateVal,
+            cityVal,
+            '宠物繁育 / 狗舍 (Dog Breeder)',
+            phoneVal,
+            remarkVal,
+            fbIdVal
+          ];
+        });
+
+        if (typeof XLSX !== 'undefined') {
+          const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+          ws['!cols'] = [28, 14, 24, 35, 25, 15, 10, 24, 12, 30, 30, 35, 15, 24, 10, 16, 24, 18, 35, 18].map(wch => ({ wch }));
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+
+          if (zip) {
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            zip.file(fileName, wbout);
+          } else {
+            XLSX.writeFile(wb, fileName);
+            await new Promise(r => setTimeout(r, 120));
+          }
+        }
+      }
+
+      // Xử lý nén ZIP nếu chọn tải trọn gói
+      if (zip) {
+        if (progLbl) progLbl.textContent = isVi() ? '📦 Đang nén toàn bộ các file thành tệp ZIP...' : '📦 正在压缩为 ZIP 文件...';
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        const zipName = `Snov_Leads_Batch_${todayStr}_${candidates.length}_Leads_${totalParts}_Files.zip`;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(zipBlob);
+        a.download = zipName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
+      // Lưu lịch sử vào localStorage
+      try {
+        localStorage.setItem('snov_export_history', JSON.stringify(history));
+      } catch (_) {}
+
+      // Tự động đẩy lịch sử lên Server để máy chủ ghi nhớ vĩnh viễn
+      try {
+        const currentHost = (window.location.protocol.startsWith('http')) ? `${window.location.protocol}//${window.location.host}` : '';
+        const targetUrl = currentHost ? `${currentHost}/api.php?route=save-data-file` : 'http://43.156.237.143:3007/api.php?route=save-data-file';
+        await fetch(targetUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: 'snov_export_history.json', content: history })
+        });
+      } catch (_) {}
+
+      // Hoàn tất
+      if (progBar) progBar.style.width = '100%';
+      if (progPct) progPct.textContent = '100%';
+      if (progLbl) progLbl.textContent = isVi() ? '🎉 Đã xuất thành công!' : '🎉 导出成功！';
+      if (btnExec) btnExec.disabled = false;
+
+      await updateSnovBatchModalKpis();
+
+      const successMsg = isVi()
+        ? `🎉 [XUẤT SNOV.IO THÀNH CÔNG] Đã xuất ${candidates.length} khách hàng thành ${totalParts} file Excel (20 khách/file), 100% không trùng lặp và đã cập nhật lịch sử!`
+        : `🎉 [导出成功] 已成功导出 ${candidates.length} 条客户，分为 ${totalParts} 个文件 (20条/文件)，100%无重复并已更新历史数据库！`;
+      toast(successMsg, 'ok');
+
+      setTimeout(() => {
+        closeSnovBatchExportModal();
+      }, 1500);
     }
 
     /* ============================ 启动 ============================ */

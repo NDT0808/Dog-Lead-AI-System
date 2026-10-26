@@ -1036,62 +1036,94 @@
       to { transform: translateX(0); opacity: 1; }
     }
 
-    /* ---------- Sticky Subnav Menu (Quick Collapse / View Mode) ---------- */
+    /* =========================================================================
+     * 🌌 CYBER-LUXURY EXECUTIVE AI — FLOATING DOCK & SECTION SHELL STYLING
+     * ========================================================================= */
     .timesheet-subnav {
       position: sticky;
-      top: 10px;
+      top: 12px;
       z-index: 99;
-      background: rgba(255, 255, 255, 0.94);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border-strong);
-      border-radius: 16px;
-      padding: 8px 14px;
-      margin: 0.85rem 0 1.25rem;
-      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 4px 10px -2px rgba(15, 23, 42, 0.05);
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1.5px solid rgba(255, 255, 255, 0.95);
+      border-radius: 24px;
+      padding: 9px 16px;
+      margin: 0.85rem auto 1.5rem;
+      box-shadow: 
+        0 20px 42px -12px rgba(15, 23, 42, 0.12),
+        0 4px 12px -2px rgba(15, 23, 42, 0.04),
+        0 0 0 1px rgba(99, 102, 241, 0.09);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
-      transition: all 0.25s ease;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    [data-theme="dark"] .timesheet-subnav {
+      background: rgba(15, 23, 42, 0.88);
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        0 24px 50px -10px rgba(0, 0, 0, 0.65),
+        0 0 0 1px rgba(99, 102, 241, 0.25);
     }
 
     .subnav-tabs {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
     .subnav-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 7px 14px;
-      border-radius: 10px;
-      border: 1px solid transparent;
-      background: var(--surface-2);
+      gap: 7px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      background: rgba(248, 250, 252, 0.85);
       color: var(--text-muted);
       font-size: 0.82rem;
-      font-weight: 700;
+      font-weight: 750;
       font-family: var(--font);
+      letter-spacing: -0.01em;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
       white-space: nowrap;
+      user-select: none;
     }
 
     .subnav-btn:hover {
-      background: var(--surface-3);
+      background: #ffffff;
       color: var(--text);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      border-color: rgba(99, 102, 241, 0.35);
+      box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.16);
     }
 
     .subnav-btn.active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+      background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #4338ca 100%);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.35);
+      box-shadow: 
+        0 8px 24px -4px rgba(79, 70, 229, 0.42),
+        inset 0 1px 1px rgba(255, 255, 255, 0.38);
+      transform: translateY(-1px);
+    }
+
+    [data-theme="dark"] .subnav-btn {
+      background: rgba(30, 41, 59, 0.7);
+      border-color: rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+    }
+
+    [data-theme="dark"] .subnav-btn:hover {
+      background: rgba(51, 65, 85, 0.9);
+      color: #f8fafc;
+      border-color: rgba(99, 102, 241, 0.5);
     }
 
     .subnav-tools {
@@ -1103,27 +1135,34 @@
     .subnav-tool-btn {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 6px 12px;
-      border-radius: 8px;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 999px;
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--text-muted);
       font-size: 0.76rem;
-      font-weight: 700;
+      font-weight: 750;
       cursor: pointer;
-      transition: all 0.18s ease;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--shadow-sm);
     }
 
     .subnav-tool-btn:hover {
-      background: var(--surface-3);
-      color: var(--text);
-      border-color: var(--border-strong);
+      background: #ffffff;
+      color: var(--primary);
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateY(-1.5px);
+      box-shadow: 0 6px 16px -3px rgba(15, 23, 42, 0.1);
     }
 
-    /* Collapsible Sections */
+    /* 💎 SECTION CAPSULE SHELL (COLLAPSIBLE ACCORDION) */
+    /* =========================================================================
+     * 💎 HIGHLIGHTED SECTION CARD ACCORDION & SLIM COLLAPSE CONTROLLER
+     * ========================================================================= */
     .collapsible-sec {
-      margin-bottom: 1.15rem;
+      margin-bottom: 1.35rem;
+      border-radius: 16px;
       transition: all 0.25s ease;
     }
 
@@ -1131,93 +1170,121 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.65rem 1.1rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      margin-bottom: 0.6rem;
+      padding: 14px 20px;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-left: 6px solid #4f46e5;
+      border-radius: 14px;
+      margin-bottom: 0.75rem;
       cursor: pointer;
       user-select: none;
-      transition: all 0.18s ease;
-      box-shadow: var(--shadow-sm);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    }
+
+    #secTimesheetKpisWrap .sec-collapse-header { border-left-color: #059669; }
+    #secTimesheetChartsWrap .sec-collapse-header { border-left-color: #7c3aed; }
+    #secTimesheetTableWrap .sec-collapse-header { border-left-color: #4f46e5; }
+
+    [data-theme="dark"] .sec-collapse-header {
+      background: #151e32;
+      border-color: #283548;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
     }
 
     .sec-collapse-header:hover {
-      background: var(--surface-2);
-      border-color: var(--border-strong);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.12);
+      border-color: #94a3b8;
     }
 
     .sec-header-left {
       display: flex;
       align-items: center;
-      gap: 0.65rem;
+      gap: 12px;
       flex-wrap: wrap;
     }
 
-    .sec-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--primary);
-    }
-    .sec-dot.dot-kpis { background: #059669; }
-    .sec-dot.dot-charts { background: #7c3aed; }
-    .sec-dot.dot-table { background: #4f46e5; }
-
     .sec-header-title {
-      font-size: 0.96rem;
-      font-weight: 800;
-      color: var(--text);
+      font-size: 1.05rem;
+      font-weight: 850;
+      letter-spacing: -0.015em;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
-    .sec-collapsed-pill {
-      display: none;
-      font-size: 0.74rem;
-      font-weight: 700;
-      padding: 2px 9px;
+    [data-theme="dark"] .sec-header-title {
+      color: #f8fafc;
+    }
+
+    .sec-highlight-badge {
+      font-size: 0.76rem;
+      font-weight: 750;
+      padding: 3px 10px;
       border-radius: 6px;
-      background: #fef3c7;
-      color: #92400e;
-      border: 1px solid #fde68a;
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
     }
 
-    .collapsible-sec.is-collapsed .sec-collapsed-pill {
+    [data-theme="dark"] .sec-highlight-badge {
+      background: #1e293b;
+      color: #cbd5e1;
+      border-color: #334155;
+    }
+
+    .sec-action-badge {
       display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    /* Expanded state: subtle clean Indigo */
+    .collapsible-sec .sec-action-badge {
+      background: #eef2ff;
+      color: #4338ca;
+      border: 1.5px solid #c7d2fe;
+    }
+
+    /* Collapsed state: Prominent highlighted Amber badge */
+    .collapsible-sec.is-collapsed .sec-collapse-header {
+      background: linear-gradient(90deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      margin-bottom: 0.5rem;
+    }
+
+    [data-theme="dark"] .collapsible-sec.is-collapsed .sec-collapse-header {
+      background: linear-gradient(90deg, #111827 0%, #151e32 100%);
+    }
+
+    .collapsible-sec.is-collapsed .sec-action-badge {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #92400e;
+      border: 1.5px solid #f59e0b;
+      box-shadow: 0 3px 10px rgba(245, 158, 11, 0.25);
     }
 
     .collapsible-sec.is-collapsed .sec-collapse-body {
       display: none !important;
     }
 
-    .btn-toggle-sec {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
+    .sec-collapse-body {
+      animation: secReveal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .btn-toggle-sec:hover {
-      background: var(--surface-3);
-      color: var(--text);
-    }
-
-    .chevron-arrow {
-      font-size: 0.75rem;
-      font-weight: 800;
-      display: inline-block;
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .collapsible-sec.is-collapsed .chevron-arrow {
-      transform: rotate(-90deg);
+    @keyframes secReveal {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -1259,6 +1326,10 @@
 
           <button type="button" class="btn btn-emerald" onclick="exportTimesheetExcel()" id="btnExportExcel">
             <span>📊</span> <span id="txtBtnExport">Xuất Excel Chấm Công (.XLSX)</span>
+          </button>
+
+          <button type="button" class="btn btn-primary" onclick="manualSyncTimesheetServer()" id="btnSyncTimesheet" style="background:#6366f1; border-color:#4f46e5;" title="Lưu và đồng bộ dữ liệu chấm công lên Server 43.156.237.143">
+            <span>☁️</span> <span>Đồng Bộ Server / 同步云端</span>
           </button>
 
           <button type="button" class="btn btn-secondary" onclick="resetTimesheet()" id="btnResetData" title="Làm mới lại dữ liệu từ gốc">
@@ -1307,13 +1378,14 @@
     <section class="collapsible-sec" id="secTimesheetKpisWrap">
       <div class="sec-collapse-header" onclick="toggleTimesheetSection('secTimesheetKpisWrap')">
         <div class="sec-header-left">
-          <span class="sec-dot dot-kpis"></span>
-          <span class="sec-header-title" id="txtSecKpisTitle">📊 4 CHỈ SỐ HOẠT ĐỘNG CỐT LÕI (KPIS)</span>
-          <span class="sec-collapsed-pill" id="txtPillKpis">Đã thu gọn — Click để mở / 已折叠</span>
+          <span class="sec-header-title">
+            <span id="txtSecKpisTitle">📊 4 CHỈ SỐ HOẠT ĐỘNG CỐT LÕI (KPIS)</span>
+            <span class="sec-highlight-badge">500+ Trại Cún Hoa Kỳ</span>
+          </span>
         </div>
-        <button type="button" class="btn-toggle-sec" title="Thu gọn / Mở rộng" aria-label="Toggle section">
-          <span class="chevron-arrow">▼</span>
-        </button>
+        <div class="sec-header-right">
+          <span class="sec-action-badge" id="pillTimesheetKpis">🔼 Đang Mở — Bấm Để Thu Nhỏ</span>
+        </div>
       </div>
       <div class="sec-collapse-body" id="secTimesheetKpisBody">
         <!-- KPI Grid (4 Cards) -->
@@ -1357,13 +1429,14 @@
     <section class="collapsible-sec" id="secTimesheetChartsWrap">
       <div class="sec-collapse-header" onclick="toggleTimesheetSection('secTimesheetChartsWrap')">
         <div class="sec-header-left">
-          <span class="sec-dot dot-charts"></span>
-          <span class="sec-header-title" id="txtSecChartsTitle">📈 BIỂU ĐỒ KHUNG GIỜ VÀNG & XU HƯỚNG ĐĂNG BÀI</span>
-          <span class="sec-collapsed-pill" id="txtPillCharts">Đã thu gọn — Click để mở / 已折叠</span>
+          <span class="sec-header-title">
+            <span id="txtSecChartsTitle">📈 BIỂU ĐỒ KHUNG GIỜ VÀNG & XU HƯỚNG ĐĂNG BÀI</span>
+            <span class="sec-highlight-badge">24 Giờ · Khung Giờ Telesale</span>
+          </span>
         </div>
-        <button type="button" class="btn-toggle-sec" title="Thu gọn / Mở rộng" aria-label="Toggle section">
-          <span class="chevron-arrow">▼</span>
-        </button>
+        <div class="sec-header-right">
+          <span class="sec-action-badge" id="pillTimesheetCharts">🔼 Đang Mở — Bấm Để Thu Nhỏ</span>
+        </div>
       </div>
       <div class="sec-collapse-body" id="secTimesheetChartsBody">
         <!-- Charts Section (2 Charts) -->
@@ -1401,13 +1474,14 @@
     <section class="collapsible-sec" id="secTimesheetTableWrap">
       <div class="sec-collapse-header" onclick="toggleTimesheetSection('secTimesheetTableWrap')">
         <div class="sec-header-left">
-          <span class="sec-dot dot-table"></span>
-          <span class="sec-header-title" id="txtSecTableTitle">📋 BẢNG MA TRẬN ĐIỂM DANH & CHẤM CÔNG CHI TIẾT (500+ TRẠI CÚN)</span>
-          <span class="sec-collapsed-pill" id="txtPillTable">Đã thu gọn — Click để mở / 已折叠</span>
+          <span class="sec-header-title">
+            <span id="txtSecTableTitle">📋 BẢNG MA TRẬN ĐIỂM DANH & CHẤM CÔNG CHI TIẾT (500+ TRẠI CÚN)</span>
+            <span class="sec-highlight-badge">500+ Trại Cún · Live Matrix</span>
+          </span>
         </div>
-        <button type="button" class="btn-toggle-sec" title="Thu gọn / Mở rộng" aria-label="Toggle section">
-          <span class="chevron-arrow">▼</span>
-        </button>
+        <div class="sec-header-right">
+          <span class="sec-action-badge" id="pillTimesheetTable">🔼 Đang Mở — Bấm Để Thu Nhỏ</span>
+        </div>
       </div>
       <div class="sec-collapse-body" id="secTimesheetTableBody">
         <!-- Table Section -->
@@ -1651,9 +1725,9 @@
         tabTable: "Bảng Ma Trận Điểm Danh / 考勤明细表",
         toolExpand: "Mở Hết / 展开",
         toolCollapse: "Thu Gọn / 折叠",
-        secKpisTitle: "📊 4 CHỈ SỐ HOẠT ĐỘNG CỐT LÕI (KPIS)",
-        secChartsTitle: "📈 BIỂU ĐỒ KHUNG GIỜ VÀNG & XU HƯỚNG ĐĂNG BÀI",
-        secTableTitle: "📋 BẢNG MA TRẬN ĐIỂM DANH & CHẤM CÔNG CHI TIẾT (500+ TRẠI CÚN)",
+        secKpisTitle: "4 CHỈ SỐ HOẠT ĐỘNG CỐT LÕI (KPIS)",
+        secChartsTitle: "BIỂU ĐỒ KHUNG GIỜ VÀNG & XU HƯỚNG ĐĂNG BÀI",
+        secTableTitle: "BẢNG MA TRẬN ĐIỂM DANH & CHẤM CÔNG CHI TIẾT (500+ TRẠI CÚN)",
         pillCollapsed: "Đã thu gọn — Click để mở / 已折叠"
       },
       zh: {
@@ -1677,9 +1751,9 @@
         tabTable: "多日考勤打卡明细表",
         toolExpand: "展开全部",
         toolCollapse: "折叠全部",
-        secKpisTitle: "📊 考勤打卡 4 大核心指标 (KPIS)",
-        secChartsTitle: "📈 黄金发帖时段分布与连续打卡趋势图",
-        secTableTitle: "📋 客户多日发帖考勤打卡明细表 (500+ 家美国本土狗舍)",
+        secKpisTitle: "考勤打卡 4 大核心指标 (KPIS)",
+        secChartsTitle: "黄金发帖时段分布与连续打卡趋势图",
+        secTableTitle: "客户多日发帖考勤打卡明细表 (500+ 家美国本土狗舍)",
         pillCollapsed: "已折叠 — 点击展开"
       }
     };
@@ -1717,15 +1791,26 @@
       if (document.getElementById('txtSecChartsTitle')) document.getElementById('txtSecChartsTitle').innerText = d.secChartsTitle;
       if (document.getElementById('txtSecTableTitle')) document.getElementById('txtSecTableTitle').innerText = d.secTableTitle;
 
-      if (document.getElementById('txtPillKpis')) document.getElementById('txtPillKpis').innerText = d.pillCollapsed;
-      if (document.getElementById('txtPillCharts')) document.getElementById('txtPillCharts').innerText = d.pillCollapsed;
-      if (document.getElementById('txtPillTable')) document.getElementById('txtPillTable').innerText = d.pillCollapsed;
+      TIMESHEET_SECTIONS.forEach(id => updateTimesheetPill(id));
 
       renderTable();
     }
 
     // Section Switch & Collapse Controller
     const TIMESHEET_SECTIONS = ['secTimesheetKpisWrap', 'secTimesheetChartsWrap', 'secTimesheetTableWrap'];
+
+    function updateTimesheetPill(secId) {
+      const el = document.getElementById(secId);
+      if (!el) return;
+      const pill = el.querySelector('.sec-action-badge');
+      if (!pill) return;
+      const isCollapsed = el.classList.contains('is-collapsed');
+      if (isCollapsed) {
+        pill.innerHTML = currentLang === 'zh' ? '🔽 点击展开明细' : '🔽 Bấm Để Mở Bảng';
+      } else {
+        pill.innerHTML = currentLang === 'zh' ? '🔼 展开中 — 点击折叠' : '🔼 Đang Mở — Bấm Để Thu Nhỏ';
+      }
+    }
 
     function switchTimesheetSection(secKey) {
       document.querySelectorAll('#timesheetSubnav .subnav-btn').forEach(b => {
@@ -1738,6 +1823,7 @@
           if (el) {
             el.style.display = 'block';
             el.classList.remove('is-collapsed');
+            updateTimesheetPill(id);
           }
         });
       } else {
@@ -1747,6 +1833,7 @@
             if (id === secKey) {
               el.style.display = 'block';
               el.classList.remove('is-collapsed');
+              updateTimesheetPill(id);
               setTimeout(() => {
                 el.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }, 60);
@@ -1768,6 +1855,7 @@
       const el = document.getElementById(secId);
       if (!el) return;
       el.classList.toggle('is-collapsed');
+      updateTimesheetPill(secId);
       if (!el.classList.contains('is-collapsed')) {
         setTimeout(() => {
           if (chartGolden) chartGolden.resize();
@@ -1790,6 +1878,7 @@
           } else {
             el.classList.add('is-collapsed');
           }
+          updateTimesheetPill(id);
         }
       });
 
@@ -1803,7 +1892,8 @@
 
     // Load initial data
     async function initData() {
-      // 1. Thử tải tệp JSON phân tích chi tiết lead_activity_timesheet_latest.json (đã gom 682 hồ sơ cả 22/10 và 23/10)
+      let hasData = false;
+      // 1. Thử tải tệp JSON phân tích chi tiết lead_activity_timesheet_latest.json
       try {
         const res = await fetch('lead_activity_timesheet_latest.json', { cache: 'no-cache' });
         if (res.ok) {
@@ -1811,42 +1901,41 @@
           if (json && json.leads && Object.keys(json.leads).length > 0) {
             ledgerMatrix = json;
             rawLeads = Object.values(json.leads);
-            updateDashboard();
-            initDragAndDrop();
-            return;
+            hasData = true;
           }
         }
       } catch (_) {}
 
-      // 2. Thử đọc từ localStorage nếu người dùng đã nạp cộng dồn trước đó
+      // 2. Nạp hợp nhất với data/leads.json để đảm bảo 100% 5,382 khách hàng có đầy đủ thông tin cá nhân và lịch sử hoạt động
+      try {
+        const resLeads = await fetch('data/leads.json', { cache: 'no-cache' });
+        if (resLeads.ok) {
+          const leadsJson = await resLeads.json();
+          if (Array.isArray(leadsJson) && leadsJson.length > 0) {
+            mergeLeadsIntoLedgerMatrix(leadsJson, !hasData);
+            hasData = true;
+          }
+        }
+      } catch (_) {}
+
+      // 3. Thử đọc từ localStorage nếu người dùng đã nạp cộng dồn trước đó
       try {
         const cached = localStorage.getItem('lead_activity_timesheet_master');
         if (cached) {
           const parsed = JSON.parse(cached);
           if (parsed && parsed.leads && Object.keys(parsed.leads).length > 0) {
-            ledgerMatrix = parsed;
-            rawLeads = Object.values(parsed.leads);
-            updateDashboard();
-            initDragAndDrop();
-            return;
+            if (!hasData) {
+              ledgerMatrix = parsed;
+              rawLeads = Object.values(parsed.leads);
+              hasData = true;
+            } else {
+              mergeLeadsIntoLedgerMatrix(Object.values(parsed.leads), false);
+            }
           }
         }
       } catch (_) {}
 
-      // 3. Fallback nạp từ các tệp CRM riêng lẻ nếu có
-      try {
-        const res23 = await fetch('LEAD_US_Meta_CRM_2026-10-23.json', { cache: 'no-cache' });
-        if (res23.ok) {
-          const leads23 = await res23.json();
-          if (Array.isArray(leads23) && leads23.length > 0) {
-            mergeLeadsIntoLedgerMatrix(leads23, true);
-            updateDashboard();
-            initDragAndDrop();
-            return;
-          }
-        }
-      } catch (_) {}
-
+      updateDashboard();
       initDragAndDrop();
     }
 
@@ -1917,8 +2006,16 @@
           const exist = map[key];
           if (!exist.activity_ledger) exist.activity_ledger = {};
           
-          // Ghi nhận thêm ngày điểm danh này vào ma trận (giữ nguyên các ngày cũ, nhận cả 2 giá trị cũ và mới)
+          // Ghi nhận ngày điểm danh này vào ma trận
           exist.activity_ledger[dateKey] = dateEntry;
+
+          // Hợp nhất toàn bộ lịch sử điểm danh nếu lead gửi tới đã có activity_ledger
+          if (l.activity_ledger && typeof l.activity_ledger === 'object') {
+            for (const [dk, dv] of Object.entries(l.activity_ledger)) {
+              exist.activity_ledger[dk] = dv;
+              dateSet.add(dk);
+            }
+          }
           exist.active_streak_days = Object.keys(exist.activity_ledger).length;
 
           // Cập nhật thông tin bài đăng nếu bài này mới hơn hoặc bằng ngày cũ
@@ -1930,7 +2027,7 @@
             exist.sales_telesale_hook = hook;
           }
 
-          // Bổ sung các trường thông tin nếu hồ sơ cũ còn thiếu
+          // Bổ sung các trường thông tin cá nhân & CRM nếu hồ sơ cũ còn thiếu
           if (!exist.phone && l.phone) exist.phone = l.phone;
           if (!exist.email && l.email) exist.email = l.email;
           if (!exist.website && l.website) exist.website = l.website;
@@ -1938,6 +2035,7 @@
             exist.amazon_url = l.amazon_url;
             exist.has_amazon = true;
           }
+          if (l.amazon_category) exist.amazon_category = l.amazon_category;
           if ((!exist.owner || exist.owner === 'Chủ trại' || exist.owner === 'Facebook User') && l.owner) {
             exist.owner = l.owner;
           }
@@ -1946,6 +2044,12 @@
           }
           if (!exist.city && l.city) exist.city = l.city;
           if (!exist.state && l.state) exist.state = l.state;
+          if (!exist.zip && l.zip) exist.zip = l.zip;
+          if (!exist.country && l.country) exist.country = l.country;
+          if (!exist.dog_breeds && l.dog_breeds) exist.dog_breeds = l.dog_breeds;
+          if (!exist.business_type && l.business_type) exist.business_type = l.business_type;
+          if (!exist.category && l.category) exist.category = l.category;
+          if (!exist.bio && l.bio) exist.bio = l.bio;
 
           // Bảo lưu / Cập nhật trường Reels Viral
           if (l.has_reel || l.hasReel || l.reel_url || l.reelUrl) {
@@ -1963,8 +2067,11 @@
           updatedCount++;
         } else {
           // THÊM MỚI HỌC VIÊN / LEAD VÀO BẢNG
-          const actLedger = {};
+          const actLedger = (l.activity_ledger && typeof l.activity_ledger === 'object' && Object.keys(l.activity_ledger).length > 0)
+            ? { ...l.activity_ledger }
+            : {};
           actLedger[dateKey] = dateEntry;
+          Object.keys(actLedger).forEach(dk => dateSet.add(dk));
 
           map[key] = {
             fb_id: rawFbId,
@@ -1975,9 +2082,16 @@
             email: l.email || '',
             website: l.website || '',
             amazon_url: l.amazon_url || '',
+            amazon_category: l.amazon_category || '',
             has_amazon: Boolean(l.has_amazon || l.amazon_url),
             city: l.city || '',
             state: l.state || '',
+            zip: l.zip || '',
+            country: l.country || 'United States',
+            dog_breeds: l.dog_breeds || [],
+            business_type: l.business_type || '',
+            category: l.category || '',
+            bio: l.bio || '',
             url: l.url || (rawFbId ? `https://www.facebook.com/profile.php?id=${rawFbId}` : ''),
             avatar: l.avatar_url || l.avatar || '',
             score: l.score || 75,
@@ -1985,7 +2099,7 @@
             sales_action: l.sales_action || 'Telesale: Tư vấn bộ kit',
             activity_ledger: actLedger,
             golden_hour_slot: goldenHour,
-            active_streak_days: 1,
+            active_streak_days: Object.keys(actLedger).length,
             latest_post_time: pubStr || 'Hôm nay',
             latest_post_date: dateKey,
             sales_telesale_hook: hook,
@@ -2017,7 +2131,64 @@
         console.warn('[Storage] Lỗi lưu trữ localStorage:', e);
       }
 
+      // Tự động đồng bộ lên Server
+      syncTimesheetToServer(ledgerMatrix);
+
       return { addedCount, updatedCount, totalLeads: Object.keys(map).length, totalDates: dateSet.size };
+    }
+
+    /* ============================ TỰ ĐỘNG ĐỒNG BỘ LÊN SERVER ============================ */
+    let isSyncingTimesheet = false;
+    async function syncTimesheetToServer(matrix, isManual = false) {
+      if (!matrix || !matrix.leads || Object.keys(matrix.leads).length === 0) return;
+      if (isSyncingTimesheet) return;
+      isSyncingTimesheet = true;
+
+      const currentHost = (window.location.protocol.startsWith('http')) ? `${window.location.protocol}//${window.location.host}` : '';
+      const targets = [
+        currentHost ? `${currentHost}/api.php?route=save-timesheet` : null,
+        currentHost ? `${currentHost}/api.php?route=save-crm` : null,
+        'http://43.156.237.143:3007/api.php?route=save-crm',
+        'http://43.156.237.143:3007/api.php?route=save-timesheet',
+        'http://localhost:8001/api/save-crm'
+      ].filter(Boolean);
+
+      const uniqueTargets = Array.from(new Set(targets));
+      let success = false;
+      const leadsArray = Object.values(matrix.leads || {});
+      const crmPayload = JSON.stringify({ leads: leadsArray });
+      const tsPayload = JSON.stringify({ matrix: matrix });
+
+      for (const url of uniqueTargets) {
+        try {
+          const body = url.includes('save-timesheet') ? tsPayload : crmPayload;
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: body
+          });
+          if (resp.ok) {
+            success = true;
+          }
+        } catch (_) {}
+      }
+
+      isSyncingTimesheet = false;
+      const count = Object.keys(matrix.leads).length;
+      if (success) {
+        showToast(`✅ [ĐỒNG BỘ THÀNH CÔNG] Đã lưu thành công Bảng Chấm Công Hoạt Động & Thông Tin Cá Nhân (${count} hồ sơ) lên Server 43.156.237.143!`, '#10b981');
+      } else {
+        showToast('❌ [ĐỒNG BỘ THẤT BẠI] Không thể kết nối tới Server 43.156.237.143! Vui lòng kiểm tra lại mạng hoặc máy chủ.', '#ef4444');
+      }
+    }
+
+    function manualSyncTimesheetServer() {
+      if (!ledgerMatrix || !ledgerMatrix.leads || Object.keys(ledgerMatrix.leads).length === 0) {
+        showToast('Chưa có dữ liệu để đồng bộ!', '#ef4444');
+        return;
+      }
+      showToast('⏳ Đang đồng bộ ma trận điểm danh lên Server...', '#6366f1');
+      syncTimesheetToServer(ledgerMatrix, true);
     }
 
     // Refresh everything
@@ -2025,6 +2196,7 @@
       updateKpis();
       renderCharts();
       renderTable();
+      TIMESHEET_SECTIONS.forEach(id => updateTimesheetPill(id));
     }
 
     // Update KPI Cards

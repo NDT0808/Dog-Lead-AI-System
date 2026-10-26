@@ -782,5 +782,28 @@ if ($route === 'proxy-image') {
     exit;
 }
 
+// 12. Save Timesheet Matrix
+if ($route === 'save-timesheet') {
+    $tsData = $body['matrix'] ?? ($body['data'] ?? $body);
+    $tsFile = __DIR__ . '/lead_activity_timesheet_latest.json';
+    @file_put_contents($tsFile, json_encode($tsData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    jsonOut(['status' => 'ok', 'message' => 'Đã lưu Timesheet thành công lên Server']);
+}
+
+// 13. Save Data File (leads.json, analytics.json, meta.json)
+if ($route === 'save-data-file') {
+    $fn = basename($body['filename'] ?? '');
+    $content = $body['content'] ?? null;
+    if (!$fn || $content === null) {
+        jsonOut(['status' => 'error', 'message' => 'Thiếu tên tệp hoặc nội dung'], 400);
+    }
+    $targetDir = __DIR__ . '/data';
+    if (!is_dir($targetDir)) @mkdir($targetDir, 0777, true);
+    $targetPath = $targetDir . '/' . $fn;
+    $rawStr = is_string($content) ? $content : json_encode($content, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    @file_put_contents($targetPath, $rawStr);
+    jsonOut(['status' => 'ok', 'message' => "Đã lưu tệp data/{$fn} thành công", 'size' => strlen($rawStr)]);
+}
+
 // Default 404
 jsonOut(['status' => 'error', 'message' => "Không tìm thấy endpoint API: {$route}"], 404);
