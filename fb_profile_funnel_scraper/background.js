@@ -7,12 +7,16 @@ let isAutoRunning = false;
 let isPaused = false;
 let targetTabId = null;
 let statusMessage = "Sẵn sàng";
+let maxParallel = 1;
 
 // Khóa chống trùng lặp và đa luồng
 let currentTaskId = null;
 let isProcessing = false;
 let nextTimer = null;
 let currentWatchdogTimer = null;
+const activeTasks = new Map();
+const workerTabs = new Set();
+let workerPool = [];
 
 function clearNextTimer() {
   if (nextTimer) {
@@ -45,6 +49,7 @@ function saveState() {
       allData,
       isAutoRunning,
       isPaused,
+      maxParallel,
       statusMessage
     }
   });
@@ -62,6 +67,7 @@ function loadState(cb) {
       allData = s.allData || [];
       isAutoRunning = s.isAutoRunning || false;
       isPaused = s.isPaused || false;
+      maxParallel = Math.max(1, Math.min(5, Number(s.maxParallel) || 1));
       statusMessage = s.statusMessage || "Sẵn sàng";
     }
     if (cb) cb();
@@ -79,6 +85,7 @@ function broadcastState() {
       allData,
       isAutoRunning,
       isPaused,
+      maxParallel,
       statusMessage
     }
   }).catch(() => {});
@@ -638,6 +645,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       : (urlList.length - 1);
 
     currentIndex = startIndex;
+    maxParallel = Math.max(1, Math.min(5, Number(msg.options && msg.options.maxParallel) || 1));
+    activeTasks.clear();
     if (msg.options && msg.options.resetData === true) {
       allData = [];
     }
@@ -654,12 +663,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
     });
 
-    // Mở worker tab ngầm (active: false) để Facebook load DOM sống mà không chiếm tab Dashboard
-    chrome.tabs.create({ url: 'about:blank', active: false }, (newTab) => {
-      targetTabId = newTab ? newTab.id : null;
-      sendResponse({ status: 'started' });
-      processNext();
-    });
+    sendResponse({ status: 'started' });
+    startParallelWorkers(maxParallel);
     return true;
   }
   else if (msg.action === 'START_AUTO') {
@@ -674,6 +679,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       : (urlList.length - 1);
 
     currentIndex = startIndex;
+    maxParallel = Math.max(1, Math.min(5, Number(msg.maxParallel) || 1));
+    activeTasks.clear();
     if (msg.resetData === true) {
       allData = []; // Chỉ reset khi được yêu cầu rõ ràng
     }
@@ -683,10 +690,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     saveState();
     sendResponse({ status: 'ok' });
 
-    (async () => {
-      await ensureWorkerTab();
-      processNext();
-    })();
+    startParallelWorkers(maxParallel);
     return true;
   }
   else if (msg.action === 'RESUME_AUTO') {
@@ -709,14 +713,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     isAutoRunning = true;
     isPaused = false;
+    if (msg.maxParallel) {
+      maxParallel = Math.max(1, Math.min(5, Number(msg.maxParallel) || 1));
+    }
     statusMessage = `Tiếp tục chạy từ dòng ${currentIndex + 1} đến ${endIndex + 1}...`;
     saveState();
     sendResponse({ status: 'ok' });
 
-    (async () => {
-      await ensureWorkerTab();
-      processNext();
-    })();
+    startParallelWorkers(maxParallel);
     return true;
   }
   else if (msg.action === 'STOP_AUTO') {
@@ -726,8 +730,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     currentTaskId = null;
     isAutoRunning = false;
     isPaused = true;
+    for (const [taskId, task] of activeTasks.entries()) {
+      if (task.watchdog) clearTimeout(task.watchdog);
+      if (task.resolve) task.resolve(null);
+    }
+    activeTasks.clear();
     statusMessage = `Đã tạm dừng tại dòng ${currentIndex + 1}/${urlList.length}. Bấm "Tiếp tục" để chạy từ dòng ${currentIndex + 1} hoặc "Xuất file CSV".`;
     saveState();
+    closeAllWorkerTabs();
     sendResponse({ status: 'ok' });
   }
   else if (msg.action === 'CLEAR_DATA') {
@@ -735,7 +745,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     clearWatchdogTimer();
     isProcessing = false;
     currentTaskId = null;
+    isAutoRunning = false;
+    isPaused = false;
+    for (const [taskId, task] of activeTasks.entries()) {
+      if (task.watchdog) clearTimeout(task.watchdog);
+      if (task.resolve) task.resolve(null);
+    }
+    activeTasks.clear();
+    closeAllWorkerTabs();
     allData = [];
+    currentIndex = 0;
+    startIndex = 0;
+    endIndex = -1;
+    statusMessage = "Đã làm mới dữ liệu.";
+    saveState();
+    sendResponse({ status: 'ok' });
     currentIndex = 0;
     startIndex = 0;
     endIndex = -1;
@@ -794,6 +818,34 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
     return true;
   }
+  else if (msg.action === 'FETCH_PAGE_ABOUT_HTML') {
+    // Fetch raw HTML của Facebook Page /about tab (dùng session cookie đang login)
+    const aboutUrl = msg.url;
+    if (!aboutUrl || !aboutUrl.includes('facebook.com')) {
+      sendResponse({ ok: false, error: 'URL không hợp lệ' });
+      return true;
+    }
+    (async () => {
+      try {
+        const res = await fetch(aboutUrl, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Cache-Control': 'no-cache',
+            'User-Agent': navigator.userAgent
+          }
+        });
+        if (!res.ok) { sendResponse({ ok: false, error: `HTTP ${res.status}` }); return; }
+        const html = await res.text();
+        sendResponse({ ok: true, html });
+      } catch (err) {
+        sendResponse({ ok: false, error: err.message || String(err) });
+      }
+    })();
+    return true;
+  }
   else if (msg.action === 'FETCH_EXTERNAL_URL') {
     const targetUrl = msg.url;
     if (!targetUrl) {
@@ -828,15 +880,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (isAutoRunning) {
       let item = msg.data || {};
 
-      // KHÓA CHỐNG TRÙNG LẶP #1: Chỉ chấp nhận tin nhắn khớp đúng currentTaskId hiện tại
-      if (!currentTaskId || item.taskId !== currentTaskId) {
-        console.warn(`[BG] Bỏ qua kết quả trùng lặp/quá hạn (item: ${item.taskId}, current: ${currentTaskId})`);
+      // Mỗi tab có một task riêng; không dùng currentTaskId toàn cục khi chạy song song.
+      const task = activeTasks.get(item.taskId);
+      if (!task) {
+        console.warn(`[BG] Bỏ qua kết quả trùng lặp/quá hạn (item: ${item.taskId})`);
         sendResponse({ status: 'ignored' });
         return;
       }
 
-      currentTaskId = null;
-      isProcessing = false;
+      clearTimeout(task.watchdog);
+      const taskIndex = task.index;
+      const taskTabId = task.tabId;
 
       // YÊU CẦU 1: CHUẨN HÓA LOGIC WEBSITE VÀ AMAZON_URL (SỬA RACE CONDITION & ĐẢO CHỖ)
       // Nếu website trên Facebook là link Amazon Storefront / Wishlist / Product
@@ -872,13 +926,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
       // Nếu có Website ngoài: Chuyển hướng trực tiếp tab trình duyệt vào trang web của họ để quét tên chủ trại
       if (hasExternalWebsite && !item.websiteInspected) {
-        statusMessage = `[Dòng ${currentIndex + 1}] Phát hiện Website ${rawWeb} -> Đang mở trình duyệt vào xem trực tiếp tìm chủ trại...`;
+        statusMessage = `[Dòng ${taskIndex + 1}] Phát hiện Website ${rawWeb} -> Đang mở trình duyệt vào xem trực tiếp tìm chủ trại...`;
         saveState();
 
         sendToDashboard('STEP2_LOG', {
           log: {
             stage: 'WEBSITE',
-            text: `[Dòng ${currentIndex + 1}] Phát hiện Website ${rawWeb} -> Đang mở trình duyệt vào xem trực tiếp tìm chủ trại...`,
+            text: `[Dòng ${taskIndex + 1}] Phát hiện Website ${rawWeb} -> Đang mở trình duyệt vào xem trực tiếp tìm chủ trại...`,
             level: 'web'
           }
         });
@@ -886,7 +940,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         (async () => {
           try {
             const inspectRes = await inspectWebsiteVisually(
-              targetTabId,
+              taskTabId,
               rawWeb,
               item.name,
               item.email,
@@ -899,7 +953,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
               sendToDashboard('STEP2_LOG', {
                 log: {
                   stage: 'CHỦ TRẠI WEB',
-                  text: `[Dòng ${currentIndex + 1}] 🎯 Đã tìm thấy chủ trại từ website: ${item.owner} (${item.ownerConfidence})`,
+                  text: `[Dòng ${taskIndex + 1}] 🎯 Đã tìm thấy chủ trại từ website: ${item.owner} (${item.ownerConfidence})`,
                   level: 'success'
                 }
               });
@@ -913,7 +967,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
               sendToDashboard('STEP2_LOG', {
                 log: {
                   stage: 'KÊNH AMAZON',
-                  text: `[Dòng ${currentIndex + 1}] 🛒 Phát hiện gian hàng/sản phẩm Amazon từ Website: ${item.amazon_url}`,
+                  text: `[Dòng ${taskIndex + 1}] 🛒 Phát hiện gian hàng/sản phẩm Amazon từ Website: ${item.amazon_url}`,
                   level: 'ai'
                 }
               });
@@ -926,7 +980,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
               sendToDashboard('STEP2_LOG', {
                 log: {
                   stage: 'KÊNH AMAZON',
-                  text: `[Dòng ${currentIndex + 1}] 🛒 Kiểm tra kênh Amazon: Amazon link not found`,
+                  text: `[Dòng ${taskIndex + 1}] 🛒 Kiểm tra kênh Amazon: Amazon link not found`,
                   level: 'info'
                 }
               });
@@ -957,11 +1011,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             console.warn('[BG] Lỗi inspect website:', err);
           } finally {
             item.websiteInspected = true;
-            finishProfileItem(item);
+            finishProfileItem(item, taskIndex);
+            if (task.resolve) task.resolve(item);
           }
         })();
       } else {
-        finishProfileItem(item);
+        finishProfileItem(item, taskIndex);
+        if (task.resolve) task.resolve(item);
       }
     }
     sendResponse({ status: 'ok' });
@@ -969,16 +1025,174 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return true;
 });
 
-function processNext() {
-  if (!isAutoRunning) {
-    isProcessing = false;
+function sendStartScrape(tabId, taskIndex, targetUrl, taskId) {
+  let attempts = 0;
+  const maxAttempts = 6;
+
+  const trySend = () => {
+    if (!isAutoRunning || isPaused) return;
+    attempts++;
+
+    chrome.tabs.sendMessage(tabId, {
+      action: 'START_SCRAPE',
+      stt: taskIndex + 1,
+      targetUrl: targetUrl,
+      taskId: taskId
+    }, (res) => {
+      const err = chrome.runtime.lastError;
+      if (err || !res || res.status !== 'started') {
+        if (attempts < maxAttempts) {
+          console.log(`[BG] Tab ${tabId} chua nhan duoc START_SCRAPE (${err ? err.message : (res ? res.status : 'chua phan hoi')}), thu lai lan ${attempts}...`);
+          if (attempts === 2) {
+            chrome.scripting.executeScript({
+              target: { tabId: tabId },
+              files: ['content.js']
+            }).catch(e => console.warn('[BG] Loi inject content.js:', e));
+          }
+          setTimeout(trySend, 1000);
+        } else {
+          console.warn(`[BG] Het so lan thu gui START_SCRAPE toi tab ${tabId}`);
+        }
+      } else {
+        console.log(`[BG] Da gui thanh cong START_SCRAPE toi tab ${tabId} (Dong ${taskIndex + 1})`);
+      }
+    });
+  };
+
+  trySend();
+}
+
+function processLeadOnTab(tabId, taskIndex, targetUrl, taskId) {
+  return new Promise(async (resolve) => {
+    let isDone = false;
+    const safeResolve = (val) => {
+      if (isDone) return;
+      isDone = true;
+      if (watchdog) clearTimeout(watchdog);
+      activeTasks.delete(taskId);
+      resolve(val);
+    };
+
+    const watchdog = setTimeout(() => {
+      if (isAutoRunning && !isPaused && !isDone) {
+        console.warn(`[BG Watchdog] Hồ sơ STT ${taskIndex + 1} xử lý quá lâu (> 25s), tự động bỏ qua.`);
+        sendToDashboard('STEP2_LOG', {
+          log: {
+            stage: 'CẢNH BÁO',
+            text: `[Dòng ${taskIndex + 1}] ⚠️ Hồ sơ phản hồi quá lâu (> 25s), tự động lưu kết quả an toàn và tiếp tục dòng kế tiếp...`,
+            level: 'warn'
+          }
+        });
+        const timeoutItem = {
+          stt: taskIndex + 1,
+          url: targetUrl,
+          name: 'Trang phản hồi chậm',
+          publishTime: 'Chưa bóc tách (Timeout)',
+          publishTimestamp: '',
+          relativeTime: ''
+        };
+        finishProfileItem(timeoutItem, taskIndex);
+        safeResolve(timeoutItem);
+      }
+    }, 25000);
+
+    activeTasks.set(taskId, {
+      index: taskIndex,
+      tabId: tabId,
+      watchdog: watchdog,
+      resolve: safeResolve
+    });
+
+    try {
+      await navigateTabAndWait(tabId, targetUrl, 15000);
+      if (!isAutoRunning || isPaused || isDone) {
+        safeResolve(null);
+        return;
+      }
+      sendStartScrape(tabId, taskIndex, targetUrl, taskId);
+    } catch (err) {
+      console.warn(`[BG] Lỗi navigate cho dòng ${taskIndex + 1}:`, err);
+      finishProfileItem({
+        stt: taskIndex + 1,
+        url: targetUrl,
+        name: 'Lỗi tải trang',
+        publishTime: 'Không thể truy cập',
+        publishTimestamp: '',
+        relativeTime: ''
+      }, taskIndex);
+      safeResolve(null);
+    }
+  });
+}
+
+async function runWorker(workerIndex) {
+  let tabId = await getOrCreateWorkerTab(workerIndex);
+  if (!tabId) {
+    console.error(`[Worker ${workerIndex}] Không thể tạo tab!`);
     return;
   }
 
-  if (currentIndex > endIndex || currentIndex >= urlList.length) {
+  while (isAutoRunning && !isPaused) {
+    if (currentIndex > endIndex || currentIndex >= urlList.length) {
+      break;
+    }
+    const taskIndex = currentIndex++;
+    saveState();
+
+    const targetUrl = urlList[taskIndex];
+    if (!targetUrl) continue;
+
+    const taskId = `${taskIndex}_${Date.now()}_w${workerIndex}_${Math.random().toString(36).slice(2, 6)}`;
+    
+    // Đảm bảo tab worker còn tồn tại trong Chrome, nếu người dùng lỡ tay đóng tab thì tạo lại
+    tabId = await getOrCreateWorkerTab(workerIndex);
+
+    const totalCount = Math.max(1, endIndex - startIndex + 1);
+    const pct = Math.min(100, Math.round(((taskIndex - startIndex + 1) / totalCount) * 100));
+    statusMessage = `[Tab ${workerIndex + 1}] Đang mở dòng ${taskIndex + 1}/${endIndex + 1}: ${targetUrl}`;
+
+    sendToDashboard('STEP2_PROGRESS', {
+      current: taskIndex - startIndex + 1,
+      total: totalCount,
+      percent: pct,
+      status: statusMessage
+    });
+    sendToDashboard('STEP2_LOG', {
+      log: {
+        stage: 'TIẾN ĐỘ',
+        text: statusMessage,
+        level: 'info'
+      }
+    });
+
+    // Bóc tách hồ sơ trên tab cố định của worker này (TÁI SỬ DỤNG TAB CŨ, KHÔNG MỞ TAB MỚI)
+    await processLeadOnTab(tabId, taskIndex, targetUrl, taskId);
+  }
+}
+
+async function startParallelWorkers(numWorkers) {
+  clearNextTimer();
+  clearWatchdogTimer();
+  isProcessing = false;
+  currentTaskId = null;
+  activeTasks.clear();
+
+  isAutoRunning = true;
+  isPaused = false;
+  saveState();
+
+  const count = Math.max(1, Math.min(5, Number(numWorkers) || 1));
+  const workerPromises = [];
+  for (let i = 0; i < count; i++) {
+    workerPromises.push(runWorker(i));
+  }
+
+  await Promise.all(workerPromises);
+
+  // Khi tất cả workers hoàn thành danh sách
+  if (isAutoRunning && !isPaused && (currentIndex > endIndex || currentIndex >= urlList.length)) {
     isAutoRunning = false;
     isPaused = false;
-    isProcessing = false;
     currentTaskId = null;
     statusMessage = `Đã hoàn thành! Đã cào xong ${allData.length} link.`;
     saveState();
@@ -986,127 +1200,17 @@ function processNext() {
     sendToDashboard('STEP2_LOG', {
       log: {
         stage: 'HỆ THỐNG',
-        text: `🎉 TOÀN BỘ QUÁ TRÌNH BÓC TÁCH BƯỚC 2 ĐÃ HOÀN TẤT THÀNH CÔNG! Đã cập nhật đầy đủ 30 trường Meta CRM cho ${allData.length} hồ sơ.`,
+        text: `🎉 TOÀN BỘ QUÁ TRÌNH BÓC TÁCH BƯỚC 2 ĐÃ HOÀN TẤT THÀNH CÔNG! Đã cập nhật đầy đủ CRM cho ${allData.length} hồ sơ.`,
         level: 'success'
       }
     });
     exportCSV(false);
-    return;
+    await closeAllWorkerTabs();
   }
+}
 
-  // Khóa chống nhiều luồng chạy cùng lúc
-  if (isProcessing) {
-    console.warn("[BG] Đang xử lý link khác, bỏ qua gọi processNext trùng.");
-    return;
-  }
-  isProcessing = true;
-
-  let targetUrl = urlList[currentIndex];
-  let taskId = `${currentIndex}_${Date.now()}`;
-  currentTaskId = taskId;
-
-  clearWatchdogTimer();
-  // WATCHDOG TIMER (22 GIÂY): Chống treo tiến trình 100%. Nếu tab FB bị chậm, dính checkpoint hoặc lỗi mạng, tự động skip an toàn sang hồ sơ tiếp theo!
-  currentWatchdogTimer = setTimeout(() => {
-    if (isAutoRunning && currentTaskId === taskId) {
-      console.warn(`[BG Watchdog] ⚠️ Hồ sơ STT ${currentIndex + 1} (${targetUrl}) xử lý quá lâu (> 22s). Tự động bỏ qua để tiến trình không bị đứng!`);
-      sendToDashboard('STEP2_LOG', {
-        log: {
-          stage: 'CẢNH BÁO',
-          text: `[Dòng ${currentIndex + 1}] ⚠️ Hồ sơ phản hồi quá lâu (> 22s), tự động lưu kết quả an toàn và tiếp tục dòng kế tiếp...`,
-          level: 'warn'
-        }
-      });
-      const timeoutItem = {
-        stt: currentIndex + 1,
-        url: targetUrl,
-        name: 'Trang phản hồi chậm',
-        publishTime: 'Chưa bóc tách (Timeout)',
-        publishTimestamp: '',
-        relativeTime: ''
-      };
-      currentTaskId = null;
-      isProcessing = false;
-      finishProfileItem(timeoutItem);
-    }
-  }, 22000);
-
-  statusMessage = `Đang mở dòng ${currentIndex + 1}/${endIndex + 1}: ${targetUrl}`;
-  saveState();
-
-  sendToDashboard('STEP2_PROGRESS', {
-    current: currentIndex - startIndex + 1,
-    total: endIndex - startIndex + 1,
-    percent: Math.round(((currentIndex - startIndex) / Math.max(1, endIndex - startIndex + 1)) * 100),
-    status: `Đang mở dòng ${currentIndex + 1}/${endIndex + 1}: ${targetUrl}`
-  });
-
-  sendToDashboard('STEP2_LOG', {
-    log: {
-      stage: 'TIẾN ĐỘ',
-      text: `Đang mở dòng ${currentIndex + 1}/${endIndex + 1}: ${targetUrl}`,
-      level: 'info'
-    }
-  });
-
-  (async () => {
-    // Đảm bảo targetTabId là một tab ngầm (active: false), không bao giờ dùng tab Dashboard
-    await ensureWorkerTab();
-    // Điều hướng tab tới profile Facebook và đợi nạp xong hoàn toàn (luôn chạy ngầm, không cướp tab)
-    await navigateTabAndWait(targetTabId, targetUrl, 30000);
-
-    if (!isAutoRunning || currentTaskId !== taskId) {
-      isProcessing = false;
-      return;
-    }
-
-    // Gửi lệnh START_SCRAPE tới content.js
-    chrome.tabs.sendMessage(targetTabId, {
-      action: 'START_SCRAPE',
-      stt: currentIndex + 1,
-      targetUrl: targetUrl,
-      taskId: taskId
-    }, (res) => {
-      if (chrome.runtime.lastError) {
-        console.log("Tab chưa sẵn sàng, thử inject script an toàn...");
-        chrome.scripting.executeScript({
-          target: { tabId: targetTabId },
-          files: ['content.js']
-        }, () => {
-          setTimeout(() => {
-            if (!isAutoRunning || currentTaskId !== taskId) {
-              isProcessing = false;
-              return;
-            }
-
-            chrome.tabs.sendMessage(targetTabId, {
-              action: 'START_SCRAPE',
-              stt: currentIndex + 1,
-              targetUrl: targetUrl,
-              taskId: taskId
-            }).catch(() => {
-              if (currentTaskId === taskId) {
-                currentTaskId = null;
-                isProcessing = false;
-
-                allData.push({
-                  stt: currentIndex + 1,
-                  url: targetUrl,
-                  name: 'Lỗi nạp trang',
-                  publishTime: 'Không thể truy cập',
-                  publishTimestamp: '',
-                  relativeTime: ''
-                });
-                currentIndex++;
-                saveState();
-                scheduleNext(1500);
-              }
-            });
-          }, 800);
-        });
-      }
-    });
-  })();
+function processNext() {
+  startParallelWorkers(maxParallel);
 }
 
 function exportCSV(isPartial = false) {
@@ -1357,8 +1461,8 @@ function exportJsonLeadUs() {
   }
 }
 
-function finishProfileItem(item) {
-  clearWatchdogTimer();
+function finishProfileItem(item, taskIndex = (item.stt ? item.stt - 1 : currentIndex)) {
+  if (item.taskId) activeTasks.delete(item.taskId);
   if (!item.owner || !isValidOwnerCandidate(item.owner) || item.owner.includes('Manager') || item.owner === 'Kennel Owner' || item.owner === 'Breeder Owner') {
     const emailOwner = extractOwnerFromEmailPrefix(item.email);
     if (emailOwner && isValidOwnerCandidate(emailOwner)) {
@@ -1372,7 +1476,7 @@ function finishProfileItem(item) {
 
   item.address = cleanAddressText(item.address || '');
 
-  item.stt = currentIndex + 1;
+  item.stt = item.stt || taskIndex + 1;
   const existingIdx = allData.findIndex(x => 
     (item.fb_id && x.fb_id && String(x.fb_id).trim() === String(item.fb_id).trim()) ||
     (item.url && x.url && String(x.url).trim().toLowerCase() === String(item.url).trim().toLowerCase()) ||
@@ -1388,7 +1492,7 @@ function finishProfileItem(item) {
     ? `${item.publishTime} (${item.relativeTime || ''})`
     : 'Không tìm thấy bài viết';
   let contactPreview = [item.owner, item.phone, item.email, item.website].filter(Boolean).join(' | ');
-  statusMessage = `[Dòng ${currentIndex + 1}] ${item.name || 'Profile'}: ${timePreview}${contactPreview ? ' | ' + contactPreview : ''}`;
+  statusMessage = `[Dòng ${taskIndex + 1}] ${item.name || 'Profile'}: ${timePreview}${contactPreview ? ' | ' + contactPreview : ''}`;
 
   // Tính điểm và xếp hạng cho hồ sơ
   let score = 55;
@@ -1400,7 +1504,18 @@ function finishProfileItem(item) {
   score = Math.min(score, 98);
   const tier = score >= 75 ? 'Tier S' : (score >= 60 ? 'Tier A' : 'Tier B');
 
-  const leadNum = String(currentIndex + 1).padStart(5, '0');
+  // Giữ score/tier trong state gốc để lần STATE_UPDATED hoặc export JSON
+  // không ghi đè lead đã chấm bằng bản raw chưa có điểm.
+  const storedIdx = existingIdx !== -1 ? existingIdx : allData.findIndex(x =>
+    (x.fb_id && item.fb_id && String(x.fb_id).trim() === String(item.fb_id).trim()) ||
+    (x.url && item.url && String(x.url).trim().toLowerCase() === String(item.url).trim().toLowerCase()) ||
+    (x.stt && item.stt && String(x.stt) === String(item.stt))
+  );
+  if (storedIdx !== -1) {
+    allData[storedIdx] = { ...allData[storedIdx], score, rank_tier: tier };
+  }
+
+  const leadNum = String(taskIndex + 1).padStart(5, '0');
   const leadId = `LEAD-US-${leadNum}`;
 
   const cleanId = item.fb_id ? String(item.fb_id).trim() : '';
@@ -1449,6 +1564,7 @@ function finishProfileItem(item) {
     website: item.website || (item.amazon_url ? item.amazon_url.split(',')[0].trim() : ''),
     websiteInspected: Boolean(item.website && !/(?:amazon\.[a-z.]+|amzn\.to|a\.co)/i.test(item.website)),
     instagram: item.instagram || '',
+    social_links: Array.isArray(item.social_links) ? item.social_links : [],
     has_amazon: Boolean(item.has_amazon && item.amazon_url),
     amazon_url: item.amazon_url || '',
     amazon_channel: (item.has_amazon && item.amazon_url) ? 'Selling on Amazon (Target)' : 'Amazon link not found',
@@ -1473,9 +1589,7 @@ function finishProfileItem(item) {
     }
   });
 
-  currentIndex++;
   saveState();
-  scheduleNext(1500);
 }
 
 const POPULAR_US_FIRST_NAMES = [
@@ -1533,7 +1647,7 @@ function extractOwnerFromEmailPrefix(email) {
   return null;
 }
 
-function waitForTabComplete(tabId, timeoutMs = 25000) {
+function waitForTabComplete(tabId, timeoutMs = 15000) {
   return new Promise((resolve) => {
     let timer = null;
     let finished = false;
@@ -1565,37 +1679,88 @@ function waitForTabComplete(tabId, timeoutMs = 25000) {
   });
 }
 
-async function ensureWorkerTab() {
-  if (targetTabId) {
-    try {
-      const t = await chrome.tabs.get(targetTabId);
-      if (t && t.id) {
-        const u = (t.url || '').toLowerCase();
-        if (!u.includes('dashboard.html') && !u.includes('popup.html') && !u.includes(':8000') && !u.includes('localhost')) {
-          return targetTabId;
-        }
-      }
-    } catch (_) {}
-  }
+async function createWorkerTab() {
   try {
     const newTab = await chrome.tabs.create({ url: 'about:blank', active: false });
-    targetTabId = newTab ? newTab.id : null;
+    if (newTab && newTab.id) {
+      workerTabs.add(newTab.id);
+      if (!targetTabId) targetTabId = newTab.id;
+      return newTab.id;
+    }
   } catch (e) {
-    console.warn('[BG] Lỗi tạo worker tab ngầm:', e);
+    console.warn('[BG] Lỗi tạo worker tab:', e);
   }
-  return targetTabId;
+  return null;
 }
 
-async function navigateTabAndWait(tabId, url, timeoutMs = 25000) {
-  const waitPromise = waitForTabComplete(tabId, timeoutMs);
-  try {
-    // Luôn luôn active: false để không chuyển tab, giữ nguyên tab UI của người dùng
-    await chrome.tabs.update(tabId, { url: url, active: false });
-  } catch (err) {
-    console.warn('[Navigate] Lỗi chrome.tabs.update:', err);
+async function getOrCreateWorkerTab(workerIndex) {
+  let tabId = workerPool[workerIndex];
+  if (tabId) {
+    try {
+      const t = await chrome.tabs.get(tabId);
+      if (t && t.id) return t.id;
+    } catch (_) {}
   }
-  await waitPromise;
-  await new Promise(r => setTimeout(r, 1000));
+  tabId = await createWorkerTab();
+  if (tabId) {
+    workerPool[workerIndex] = tabId;
+  }
+  return tabId;
+}
+
+async function ensureWorkerTab() {
+  return getOrCreateWorkerTab(0);
+}
+
+async function closeAllWorkerTabs() {
+  const tabsToClose = Array.from(workerTabs);
+  workerTabs.clear();
+  workerPool = [];
+  for (const tid of tabsToClose) {
+    try {
+      await chrome.tabs.remove(tid);
+    } catch (_) {}
+  }
+}
+
+async function navigateTabAndWait(tabId, url, timeoutMs = 15000) {
+  return new Promise(async (resolve) => {
+    let finished = false;
+    let timer = null;
+
+    const cleanup = () => {
+      if (timer) clearTimeout(timer);
+      chrome.tabs.onUpdated.removeListener(listener);
+    };
+
+    const done = () => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      resolve(true);
+    };
+
+    const listener = (updatedTabId, changeInfo) => {
+      if (updatedTabId === tabId && changeInfo.status === 'complete') {
+        done();
+      }
+    };
+
+    timer = setTimeout(() => {
+      done();
+    }, timeoutMs);
+
+    chrome.tabs.onUpdated.addListener(listener);
+
+    try {
+      // KHONG dung active: false trong tabs.update vi Chrome API cam (nem loi 'Tabs cannot be deactivated directly')
+      // Khong truyen active thi Chrome giu nguyen tab hien tai, worker tab chay ngam an toan!
+      await chrome.tabs.update(tabId, { url: url });
+    } catch (err) {
+      console.warn('[Navigate] Loi chrome.tabs.update:', err);
+      done();
+    }
+  });
 }
 
 function runScriptInTab(tabId, func, args = []) {
@@ -1859,6 +2024,10 @@ async function scrollAndExtractPageAgent(options) {
            .trim();
     }
 
+    const BIO_STOPWORDS = /\b(?:we are|we breed|family owned|raising|breeding|breeder|breeders|puppy|puppies|welcome to|our dogs|our goal|our passion|frenchies|doodles|poodles|retriever|shepherd|bulldog|corgi|akc registered|health tested|champion|bloodlines|take-home|application|contact us|follow us|specializing in|proud to|loving homes|furry friends|best friend|born and raised|call or text|available puppies|upcoming litters|adoption|adopt|stud service|good dog|screening process|meet the|about us|our story|dm for info|message us|ship nationwide|since \d{4}|for loving families)\b/i;
+    if (BIO_STOPWORDS.test(s)) return '';
+    if (s.split(/\s+/).length > 15) return '';
+
     if (/\b(?:cộng đồng|nhóm công khai|nhóm riêng tư|public group|private group|community|nhóm)\b/i.test(s) && !/\d{1,5}\s+[A-Za-z]/.test(s)) {
       return '';
     }
@@ -1877,6 +2046,7 @@ async function scrollAndExtractPageAgent(options) {
 
     s = s.replace(/^[\s,·•|:—–-]+|[\s,·•|:—–-]+$/g, '').trim();
     if (s.length < 5) return '';
+    if (BIO_STOPWORDS.test(s)) return '';
 
     return s;
   };
@@ -1891,20 +2061,20 @@ async function scrollAndExtractPageAgent(options) {
   while (scrollY < docH && scrollCount < 6 && scrollY < 3200) {
     scrollCount++;
     scrollY += step;
-    window.scrollTo({ top: scrollY, behavior: 'smooth' });
-    await sleep(350);
+    window.scrollTo({ top: scrollY, behavior: 'auto' });
+    await sleep(300);
     docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, 1200);
     const pct = Math.min(100, Math.round((scrollY / Math.min(docH, 3200)) * 100));
     setStatus(`👀 Đang cuộn xem ${pageTitle} từ từ (${pct}%)...`, 'Đang cuộn...', '#b84f2e', pct);
     if (scrollY >= docH - 100) break;
   }
-  window.scrollTo({ top: Math.min(docH, 3200), behavior: 'smooth' });
+  window.scrollTo({ top: Math.min(docH, 3200), behavior: 'auto' });
   setStatus(`📄 Đã cuộn xong ${pageTitle}! Đang bóc tách thông tin liên hệ & chủ trại...`, 'Đáy trang', '#0284c7', 100);
   await sleep(400);
 
   // Trích xuất từ DOM trang hiện tại
   let htmlStr = document.documentElement ? document.documentElement.innerHTML : '';
-  let bodyText = document.body ? document.body.innerText : '';
+  let bodyText = document.body ? (document.body.innerText || document.body.textContent || '') : '';
   let owner = '';
 
   // 1. Quét Good Dog

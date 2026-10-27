@@ -22,6 +22,8 @@ const fromLineInput = $('fromLine');
 const txtToLine = $('txtToLine');
 const toLineInput = $('toLine');
 const txtRangeHint = $('txtRangeHint');
+const parallelTabsInput = $('parallelTabs');
+const txtParallelTabs = $('txtParallelTabs');
 
 const currentStatusTitle = $('currentStatusTitle');
 const progressPercent = $('progressPercent');
@@ -61,6 +63,7 @@ const I18N = {
     toLinePlaceholderEnd: "Hết",
     toLinePlaceholderTotal: (tot) => `Hết (${tot})`,
     rangeHint: "💡 Chạy đoạn tùy chọn: ví dụ từ dòng <b>200</b> đến <b>300</b>. Chạy 1 link cụ thể: từ <b>200</b> đến <b>200</b>.",
+    parallelTabs: "Số tab chạy song song:",
     
     statusReady: "Trạng thái: Sẵn sàng",
     statusRunning: (cur, tot) => `Đang chạy (Dòng ${cur}/${tot})`,
@@ -110,6 +113,7 @@ const I18N = {
     toLinePlaceholderEnd: "末尾",
     toLinePlaceholderTotal: (tot) => `末尾 (${tot})`,
     rangeHint: "💡 支持自定义分段：例如第 <b>200</b> 行至 <b>300</b> 行。单链接测试：从 <b>200</b> 到 <b>200</b>。",
+    parallelTabs: "并行运行的标签页数量：",
     
     statusReady: "状态：就绪",
     statusRunning: (cur, tot) => `运行中（第 ${cur}/${tot} 行）`,
@@ -173,6 +177,7 @@ function setLanguage(lang) {
   txtFromLine.textContent = dict.fromLine;
   txtToLine.textContent = dict.toLine;
   txtRangeHint.innerHTML = dict.rangeHint;
+  txtParallelTabs.textContent = dict.parallelTabs;
 
   txtScrapedPrefix.textContent = dict.scrapedPrefix;
   txtScrapedSuffix.textContent = dict.scrapedSuffix;
@@ -260,11 +265,13 @@ function render() {
     urlListText.disabled = true;
     fromLineInput.disabled = true;
     toLineInput.disabled = true;
+    parallelTabsInput.disabled = true;
     btnQuickPaste.disabled = true;
   } else {
     urlListText.disabled = false;
     fromLineInput.disabled = false;
     toLineInput.disabled = false;
+    parallelTabsInput.disabled = false;
     btnQuickPaste.disabled = false;
     btnPause.style.display = 'none';
 
@@ -313,6 +320,9 @@ function updateState() {
         }
         if (state.endIndex !== undefined && state.endIndex >= 0 && document.activeElement !== toLineInput && !toLineInput.value) {
           toLineInput.value = state.endIndex + 1;
+        }
+        if (state.maxParallel && document.activeElement !== parallelTabsInput) {
+          parallelTabsInput.value = state.maxParallel;
         }
       }
 
@@ -388,6 +398,9 @@ btnAutoStart.addEventListener('click', () => {
 
   const startIdx = fromVal - 1;
   const endIdx = toVal - 1;
+  let parallelTabs = parseInt(parallelTabsInput.value, 10);
+  if (isNaN(parallelTabs)) parallelTabs = 1;
+  parallelTabs = Math.max(1, Math.min(5, parallelTabs));
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (!tabs[0]) return alert(dict.alertNoTab);
@@ -396,6 +409,7 @@ btnAutoStart.addEventListener('click', () => {
       urls: urls,
       startIndex: startIdx,
       endIndex: endIdx,
+      maxParallel: parallelTabs,
       tabId: tabs[0].id
     }, () => {
       updateState();

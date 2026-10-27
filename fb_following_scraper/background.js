@@ -164,6 +164,11 @@ function cleanPhone(raw) {
 function cleanAddressText(raw) {
   if (!raw || typeof raw !== 'string') return '';
   let s = raw.trim();
+
+  const BIO_STOPWORDS = /\b(?:we are|we breed|family owned|raising|breeding|breeder|breeders|puppy|puppies|welcome to|our dogs|our goal|our passion|frenchies|doodles|poodles|retriever|shepherd|bulldog|corgi|akc registered|health tested|champion|bloodlines|take-home|application|contact us|follow us|specializing in|proud to|loving homes|furry friends|best friend|born and raised|call or text|available puppies|upcoming litters|adoption|adopt|stud service|good dog|screening process|meet the|about us|our story|dm for info|message us|ship nationwide|since \d{4}|for loving families)\b/i;
+  if (BIO_STOPWORDS.test(s)) return '';
+  if (s.split(/\s+/).length > 15) return '';
+
   let prev = '';
   while (s !== prev) {
     prev = s;
@@ -187,7 +192,16 @@ function cleanAddressText(raw) {
        .replace(/,\s*,/g, ',')
        .replace(/\s+/g, ' ');
   s = s.replace(/^[\s,·•|:—–-]+|[\s,·•|:—–-]+$/g, '').trim();
-  return s.length < 5 ? '' : s;
+
+  const isLikelyAddr = (str) => {
+    if (!str || str.length < 5 || str.length > 130) return false;
+    if (BIO_STOPWORDS.test(str)) return false;
+    if (mStreet) return true;
+    if (/\b[A-Za-z\s.-]{2,30},\s*[A-Z]{2}\b(?:\s*\d{5})?/i.test(str)) return true;
+    return false;
+  };
+
+  return (s.length < 5 || !isLikelyAddr(s)) ? '' : s;
 }
 
 function decodeCfEmail(cfHex) {

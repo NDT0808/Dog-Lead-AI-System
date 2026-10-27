@@ -1,71 +1,82 @@
 if (window.location.origin.includes('127.0.0.1') || window.location.origin.includes('localhost') || window.location.origin.includes('43.156.237.143') || window.location.href.includes('step2') || window.location.href.includes('dashboard') || window.location.href.includes('2.html')) {
-    const announceReady = () => {
-        window.postMessage({ type: 'PET_LEAD_EXT_READY', tool: 'fb_profile_funnel_scraper', version: '2.0.0' }, '*');
-    };
-    announceReady();
-    setInterval(announceReady, 1500);
+  const announceReady = () => {
+    window.postMessage({ type: 'PET_LEAD_EXT_READY', tool: 'fb_profile_funnel_scraper', version: '2.0.0' }, '*');
+  };
+  announceReady();
+  setInterval(announceReady, 1500);
 
-    // Relay scan requests from Web Dashboard to background.js
-    window.addEventListener('message', (event) => {
-        if (event.source !== window || !event.data) return;
-        if (event.data.type === 'START_STEP2_SCAN_VIA_EXTENSION' || event.data.type === 'START_AUTO') {
-            chrome.runtime.sendMessage({
-                action: 'START_AUTO',
-                urls: event.data.urls || event.data.links,
-                startIndex: event.data.startIndex !== undefined ? event.data.startIndex : (event.data.options ? event.data.options.fromIndex : 0),
-                endIndex: event.data.endIndex !== undefined ? event.data.endIndex : (event.data.options ? event.data.options.toIndex : 0),
-                tabId: null
-            });
-        } else if (event.data.type === 'STOP_STEP2_SCAN_VIA_EXTENSION' || event.data.type === 'STOP_AUTO') {
-            chrome.runtime.sendMessage({ action: 'STOP_AUTO' });
-        } else if (event.data.type === 'RESUME_STEP2_SCAN_VIA_EXTENSION' || event.data.type === 'RESUME_AUTO') {
-            chrome.runtime.sendMessage({ action: 'RESUME_AUTO' });
-        }
-    });
+  // Relay scan requests from Web Dashboard to background.js
+  window.addEventListener('message', (event) => {
+    if (event.source !== window || !event.data) return;
+    if (event.data.type === 'START_STEP2_SCAN_VIA_EXTENSION' || event.data.type === 'START_AUTO') {
+      chrome.runtime.sendMessage({
+        action: 'START_AUTO',
+        urls: event.data.urls || event.data.links,
+        startIndex: event.data.startIndex !== undefined ? event.data.startIndex : (event.data.options ? event.data.options.fromIndex : 0),
+        endIndex: event.data.endIndex !== undefined ? event.data.endIndex : (event.data.options ? event.data.options.toIndex : 0),
+        maxParallel: event.data.maxParallel !== undefined ? event.data.maxParallel : (event.data.options ? event.data.options.maxParallel : 1),
+        tabId: null
+      });
+    } else if (event.data.type === 'STOP_STEP2_SCAN_VIA_EXTENSION' || event.data.type === 'STOP_AUTO') {
+      chrome.runtime.sendMessage({ action: 'STOP_AUTO' });
+    } else if (event.data.type === 'RESUME_STEP2_SCAN_VIA_EXTENSION' || event.data.type === 'RESUME_AUTO') {
+      chrome.runtime.sendMessage({ action: 'RESUME_AUTO' });
+    }
+  });
 
-    // Relay scan events from background.js to Web Dashboard
-    chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-        if (msg && msg.action && (msg.action.startsWith('STEP2_') || msg.action === 'STATE_UPDATED')) {
-            window.postMessage({ type: 'PET_LEAD_STEP2_EVENT', payload: msg }, '*');
-        }
-        return true;
-    });
+  // Relay scan events from background.js to Web Dashboard
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg && msg.action && (msg.action.startsWith('STEP2_') || msg.action === 'STATE_UPDATED')) {
+      window.postMessage({ type: 'PET_LEAD_STEP2_EVENT', payload: msg }, '*');
+    }
+    return true;
+  });
 }
 
 if (!window.__FB_SCRAPER_LOADED__) {
-    window.__FB_SCRAPER_LOADED__ = true;
-    let isCurrentlyScraping = false;
+  window.__FB_SCRAPER_LOADED__ = true;
+  let currentActiveTaskId = null;
 
-    chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-        if (msg.action === 'START_SCRAPE') {
-            if (isCurrentlyScraping) {
-                console.log("[FB Scraper] Đang cào dở, bỏ qua lệnh START_SCRAPE trùng lặp.");
-                sendResponse({ status: 'already_running' });
-                return;
-            }
-            isCurrentlyScraping = true;
-            scrapePublishTime(msg.targetUrl, msg.stt, msg.taskId)
-                .finally(() => {
-                    isCurrentlyScraping = false;
-                });
-            sendResponse({ status: 'started' });
-        }
-        else if (msg.action === 'TRIGGER_DOWNLOAD') {
-            downloadCSV(msg.data, msg.isPartial);
-            sendResponse({ status: 'ok' });
-        }
-        else if (msg.action === 'TRIGGER_DIRECT_FILE_DOWNLOAD' && msg.content) {
-            const blob = new Blob([msg.content], { type: 'application/json;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = msg.filename || 'export.json';
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
-            sendResponse({ status: 'ok' });
-        }
-    });
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg.action === 'PING') {
+      sendResponse({ status: 'pong', url: window.location.href });
+      return true;
+    }
+    if (msg.action === 'START_SCRAPE') {
+      if (currentActiveTaskId && currentActiveTaskId === msg.taskId) {
+        console.log("[FB Scraper] Dang cao dung taskId nay, bo qua goi lap lai.");
+        sendResponse({ status: 'already_running' });
+        return true;
+      }
+      currentActiveTaskId = msg.taskId;
+      sendResponse({ status: 'started' });
+      scrapePublishTime(msg.targetUrl, msg.stt, msg.taskId)
+        .catch(err => console.warn('[FB Scraper] Loi scrapePublishTime:', err))
+        .finally(() => {
+          if (currentActiveTaskId === msg.taskId) {
+            currentActiveTaskId = null;
+          }
+        });
+      return true;
+    }
+    else if (msg.action === 'TRIGGER_DOWNLOAD') {
+      downloadCSV(msg.data, msg.isPartial);
+      sendResponse({ status: 'ok' });
+      return true;
+    }
+    else if (msg.action === 'TRIGGER_DIRECT_FILE_DOWNLOAD' && msg.content) {
+      const blob = new Blob([msg.content], { type: 'application/json;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = msg.filename || 'export.json';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
+      sendResponse({ status: 'ok' });
+      return true;
+    }
+  });
 }
 
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
@@ -92,7 +103,7 @@ function sanitizeAndValidateAmazonUrl(rawUrl) {
       const u = new URL(url, window.location.origin);
       const real = u.searchParams.get('u');
       if (real) url = decodeURIComponent(real);
-    } catch (_) {}
+    } catch (_) { }
   }
 
   // Kiểm tra tên miền Amazon
@@ -178,7 +189,7 @@ function extractExternalUrlsFromScriptsAndHtml() {
       } catch (_) {
         const matchU = clean.match(/[?&]u=([^&]+)/);
         if (matchU) {
-          try { clean = decodeURIComponent(matchU[1]); } catch (_) {}
+          try { clean = decodeURIComponent(matchU[1]); } catch (_) { }
         }
       }
     }
@@ -223,7 +234,7 @@ function extractRelayFeedAndPinnedTimestamps(currentProfileId) {
   const scripts = Array.from(document.querySelectorAll('script')).filter(s => {
     const t = s.textContent || '';
     return (t.includes('creation_time') || t.includes('publish_time')) &&
-           (t.includes('Story') || t.includes('timeline_list_feed_units') || t.includes('pinned') || t.includes('Pinned'));
+      (t.includes('Story') || t.includes('timeline_list_feed_units') || t.includes('pinned') || t.includes('Pinned'));
   });
 
   const nowSec = Math.floor(Date.now() / 1000);
@@ -324,99 +335,101 @@ function isFacebookUIString(str) {
  * Kiểm tra các tên rác hệ thống của Facebook
  */
 function isGarbageName(name) {
-    if (!name) return true;
-    let s = name.toLowerCase().trim();
-    if (isFacebookUIString(s)) return true;
-    if (s === 'facebook' || s === 'thông báo' || s.includes('thông báo') || s === 'notifications' || s === '通知' || s.startsWith('(')) {
-        return true;
-    }
-    return false;
+  if (!name) return true;
+  let s = name.toLowerCase().trim();
+  if (isFacebookUIString(s)) return true;
+  if (s === 'facebook' || s === 'thông báo' || s.includes('thông báo') || s === 'notifications' || s === '通知' || s.startsWith('(')) {
+    return true;
+  }
+  return false;
 }
 
 /**
  * Lấy tên Fanpage / Profile chuẩn xác, không dính tên rác (Hỗ trợ VI, EN, ZH)
  */
 function getProfileName() {
-    // 1. Kiểm tra từ text ngay trước số người theo dõi trong DOM (VI, EN, ZH)
-    let bodyText = document.body ? document.body.innerText : '';
-    if (bodyText) {
-        let m = bodyText.match(/(?:^|\n)([^\n|]{2,60}?)\s*\n\s*\d+(?:[,\.]\d+)?[KkMm万萬]?\s*(?:người theo dõi|followers|lượt thích|likes|位粉丝|个粉丝|关注者|次赞|个赞|人关注)/i)
-             || bodyText.match(/(?:^|\n|\|\s*)([^\n|]{2,60}?)\s*(?: |\s)*(?:•|\||\n)\s*\d+(?:[,\.]\d+)?[KkMm万萬]?\s*(?:người theo dõi|followers|lượt thích|likes|位粉丝|个粉丝|关注者|次赞|个赞|人关注)/i);
-        if (m && !isGarbageName(m[1])) {
-            let clean = m[1].replace(/^[\s|·•\-_]+|[\s|·•\-_]+$/g, '').trim();
-            if (clean && !isGarbageName(clean)) return clean;
-        }
+  // 1. Kiểm tra từ text ngay trước số người theo dõi trong DOM (VI, EN, ZH)
+  let bodyText = document.body ? (document.body.innerText || document.body.textContent || '') : '';
+  if (bodyText) {
+    let m = bodyText.match(/(?:^|\n)([^\n|]{2,60}?)\s*\n\s*\d+(?:[,\.]\d+)?[KkMm万萬]?\s*(?:người theo dõi|followers|lượt thích|likes|位粉丝|个粉丝|关注者|次赞|个赞|人关注)/i)
+      || bodyText.match(/(?:^|\n|\|\s*)([^\n|]{2,60}?)\s*(?: |\s)*(?:•|\||\n)\s*\d+(?:[,\.]\d+)?[KkMm万萬]?\s*(?:người theo dõi|followers|lượt thích|likes|位粉丝|个粉丝|关注者|次赞|个赞|人关注)/i);
+    if (m && !isGarbageName(m[1])) {
+      let clean = m[1].replace(/^[\s|·•\-_]+|[\s|·•\-_]+$/g, '').trim();
+      if (clean && !isGarbageName(clean)) return clean;
     }
+  }
 
-    // 2. Kiểm tra H1 bên trong vùng nội dung chính (main)
-    let mainH1 = document.querySelector('div[role="main"] h1');
-    if (mainH1 && mainH1.innerText && !isGarbageName(mainH1.innerText)) {
-        return mainH1.innerText.trim();
+  // 2. Kiểm tra H1 bên trong vùng nội dung chính (main)
+  let mainH1 = document.querySelector('div[role="main"] h1');
+  if (mainH1) {
+    const h1T = (mainH1.innerText || mainH1.textContent || '').trim();
+    if (h1T && !isGarbageName(h1T)) return h1T;
+  }
+
+  // 3. Kiểm tra thẻ meta og:title
+  let ogTitle = document.querySelector('meta[property="og:title"]');
+  if (ogTitle && ogTitle.content) {
+    let clean = ogTitle.content.replace(/^\(\d+\)\s*/, '').split('|')[0].split('-')[0].trim();
+    if (!isGarbageName(clean)) return clean;
+  }
+
+  // 4. Kiểm tra bất kỳ thẻ H1 nào hợp lệ
+  let h1List = Array.from(document.querySelectorAll('h1'));
+  for (let h of h1List) {
+    const hText = (h.innerText || h.textContent || '').trim();
+    if (hText && !isGarbageName(hText)) {
+      return hText;
     }
+  }
 
-    // 3. Kiểm tra thẻ meta og:title
-    let ogTitle = document.querySelector('meta[property="og:title"]');
-    if (ogTitle && ogTitle.content) {
-        let clean = ogTitle.content.replace(/^\(\d+\)\s*/, '').split('|')[0].split('-')[0].trim();
-        if (!isGarbageName(clean)) return clean;
-    }
+  // 5. Kiểm tra document.title
+  if (document.title) {
+    let clean = document.title.replace(/^\(\d+\)\s*/, '').split('|')[0].split('-')[0].trim();
+    if (!isGarbageName(clean)) return clean;
+  }
 
-    // 4. Kiểm tra bất kỳ thẻ H1 nào hợp lệ
-    let h1List = Array.from(document.querySelectorAll('h1'));
-    for (let h of h1List) {
-        if (h.innerText && !isGarbageName(h.innerText)) {
-            return h.innerText.trim();
-        }
-    }
+  // 6. Fallback từ URL slug
+  let pathname = window.location.pathname.replace(/^\/|\/$/g, '');
+  let slug = pathname.split('/')[0] || '';
+  if (slug && slug !== 'profile.php' && slug !== 'pages') {
+    return slug;
+  }
 
-    // 5. Kiểm tra document.title
-    if (document.title) {
-        let clean = document.title.replace(/^\(\d+\)\s*/, '').split('|')[0].split('-')[0].trim();
-        if (!isGarbageName(clean)) return clean;
-    }
-
-    // 6. Fallback từ URL slug
-    let pathname = window.location.pathname.replace(/^\/|\/$/g, '');
-    let slug = pathname.split('/')[0] || '';
-    if (slug && slug !== 'profile.php' && slug !== 'pages') {
-        return slug;
-    }
-
-    return 'Facebook User';
+  return 'Facebook User';
 }
 
 /**
  * Trích xuất Facebook ID số từ URL hoặc DOM meta
  */
 function extractFacebookID() {
-    try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const qId = urlParams.get('id');
-        if (qId && /^\d+$/.test(qId)) return qId;
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const qId = urlParams.get('id');
+    if (qId && /^\d+$/.test(qId)) return qId;
 
-        const mProfile = document.querySelector('meta[property="al:android:url"], meta[property="al:ios:url"]');
-        if (mProfile && mProfile.content) {
-            const m = mProfile.content.match(/fb:\/\/profile\/(\d+)|fb:\/\/page\/(\d+)/);
-            if (m && (m[1] || m[2])) return m[1] || m[2];
-        }
-
-        const mUserId = document.querySelector('meta[property="fb:profile_id"], meta[property="fb:pages"]');
-        if (mUserId && mUserId.content && /^\d+$/.test(mUserId.content)) {
-            return mUserId.content;
-        }
-
-        const scripts = document.querySelectorAll('script');
-        for (const s of scripts) {
-            const t = s.textContent || '';
-            if (t.includes('userID') || t.includes('pageID') || t.includes('entity_id')) {
-                const m = t.match(/["'](?:userID|pageID|entity_id)["']\s*:\s*["']?(\d{8,20})["']?/);
-                if (m && m[1]) return m[1];
-            }
-        }
-    } catch (e) {
-        console.warn('[FB Scraper] Lỗi khi trích xuất FB ID:', e);
+    const mProfile = document.querySelector('meta[property="al:android:url"], meta[property="al:ios:url"]');
+    if (mProfile && mProfile.content) {
+      const m = mProfile.content.match(/fb:\/\/profile\/(\d+)|fb:\/\/page\/(\d+)/);
+      if (m && (m[1] || m[2])) return m[1] || m[2];
     }
-    return '';
+
+    const mUserId = document.querySelector('meta[property="fb:profile_id"], meta[property="fb:pages"]');
+    if (mUserId && mUserId.content && /^\d+$/.test(mUserId.content)) {
+      return mUserId.content;
+    }
+
+    const scripts = document.querySelectorAll('script');
+    for (const s of scripts) {
+      const t = s.textContent || '';
+      if (t.includes('userID') || t.includes('pageID') || t.includes('entity_id')) {
+        const m = t.match(/["'](?:userID|pageID|entity_id)["']\s*:\s*["']?(\d{8,20})["']?/);
+        if (m && m[1]) return m[1];
+      }
+    }
+  } catch (e) {
+    console.warn('[FB Scraper] Lỗi khi trích xuất FB ID:', e);
+  }
+  return '';
 }
 
 /**
@@ -429,176 +442,176 @@ function extractFacebookID() {
  * Trích xuất chuỗi thời gian từ một đoạn text hoặc thuộc tính aria-label (Đa ngôn ngữ VI, EN, ZH)
  */
 function extractTimeFromText(text) {
-    if (!text) return null;
-    let s = text.trim();
-    let sLower = s.toLowerCase();
+  if (!text) return null;
+  let s = text.trim();
+  let sLower = s.toLowerCase();
 
-    // 1. Dạng Vừa xong / Just now / 刚刚
-    if (sLower.includes('vừa xong') || sLower.includes('just now') || s.includes('刚刚')) {
-        return s.includes('刚刚') ? '刚刚' : (sLower.includes('just now') ? 'just now' : 'vừa xong');
-    }
+  // 1. Dạng Vừa xong / Just now / 刚刚
+  if (sLower.includes('vừa xong') || sLower.includes('just now') || s.includes('刚刚')) {
+    return s.includes('刚刚') ? '刚刚' : (sLower.includes('just now') ? 'just now' : 'vừa xong');
+  }
 
-    // 2. Dạng Hôm qua / Hôm nay / Yesterday / Today / 昨天 / 今天
-    let yestM = sLower.match(/(?:hôm qua|yesterday|昨天)\s*(?:lúc|at)?\s*(\d{1,2}:\d{2}(?:\s*(?:am|pm))?)/i);
-    if (yestM) return yestM[0].trim();
+  // 2. Dạng Hôm qua / Hôm nay / Yesterday / Today / 昨天 / 今天
+  let yestM = sLower.match(/(?:hôm qua|yesterday|昨天)\s*(?:lúc|at)?\s*(\d{1,2}:\d{2}(?:\s*(?:am|pm))?)/i);
+  if (yestM) return yestM[0].trim();
 
-    let todayM = sLower.match(/(?:hôm nay|today|今天)\s*(?:lúc|at)?\s*(\d{1,2}:\d{2}(?:\s*(?:am|pm))?)/i);
-    if (todayM) return todayM[0].trim();
+  let todayM = sLower.match(/(?:hôm nay|today|今天)\s*(?:lúc|at)?\s*(\d{1,2}:\d{2}(?:\s*(?:am|pm))?)/i);
+  if (todayM) return todayM[0].trim();
 
-    // 3. Dạng Tiếng Trung: 2025年8月15日 hoặc 10月14日 14:30
-    let cnDateM = s.match(/(?:(\d{4})年)?\s*(\d{1,2})月(\d{1,2})日(?:\s*(\d{1,2}:\d{2}))?/);
-    if (cnDateM) return cnDateM[0].trim();
+  // 3. Dạng Tiếng Trung: 2025年8月15日 hoặc 10月14日 14:30
+  let cnDateM = s.match(/(?:(\d{4})年)?\s*(\d{1,2})月(\d{1,2})日(?:\s*(\d{1,2}:\d{2}))?/);
+  if (cnDateM) return cnDateM[0].trim();
 
-    // 4. Dạng Tiếng Việt: 10 tháng 10 lúc 14:30 hoặc 19 thg 10 hoặc 15 tháng 8, 2025
-    let viDateM = sLower.match(/(\d{1,2}\s+(?:tháng|thg)\s+\d{1,2}(?:,?\s*\d{4})?(?:\s+lúc\s+\d{1,2}:\d{2})?)/i);
-    if (viDateM) return viDateM[1].trim();
+  // 4. Dạng Tiếng Việt: 10 tháng 10 lúc 14:30 hoặc 19 thg 10 hoặc 15 tháng 8, 2025
+  let viDateM = sLower.match(/(\d{1,2}\s+(?:tháng|thg)\s+\d{1,2}(?:,?\s*\d{4})?(?:\s+lúc\s+\d{1,2}:\d{2})?)/i);
+  if (viDateM) return viDateM[1].trim();
 
-    // 5. Dạng Tiếng Anh: October 14 at 2:30 PM hoặc 14 Oct, 2025 hoặc Oct 14, 2025
-    let enDateM1 = sLower.match(/([a-z]+)\s+(\d{1,2})(?:,?\s*(\d{4}))?(?:\s+at\s+\d{1,2}:\d{2}(?:\s*(?:am|pm))?)?/i);
-    if (enDateM1 && MONTH_MAP[enDateM1[1]] !== undefined) {
-        return enDateM1[0].trim();
-    }
-    let enDateM2 = sLower.match(/(\d{1,2})\s+([a-z]+)(?:,?\s*(\d{4}))?(?:\s+at\s+\d{1,2}:\d{2}(?:\s*(?:am|pm))?)?/i);
-    if (enDateM2 && MONTH_MAP[enDateM2[2]] !== undefined) {
-        return enDateM2[0].trim();
-    }
+  // 5. Dạng Tiếng Anh: October 14 at 2:30 PM hoặc 14 Oct, 2025 hoặc Oct 14, 2025
+  let enDateM1 = sLower.match(/([a-z]+)\s+(\d{1,2})(?:,?\s*(\d{4}))?(?:\s+at\s+\d{1,2}:\d{2}(?:\s*(?:am|pm))?)?/i);
+  if (enDateM1 && MONTH_MAP[enDateM1[1]] !== undefined) {
+    return enDateM1[0].trim();
+  }
+  let enDateM2 = sLower.match(/(\d{1,2})\s+([a-z]+)(?:,?\s*(\d{4}))?(?:\s+at\s+\d{1,2}:\d{2}(?:\s*(?:am|pm))?)?/i);
+  if (enDateM2 && MONTH_MAP[enDateM2[2]] !== undefined) {
+    return enDateM2[0].trim();
+  }
 
-    // 6. Dạng Phút / Giờ / Ngày / Tuần / Tháng / Năm (VI, EN, ZH)
-    let relM = s.match(/(\d+\s*(?:phút|min|mins|m|giờ|hour|hours|hr|hrs|h|ngày|day|days|d|tuần|week|weeks|w|tháng|month|months|mo|mos|năm|year|years|yr|yrs|y|分钟|小时|天|周|星期|个月)(?:[\s·•\-_,]|trước|ago|前|$))/i);
-    if (relM) {
-        return relM[1].trim();
-    }
+  // 6. Dạng Phút / Giờ / Ngày / Tuần / Tháng / Năm (VI, EN, ZH)
+  let relM = s.match(/(\d+\s*(?:phút|min|mins|m|giờ|hour|hours|hr|hrs|h|ngày|day|days|d|tuần|week|weeks|w|tháng|month|months|mo|mos|năm|year|years|yr|yrs|y|分钟|小时|天|周|星期|个月)(?:[\s·•\-_,]|trước|ago|前|$))/i);
+  if (relM) {
+    return relM[1].trim();
+  }
 
-    return null;
+  return null;
 }
 
 /**
  * Chuyển đổi chuỗi thời gian sang Unix Timestamp (giây) - Hỗ trợ chuẩn xác VI, EN, ZH
  */
 function parseRelativeTimeToTimestamp(str) {
-    if (!str) return null;
-    const s = str.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!str) return null;
+  const s = str.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
 
-    // Vừa xong / Just now
-    if (/^(vừa xong|just now|now|1 phút|1m)$/.test(s)) {
-        return nowSec - 30;
+  // Vừa xong / Just now
+  if (/^(vừa xong|just now|now|1 phút|1m)$/.test(s)) {
+    return nowSec - 30;
+  }
+
+  // "Hôm qua" hoặc "Hôm qua lúc 00:15" / "Yesterday at 12:15 AM"
+  const yesterdayMatch = s.match(/^(?:hôm qua|yesterday)(?:\s+(?:lúc|at)\s+(\d{1,2}):(\d{2})(?:\s*(am|pm|sa|ch))?)?$/i);
+  if (yesterdayMatch) {
+    const yDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    if (yesterdayMatch[1] !== undefined) {
+      let h = parseInt(yesterdayMatch[1], 10);
+      const m = parseInt(yesterdayMatch[2], 10);
+      const ampm = (yesterdayMatch[3] || '').toLowerCase();
+      if ((ampm === 'pm' || ampm === 'ch') && h < 12) h += 12;
+      if ((ampm === 'am' || ampm === 'sa') && h === 12) h = 0;
+      yDate.setHours(h, m, 0, 0);
+    } else {
+      yDate.setHours(12, 0, 0, 0);
     }
+    return Math.floor(yDate.getTime() / 1000);
+  }
 
-    // "Hôm qua" hoặc "Hôm qua lúc 00:15" / "Yesterday at 12:15 AM"
-    const yesterdayMatch = s.match(/^(?:hôm qua|yesterday)(?:\s+(?:lúc|at)\s+(\d{1,2}):(\d{2})(?:\s*(am|pm|sa|ch))?)?$/i);
-    if (yesterdayMatch) {
-        const yDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-        if (yesterdayMatch[1] !== undefined) {
-            let h = parseInt(yesterdayMatch[1], 10);
-            const m = parseInt(yesterdayMatch[2], 10);
-            const ampm = (yesterdayMatch[3] || '').toLowerCase();
-            if ((ampm === 'pm' || ampm === 'ch') && h < 12) h += 12;
-            if ((ampm === 'am' || ampm === 'sa') && h === 12) h = 0;
-            yDate.setHours(h, m, 0, 0);
-        } else {
-            yDate.setHours(12, 0, 0, 0);
-        }
-        return Math.floor(yDate.getTime() / 1000);
-    }
+  // "Hôm nay lúc 08:30" / "Today at 8:30 AM"
+  const todayMatch = s.match(/^(?:hôm nay|today)\s+(?:lúc|at)\s+(\d{1,2}):(\d{2})(?:\s*(am|pm|sa|ch))?$/i);
+  if (todayMatch) {
+    let h = parseInt(todayMatch[1], 10);
+    const m = parseInt(todayMatch[2], 10);
+    const ampm = (todayMatch[3] || '').toLowerCase();
+    if ((ampm === 'pm' || ampm === 'ch') && h < 12) h += 12;
+    if ((ampm === 'am' || ampm === 'sa') && h === 12) h = 0;
+    const tDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+    return Math.floor(tDate.getTime() / 1000);
+  }
 
-    // "Hôm nay lúc 08:30" / "Today at 8:30 AM"
-    const todayMatch = s.match(/^(?:hôm nay|today)\s+(?:lúc|at)\s+(\d{1,2}):(\d{2})(?:\s*(am|pm|sa|ch))?$/i);
-    if (todayMatch) {
-        let h = parseInt(todayMatch[1], 10);
-        const m = parseInt(todayMatch[2], 10);
-        const ampm = (todayMatch[3] || '').toLowerCase();
-        if ((ampm === 'pm' || ampm === 'ch') && h < 12) h += 12;
-        if ((ampm === 'am' || ampm === 'sa') && h === 12) h = 0;
-        const tDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
-        return Math.floor(tDate.getTime() / 1000);
-    }
+  // Phút / Giờ / Ngày / Tuần / Tháng / Năm trước (Tránh đụng '16 tháng 10')
+  let m = s.match(/^(\d+)\s*(?:phút|p|min|mins|minute|minutes|m)(?:[\s·•\-_,]|\b|trước|ago|$)/i);
+  if (m) return nowSec - parseInt(m[1], 10) * 60;
 
-    // Phút / Giờ / Ngày / Tuần / Tháng / Năm trước (Tránh đụng '16 tháng 10')
-    let m = s.match(/^(\d+)\s*(?:phút|p|min|mins|minute|minutes|m)(?:[\s·•\-_,]|\b|trước|ago|$)/i);
-    if (m) return nowSec - parseInt(m[1], 10) * 60;
+  m = s.match(/^(\d+)\s*(?:giờ|g|h|hr|hrs|hour|hours)(?:[\s·•\-_,]|\b|trước|ago|$)/i);
+  if (m) return nowSec - parseInt(m[1], 10) * 3600;
 
-    m = s.match(/^(\d+)\s*(?:giờ|g|h|hr|hrs|hour|hours)(?:[\s·•\-_,]|\b|trước|ago|$)/i);
-    if (m) return nowSec - parseInt(m[1], 10) * 3600;
+  m = s.match(/^(\d+)\s*(?:ngày|ng|d|day|days)(?:[\s·•\-_,]|\b|trước|ago|$)/i);
+  if (m) return nowSec - parseInt(m[1], 10) * 86400;
 
-    m = s.match(/^(\d+)\s*(?:ngày|ng|d|day|days)(?:[\s·•\-_,]|\b|trước|ago|$)/i);
-    if (m) return nowSec - parseInt(m[1], 10) * 86400;
+  m = s.match(/^(\d+)\s*(?:tuần|t|w|wk|wks|week|weeks)(?:[\s·•\-_,]|\b|trước|ago|$)/i);
+  if (m) return nowSec - parseInt(m[1], 10) * 604800;
 
-    m = s.match(/^(\d+)\s*(?:tuần|t|w|wk|wks|week|weeks)(?:[\s·•\-_,]|\b|trước|ago|$)/i);
-    if (m) return nowSec - parseInt(m[1], 10) * 604800;
+  m = s.match(/^(\d+)\s*(?:tháng\s+trước|months?\s+ago|mos?\s+ago|mos\b)/i);
+  if (m) return nowSec - parseInt(m[1], 10) * 2592000;
 
-    m = s.match(/^(\d+)\s*(?:tháng\s+trước|months?\s+ago|mos?\s+ago|mos\b)/i);
-    if (m) return nowSec - parseInt(m[1], 10) * 2592000;
+  m = s.match(/^(\d+)\s*(?:năm\s+trước|years?\s+ago|yrs?\s+ago|yrs\b)/i);
+  if (m) return nowSec - parseInt(m[1], 10) * 31536000;
 
-    m = s.match(/^(\d+)\s*(?:năm\s+trước|years?\s+ago|yrs?\s+ago|yrs\b)/i);
-    if (m) return nowSec - parseInt(m[1], 10) * 31536000;
-
-    return null;
+  return null;
 }
 
 /**
  * Định dạng Unix Timestamp thành chuỗi ngày giờ DD/MM/YYYY HH:mm:ss
  */
 function formatTimestampToDate(ts) {
-    if (!ts) return '';
-    let dt = new Date(ts * 1000);
-    let pad = (n) => String(n).padStart(2, '0');
-    return `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
+  if (!ts) return '';
+  let dt = new Date(ts * 1000);
+  let pad = (n) => String(n).padStart(2, '0');
+  return `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
 }
 
 /**
  * Tính toán thời gian tương đối chuẩn xác từ Unix Timestamp
  */
 function formatRelativeTime(ts) {
-    if (!ts) return '';
-    let nowSec = Math.floor(Date.now() / 1000);
-    let diffSec = Math.max(0, nowSec - ts);
-    let diffMin = Math.floor(diffSec / 60);
-    let diffHours = Math.floor(diffMin / 60);
-    let diffDays = Math.floor(diffHours / 24);
+  if (!ts) return '';
+  let nowSec = Math.floor(Date.now() / 1000);
+  let diffSec = Math.max(0, nowSec - ts);
+  let diffMin = Math.floor(diffSec / 60);
+  let diffHours = Math.floor(diffMin / 60);
+  let diffDays = Math.floor(diffHours / 24);
 
-    if (diffMin < 1) return 'vừa xong';
-    if (diffMin < 60) return `${diffMin} phút trước`;
-    if (diffHours < 24) return `${diffHours} giờ trước`;
-    if (diffDays < 7) return `${diffDays} ngày trước`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} tuần trước`;
-    if (diffDays < 365) return `${Math.floor(diffDays / 30)} tháng trước`;
-    return `${Math.floor(diffDays / 365)} năm trước`;
+  if (diffMin < 1) return 'vừa xong';
+  if (diffMin < 60) return `${diffMin} phút trước`;
+  if (diffHours < 24) return `${diffHours} giờ trước`;
+  if (diffDays < 7) return `${diffDays} ngày trước`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} tuần trước`;
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)} tháng trước`;
+  return `${Math.floor(diffDays / 365)} năm trước`;
 }
 
 /**
  * Kiểm tra chuỗi text hoặc thẻ DOM có chứa nội dung thông báo / bình luận rác không
  */
 function isNotificationOrCommentGarbage(txt) {
-    if (!txt || typeof txt !== 'string') return true;
-    const t = txt.toLowerCase().trim();
-    if (t.length < 1) return true;
-    // Bỏ qua các nhãn hệ thống hoặc nút bấm
-    if (/^(?:thích|like|bình luận|comment|chia sẻ|share|gửi|send|xem thêm|see more|xem bản dịch|see translation|phù hợp nhất|most relevant|tất cả bình luận|all comments|trả lời|reply|tác giả|author)$/i.test(t)) {
-        return true;
-    }
-    return (
-        t.includes('đã nhắc đến bạn') ||
-        t.includes('đã bình luận') ||
-        t.includes('đã thích') ||
-        t.includes('đã chia sẻ') ||
-        t.includes('mentioned you') ||
-        t.includes('commented on') ||
-        t.includes('reacted to') ||
-        t.includes('shared your') ||
-        t.includes('chưa đọc') ||
-        t.includes('unread') ||
-        t.includes('thông báo') ||
-        t.includes('notifications')
-    );
+  if (!txt || typeof txt !== 'string') return true;
+  const t = txt.toLowerCase().trim();
+  if (t.length < 1) return true;
+  // Bỏ qua các nhãn hệ thống hoặc nút bấm
+  if (/^(?:thích|like|bình luận|comment|chia sẻ|share|gửi|send|xem thêm|see more|xem bản dịch|see translation|phù hợp nhất|most relevant|tất cả bình luận|all comments|trả lời|reply|tác giả|author)$/i.test(t)) {
+    return true;
+  }
+  return (
+    t.includes('đã nhắc đến bạn') ||
+    t.includes('đã bình luận') ||
+    t.includes('đã thích') ||
+    t.includes('đã chia sẻ') ||
+    t.includes('mentioned you') ||
+    t.includes('commented on') ||
+    t.includes('reacted to') ||
+    t.includes('shared your') ||
+    t.includes('chưa đọc') ||
+    t.includes('unread') ||
+    t.includes('thông báo') ||
+    t.includes('notifications')
+  );
 }
 
 function isNotificationOrGarbageElement(el) {
-    if (!el) return true;
-    if (el.closest('div[role="dialog"], div[role="menu"], [aria-modal="true"], header, nav, [role="navigation"], [role="banner"], [aria-label*="Thông báo"], [aria-label*="Notification"]')) {
-        return true;
-    }
-    const txt = (el.innerText || el.getAttribute('aria-label') || '');
-    return isNotificationOrCommentGarbage(txt);
+  if (!el) return true;
+  if (el.closest('div[role="dialog"], div[role="menu"], [aria-modal="true"], header, nav, [role="navigation"], [role="banner"], [aria-label*="Thông báo"], [aria-label*="Notification"]')) {
+    return true;
+  }
+  const txt = (el.innerText || el.getAttribute('aria-label') || '');
+  return isNotificationOrCommentGarbage(txt);
 }
 
 /**
@@ -614,228 +627,229 @@ function isNotificationOrGarbageElement(el) {
  * Chặn lỗi không khớp regex khi chuỗi có chữ 'lúc'
  */
 function parseTimeFromString(str) {
-    if (!str) return null;
-    const clean = str
-        .replace(/[\u200B-\u200D\uFEFF\u00a0]/g, ' ')
-        .replace(/[·•|]+/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+  if (!str) return null;
+  const clean = str
+    .replace(/[\u200B-\u200D\uFEFF\u00a0]/g, ' ')
+    .replace(/[·•|]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
-    if (clean.length < 2 || clean.length > 60) return null;
+  if (clean.length < 2 || clean.length > 60) return null;
 
-    // Bước 1: Kiểm tra thời gian tương đối
-    const rel = parseRelativeTimeToTimestamp(clean);
-    if (rel) return rel;
+  // Bước 1: Kiểm tra thời gian tương đối
+  const rel = parseRelativeTimeToTimestamp(clean);
+  if (rel) return rel;
 
-    // Tách giờ:phút nếu có ("lúc 16:03", "at 4:03 PM")
-    let hour = 12, minute = 0;
-    const timeMatch = clean.match(/(?:lúc|at|,|\s)\s*(\d{1,2}):(\d{2})(?:\s*(AM|PM|SA|CH))?/i);
-    if (timeMatch) {
-        hour = parseInt(timeMatch[1], 10);
-        minute = parseInt(timeMatch[2], 10);
-        const ampm = (timeMatch[3] || '').toUpperCase();
-        if ((ampm === 'PM' || ampm === 'CH') && hour < 12) hour += 12;
-        if ((ampm === 'AM' || ampm === 'SA') && hour === 12) hour = 0;
+  // Tách giờ:phút nếu có ("lúc 16:03", "at 4:03 PM")
+  let hour = 12, minute = 0;
+  const timeMatch = clean.match(/(?:lúc|at|,|\s)\s*(\d{1,2}):(\d{2})(?:\s*(AM|PM|SA|CH))?/i);
+  if (timeMatch) {
+    hour = parseInt(timeMatch[1], 10);
+    minute = parseInt(timeMatch[2], 10);
+    const ampm = (timeMatch[3] || '').toUpperCase();
+    if ((ampm === 'PM' || ampm === 'CH') && hour < 12) hour += 12;
+    if ((ampm === 'AM' || ampm === 'SA') && hour === 12) hour = 0;
+  }
+
+  // Bước 2: Tiếng Việt ("16 tháng 10", "16 tháng 10 lúc 16:03", "16 tháng 10, 2025 lúc 16:03", "8 Tháng 10", "28 Tháng 9", "15 tháng 9")
+  let m = clean.match(/^(?:ngày\s+)?(\d{1,2})\s+th(?:áng|g)\s+(\d{1,2})(?:(?:\s*,\s*|\s+năm\s+|\s+)(\d{4}))?(?:\s+lúc\s+\d{1,2}:\d{2}(?:\s*(?:AM|PM|SA|CH))?)?$/i);
+  if (m) {
+    const day = parseInt(m[1], 10);
+    const month = parseInt(m[2], 10) - 1;
+    let year = m[3] ? parseInt(m[3], 10) : now.getFullYear();
+    let dt = new Date(year, month, day, hour, minute, 0);
+    if (!m[3] && dt.getTime() > now.getTime() + 86400000) {
+      year -= 1;
+      dt = new Date(year, month, day, hour, minute, 0);
     }
+    return Math.floor(dt.getTime() / 1000);
+  }
 
-    // Bước 2: Tiếng Việt ("16 tháng 10", "16 tháng 10 lúc 16:03", "16 tháng 10, 2025 lúc 16:03", "8 Tháng 10", "28 Tháng 9", "15 tháng 9")
-    let m = clean.match(/^(?:ngày\s+)?(\d{1,2})\s+th(?:áng|g)\s+(\d{1,2})(?:(?:\s*,\s*|\s+năm\s+|\s+)(\d{4}))?(?:\s+lúc\s+\d{1,2}:\d{2}(?:\s*(?:AM|PM|SA|CH))?)?$/i);
-    if (m) {
-        const day = parseInt(m[1], 10);
-        const month = parseInt(m[2], 10) - 1;
-        let year = m[3] ? parseInt(m[3], 10) : now.getFullYear();
-        let dt = new Date(year, month, day, hour, minute, 0);
-        if (!m[3] && dt.getTime() > now.getTime() + 86400000) {
-            year -= 1;
-            dt = new Date(year, month, day, hour, minute, 0);
-        }
-        return Math.floor(dt.getTime() / 1000);
+  // Bước 3: Định dạng DD/MM/YYYY hoặc DD-MM-YYYY
+  m = clean.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+\d{1,2}:\d{2}.*)?$/);
+  if (m) {
+    const d = parseInt(m[1], 10);
+    const mo = parseInt(m[2], 10) - 1;
+    let y = parseInt(m[3], 10);
+    if (y < 100) y += 2000;
+    const dt = new Date(y, mo, d, hour, minute, 0);
+    if (!isNaN(dt.getTime())) return Math.floor(dt.getTime() / 1000);
+  }
+
+  // Bước 4: Tiếng Anh ("October 16", "Oct 16 at 4:03 PM", "16 October 2025")
+  const months = {
+    jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
+    may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7,
+    sep: 8, sept: 8, september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11
+  };
+  m = clean.match(/^([A-Za-z]+)\s+(\d{1,2})(?:,?\s+(\d{4}))?(?:\s+at\s+\d{1,2}:\d{2}.*)?$/i);
+  if (m && months[m[1].toLowerCase()] !== undefined) {
+    const mo = months[m[1].toLowerCase()];
+    const d = parseInt(m[2], 10);
+    let y = m[3] ? parseInt(m[3], 10) : now.getFullYear();
+    let dt = new Date(y, mo, d, hour, minute, 0);
+    if (!m[3] && dt.getTime() > now.getTime() + 86400000) {
+      y -= 1;
+      dt = new Date(y, mo, d, hour, minute, 0);
     }
+    return Math.floor(dt.getTime() / 1000);
+  }
 
-    // Bước 3: Định dạng DD/MM/YYYY hoặc DD-MM-YYYY
-    m = clean.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+\d{1,2}:\d{2}.*)?$/);
-    if (m) {
-        const d = parseInt(m[1], 10);
-        const mo = parseInt(m[2], 10) - 1;
-        let y = parseInt(m[3], 10);
-        if (y < 100) y += 2000;
-        const dt = new Date(y, mo, d, hour, minute, 0);
-        if (!isNaN(dt.getTime())) return Math.floor(dt.getTime() / 1000);
-    }
-
-    // Bước 4: Tiếng Anh ("October 16", "Oct 16 at 4:03 PM", "16 October 2025")
-    const months = {
-        jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
-        may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7,
-        sep: 8, sept: 8, september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11
-    };
-    m = clean.match(/^([A-Za-z]+)\s+(\d{1,2})(?:,?\s+(\d{4}))?(?:\s+at\s+\d{1,2}:\d{2}.*)?$/i);
-    if (m && months[m[1].toLowerCase()] !== undefined) {
-        const mo = months[m[1].toLowerCase()];
-        const d = parseInt(m[2], 10);
-        let y = m[3] ? parseInt(m[3], 10) : now.getFullYear();
-        let dt = new Date(y, mo, d, hour, minute, 0);
-        if (!m[3] && dt.getTime() > now.getTime() + 86400000) {
-            y -= 1;
-            dt = new Date(y, mo, d, hour, minute, 0);
-        }
-        return Math.floor(dt.getTime() / 1000);
-    }
-
-    return null;
+  return null;
 }
 
 function decodeGHLScrambledText(container) {
-    if (!container) return [];
-    // Tìm các thẻ span dùng flex để sắp xếp chữ theo thuộc tính style="order:..."
-    const flexSpans = container.querySelectorAll('span[style*="display: flex"], span[style*="display:flex"]');
-    const results = [];
+  if (!container) return [];
+  // Tìm các thẻ span dùng flex để sắp xếp chữ theo thuộc tính style="order:..."
+  const flexSpans = container.querySelectorAll('span[style*="display: flex"], span[style*="display:flex"]');
+  const results = [];
 
-    for (const flexParent of flexSpans) {
-        const children = Array.from(flexParent.children).filter(el => {
-            if (el.tagName !== 'SPAN') return false;
-            // Loại bỏ 100% các ký tự rác có gắn checksum hoặc đẩy ra ngoài bằng position: absolute / top: 3em
-            if (el.hasAttribute('checksum')) return false;
-            const styleAttr = el.getAttribute('style') || '';
-            if (/position\s*:\s*absolute/i.test(styleAttr) || /top\s*:\s*3em/i.test(styleAttr)) return false;
-            return true;
-        });
+  for (const flexParent of flexSpans) {
+    const children = Array.from(flexParent.children).filter(el => {
+      if (el.tagName !== 'SPAN') return false;
+      // Loại bỏ 100% các ký tự rác có gắn checksum hoặc đẩy ra ngoài bằng position: absolute / top: 3em
+      if (el.hasAttribute('checksum')) return false;
+      const styleAttr = el.getAttribute('style') || '';
+      if (/position\s*:\s*absolute/i.test(styleAttr) || /top\s*:\s*3em/i.test(styleAttr)) return false;
+      return true;
+    });
 
-        if (children.length > 0) {
-            children.sort((a, b) => {
-                const orderA = parseInt((a.getAttribute('style') || '').match(/order\s*:\s*(\d+)/i)?.[1] || '0', 10);
-                const orderB = parseInt((b.getAttribute('style') || '').match(/order\s*:\s*(\d+)/i)?.[1] || '0', 10);
-                return orderA - orderB;
-            });
-            const decoded = children.map(c => c.textContent || '').join('').replace(/\u00a0/g, ' ').trim();
-            if (decoded) results.push(decoded);
-        }
+    if (children.length > 0) {
+      children.sort((a, b) => {
+        const orderA = parseInt((a.getAttribute('style') || '').match(/order\s*:\s*(\d+)/i)?.[1] || '0', 10);
+        const orderB = parseInt((b.getAttribute('style') || '').match(/order\s*:\s*(\d+)/i)?.[1] || '0', 10);
+        return orderA - orderB;
+      });
+      const decoded = children.map(c => c.textContent || '').join('').replace(/\u00a0/g, ' ').trim();
+      if (decoded) results.push(decoded);
     }
-    return results;
+  }
+  return results;
 }
 
 function extractTimeFromArticleElement(article) {
-    if (!article) return null;
-    const articleRect = article.getBoundingClientRect();
+  if (!article) return null;
+  const articleRect = article.getBoundingClientRect();
 
-    // 0. ƯU TIÊN SỐ 1 TRÊN DOM: Giải mã trực tiếp chuỗi thời gian bị Facebook xáo trộn (GHL Scrambled Label)
-    const decodedLabels = decodeGHLScrambledText(article);
-    for (const lbl of decodedLabels) {
-        const ts = parseTimeFromString(lbl);
-        if (ts) {
-            return {
-                timestamp: ts,
-                raw: lbl,
-                publishTime: formatTimestampToDate(ts),
-                relativeTime: formatRelativeTime(ts)
-            };
-        }
+  // 0. ƯU TIÊN SỐ 1 TRÊN DOM: Giải mã trực tiếp chuỗi thời gian bị Facebook xáo trộn (GHL Scrambled Label)
+  const decodedLabels = decodeGHLScrambledText(article);
+  for (const lbl of decodedLabels) {
+    const ts = parseTimeFromString(lbl);
+    if (ts) {
+      return {
+        timestamp: ts,
+        raw: lbl,
+        publishTime: formatTimestampToDate(ts),
+        relativeTime: formatRelativeTime(ts)
+      };
     }
+  }
 
-    // Chỉ xét các thẻ nằm ở vùng Header trên cùng của bài viết (cách đỉnh bài viết tối đa 130px)
-    // để KHÔNG BAO GIỜ chạm tới ngày tháng của Video/Reel được Share nằm bên dưới!
-    const isInsideHeaderZone = (el) => {
-        try {
-            const r = el.getBoundingClientRect();
-            if (r.height === 0 && r.width === 0) return true;
-            return (r.top - articleRect.top) <= 130;
-        } catch (_) {
-            return true;
-        }
-    };
-
-    const links = article.querySelectorAll('a[href*="/posts/"], a[href*="/videos/"], a[href*="/reel/"], a[href*="permalink"], a[href*="story_fbid"], a[role="link"]');
-    for (const a of links) {
-        if (!isInsideHeaderZone(a)) continue;
-        const label = a.getAttribute('aria-label') || '';
-        if (label) {
-            const ts = parseTimeFromString(label);
-            if (ts) {
-                return {
-                    timestamp: ts,
-                    raw: label,
-                    publishTime: formatTimestampToDate(ts),
-                    relativeTime: formatRelativeTime(ts)
-                };
-            }
-        }
-        const text = (a.innerText || a.textContent || '').trim();
-        if (text && text.length <= 45) {
-            const ts = parseTimeFromString(text);
-            if (ts) {
-                return {
-                    timestamp: ts,
-                    raw: text,
-                    publishTime: formatTimestampToDate(ts),
-                    relativeTime: formatRelativeTime(ts)
-                };
-            }
-        }
+  // Chỉ xét các thẻ nằm ở vùng Header trên cùng của bài viết (cách đỉnh bài viết tối đa 130px)
+  // để KHÔNG BAO GIỜ chạm tới ngày tháng của Video/Reel được Share nằm bên dưới!
+  const isInsideHeaderZone = (el) => {
+    try {
+      const r = el.getBoundingClientRect();
+      if (r.height === 0 && r.width === 0) return true;
+      return (r.top - articleRect.top) <= 130;
+    } catch (_) {
+      return true;
     }
+  };
 
-    const spans = article.querySelectorAll('span, abbr');
-    for (const sp of spans) {
-        if (!isInsideHeaderZone(sp)) continue;
-        // Chỉ lấy span lá (hoặc span ngắn) ở vùng Header
-        const text = (sp.innerText || sp.textContent || '').trim();
-        if (text && text.length >= 2 && text.length <= 40) {
-            const ts = parseTimeFromString(text);
-            if (ts) {
-                return {
-                    timestamp: ts,
-                    raw: text,
-                    publishTime: formatTimestampToDate(ts),
-                    relativeTime: formatRelativeTime(ts)
-                };
-            }
-        }
+  const links = article.querySelectorAll('a[href*="/posts/"], a[href*="/videos/"], a[href*="/reel/"], a[href*="permalink"], a[href*="story_fbid"], a[role="link"]');
+  for (const a of links) {
+    if (!isInsideHeaderZone(a)) continue;
+    const label = a.getAttribute('aria-label') || '';
+    if (label) {
+      const ts = parseTimeFromString(label);
+      if (ts) {
+        return {
+          timestamp: ts,
+          raw: label,
+          publishTime: formatTimestampToDate(ts),
+          relativeTime: formatRelativeTime(ts)
+        };
+      }
     }
-    return null;
+    const text = (a.innerText || a.textContent || '').trim();
+    if (text && text.length <= 45) {
+      const ts = parseTimeFromString(text);
+      if (ts) {
+        return {
+          timestamp: ts,
+          raw: text,
+          publishTime: formatTimestampToDate(ts),
+          relativeTime: formatRelativeTime(ts)
+        };
+      }
+    }
+  }
+
+  const spans = article.querySelectorAll('span, abbr');
+  for (const sp of spans) {
+    if (!isInsideHeaderZone(sp)) continue;
+    // Chỉ lấy span lá (hoặc span ngắn) ở vùng Header
+    const text = (sp.innerText || sp.textContent || '').trim();
+    if (text && text.length >= 2 && text.length <= 40) {
+      const ts = parseTimeFromString(text);
+      if (ts) {
+        return {
+          timestamp: ts,
+          raw: text,
+          publishTime: formatTimestampToDate(ts),
+          relativeTime: formatRelativeTime(ts)
+        };
+      }
+    }
+  }
+  return null;
 }
 
 /**
  * Quét tìm các bài viết trên feed DOM và lấy thời gian (Chính xác theo DOM thực tế)
  */
 function findAllPostTimesInDOM() {
-    let candidates = [];
-    const minTs = 1577836800; // 01/01/2020
-    const nowSec = Math.floor(Date.now() / 1000);
-    const maxTs = nowSec + 86400 * 2;
+  let candidates = [];
+  const minTs = 1577836800; // 01/01/2020
+  const nowSec = Math.floor(Date.now() / 1000);
+  const maxTs = nowSec + 86400 * 2;
 
-    // 1. Tìm các bài viết trong timeline (bao gồm cả bài ghim ở đầu trang)
-    let articles = Array.from(document.querySelectorAll(
-        'div[role="feed"] div[role="article"], div[data-pagelet^="ProfileTimeline"] div[role="article"], div[data-pagelet^="FeedUnit_"], div[role="article"]'
-    )).filter(el => {
-        if (el.closest('header, nav, [role="navigation"], [role="banner"], [aria-label*="Thông báo"], [aria-label*="Notification"]')) return false;
-        if (el.parentElement && el.parentElement.closest('div[role="article"]')) return false;
-        let r = el.getBoundingClientRect();
-        let docTop = r.top + window.scrollY;
-        return el.offsetHeight > 60 && docTop > 100;
-    });
+  // 1. Tìm các bài viết trong timeline (bao gồm cả bài ghim ở đầu trang)
+  let articles = Array.from(document.querySelectorAll(
+    'div[role="feed"] div[role="article"], div[data-pagelet^="ProfileTimeline"] div[role="article"], div[data-pagelet^="FeedUnit_"], div[role="article"]'
+  )).filter(el => {
+    if (el.closest('header, nav, [role="navigation"], [role="banner"], [aria-label*="Thông báo"], [aria-label*="Notification"]')) return false;
+    if (el.parentElement && el.parentElement.closest('div[role="article"]')) return false;
+    let r = el.getBoundingClientRect();
+    let docTop = r.top + window.scrollY;
+    const textLen = (el.innerText || el.textContent || '').trim().length;
+    return (el.offsetHeight > 50 || textLen > 25) && (docTop > 100 || r.top === 0 || textLen > 50);
+  });
 
-    articles.sort((a, b) => {
-        let topA = a.getBoundingClientRect().top + window.scrollY;
-        let topB = b.getBoundingClientRect().top + window.scrollY;
-        return topA - topB;
-    });
+  articles.sort((a, b) => {
+    let topA = a.getBoundingClientRect().top + window.scrollY;
+    let topB = b.getBoundingClientRect().top + window.scrollY;
+    return topA - topB;
+  });
 
-    for (let i = 0; i < Math.min(articles.length, 6); i++) {
-        let article = articles[i];
-        let articleText = (article.innerText || '').toLowerCase();
-        let isPinned = /(?:đã ghim|pinned post|pinned|置顶|置顶帖子)/i.test(articleText.slice(0, 180));
+  for (let i = 0; i < Math.min(articles.length, 6); i++) {
+    let article = articles[i];
+    let articleText = (article.innerText || article.textContent || '').toLowerCase();
+    let isPinned = /(?:đã ghim|pinned post|pinned|置顶|置顶帖子)/i.test(articleText.slice(0, 180));
 
-        let articleTime = extractTimeFromArticleElement(article);
-        if (articleTime && articleTime.timestamp >= minTs && articleTime.timestamp <= maxTs) {
-            candidates.push({
-                ...articleTime,
-                isPinned: isPinned,
-                source: 'article_dom',
-                element: article
-            });
-        }
+    let articleTime = extractTimeFromArticleElement(article);
+    if (articleTime && articleTime.timestamp >= minTs && articleTime.timestamp <= maxTs) {
+      candidates.push({
+        ...articleTime,
+        isPinned: isPinned,
+        source: 'article_dom',
+        element: article
+      });
     }
+  }
 
-    return candidates;
+  return candidates;
 }
 
 /**
@@ -843,142 +857,142 @@ function findAllPostTimesInDOM() {
  * Thu thập tất cả các bài đăng và chọn con số LỚN NHẤT (mới nhất), giải mã chính xác ví dụ publish_time: 1792530962
  */
 function extractFacebookPublishTimeDetailed() {
-    const nowSec = Math.floor(Date.now() / 1000);
-    const minTs = 1577836800; // 01/01/2020
-    const maxTs = nowSec + 60;
+  const nowSec = Math.floor(Date.now() / 1000);
+  const minTs = 1577836800; // 01/01/2020
+  const maxTs = nowSec + 60;
 
-    let currentProfileId = '';
-    try {
-        currentProfileId = extractFacebookID() || '';
-    } catch (_) {}
+  let currentProfileId = '';
+  try {
+    currentProfileId = extractFacebookID() || '';
+  } catch (_) { }
 
-    // 1. Quét Relay GraphQL Stories: Lấy Pinned Post và Timeline Feed Units (Reels / Feed)
-    const relayTimes = extractRelayFeedAndPinnedTimestamps(currentProfileId);
-    const relayPinnedTs = relayTimes.pinnedTs || 0;
-    const relayFeedTs = relayTimes.latestFeedTs || 0;
-    const relayMaxTs = Math.max(relayPinnedTs, relayFeedTs);
+  // 1. Quét Relay GraphQL Stories: Lấy Pinned Post và Timeline Feed Units (Reels / Feed)
+  const relayTimes = extractRelayFeedAndPinnedTimestamps(currentProfileId);
+  const relayPinnedTs = relayTimes.pinnedTs || 0;
+  const relayFeedTs = relayTimes.latestFeedTs || 0;
+  const relayMaxTs = Math.max(relayPinnedTs, relayFeedTs);
 
-    let candidates = [];
+  let candidates = [];
 
-    // 2. Quét từ DOM (Header bài viết hiển thị trên tường)
-    try {
-        const domCandidates = findAllPostTimesInDOM();
-        for (const c of domCandidates) {
-            if (c.timestamp && c.timestamp >= minTs && c.timestamp <= maxTs) {
-                candidates.push(c);
-            }
-        }
-    } catch (_) {}
-
-    // 3. Quét từ <script> JSON bổ sung (page_insights)
-    try {
-        const scripts = Array.from(document.querySelectorAll('script')).filter(s => {
-            const t = s.textContent || '';
-            return t.includes('publish_time') || t.includes('creation_time');
-        });
-
-        for (const s of scripts) {
-            const text = s.textContent || '';
-
-            // Bắt các khối page_insights có chứa actor_id và publish_time
-            const insightRegex = /["\\]*actor_id["\\]*\s*:\s*["\\]*(\d+)["\\]*[\s\S]{0,350}?["\\]*publish_time["\\]*\s*:\s*(\d{9,11})/g;
-            for (const m of text.matchAll(insightRegex)) {
-                const actorId = m[1];
-                const ts = parseInt(m[2], 10);
-                const snippet = m[0];
-
-                if (currentProfileId && actorId && actorId !== currentProfileId) {
-                    continue;
-                }
-                const isVideoAttachment = snippet.includes('EntVideoCreationStory');
-
-                if (ts >= minTs && ts <= maxTs) {
-                    candidates.push({
-                        timestamp: ts,
-                        source: isVideoAttachment ? 'video_script' : 'post_script',
-                        actorId: actorId,
-                        isPinned: false
-                    });
-                }
-            }
-        }
-    } catch (_) {}
-
-    // Quyết định timestamp tối ưu: So sánh giữa Pinned Post, Regular Post (Feed/Reels) và DOM
-    let targetTs = 0;
-    let postTag = '';
-
-    const firstDom = candidates.find(c => c.source === 'article_dom');
-
-    if (relayMaxTs > 0) {
-        targetTs = relayMaxTs;
-        if (targetTs === relayPinnedTs && relayPinnedTs > relayFeedTs) {
-            postTag = ' (Pinned)';
-        } else if (targetTs === relayFeedTs && relayFeedTs > 0) {
-            postTag = ' (Reels/Feed)';
-        }
-        // Nếu DOM có bài viết mới hơn nữa
-        if (firstDom && firstDom.timestamp > targetTs) {
-            targetTs = firstDom.timestamp;
-            postTag = '';
-        }
-    } else if (firstDom) {
-        targetTs = firstDom.timestamp;
-    } else if (candidates.length > 0) {
-        const postScripts = candidates.filter(c => c.source === 'post_script');
-        targetTs = postScripts.length > 0 ? postScripts[0].timestamp : candidates[0].timestamp;
+  // 2. Quét từ DOM (Header bài viết hiển thị trên tường)
+  try {
+    const domCandidates = findAllPostTimesInDOM();
+    for (const c of domCandidates) {
+      if (c.timestamp && c.timestamp >= minTs && c.timestamp <= maxTs) {
+        candidates.push(c);
+      }
     }
+  } catch (_) { }
 
-    if (targetTs >= minTs && targetTs <= maxTs) {
-        const dt = new Date(targetTs * 1000);
-        const pad = n => String(n).padStart(2, '0');
-        const formattedDate = `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}${postTag}`;
+  // 3. Quét từ <script> JSON bổ sung (page_insights)
+  try {
+    const scripts = Array.from(document.querySelectorAll('script')).filter(s => {
+      const t = s.textContent || '';
+      return t.includes('publish_time') || t.includes('creation_time');
+    });
 
-        const diffSec = Math.max(0, nowSec - targetTs);
-        const diffDays = Math.floor(diffSec / 86400);
-        const relText = `${formatRelativeTime(targetTs)}${postTag}`;
+    for (const s of scripts) {
+      const text = s.textContent || '';
 
-        const isActive = diffDays <= 60;
-        const actStatus = isActive ? '✓ TÍCH CỰC (Trại đang hoạt động)' : '⚠️ ÍT HOẠT ĐỘNG (> 60 ngày)';
+      // Bắt các khối page_insights có chứa actor_id và publish_time
+      const insightRegex = /["\\]*actor_id["\\]*\s*:\s*["\\]*(\d+)["\\]*[\s\S]{0,350}?["\\]*publish_time["\\]*\s*:\s*(\d{9,11})/g;
+      for (const m of text.matchAll(insightRegex)) {
+        const actorId = m[1];
+        const ts = parseInt(m[2], 10);
+        const snippet = m[0];
 
-        return {
-            timestamp: targetTs,
-            publishTime: formattedDate,
-            relativeTime: relText,
-            activityStatus: actStatus,
-            isoTime: dt.toISOString()
-        };
+        if (currentProfileId && actorId && actorId !== currentProfileId) {
+          continue;
+        }
+        const isVideoAttachment = snippet.includes('EntVideoCreationStory');
+
+        if (ts >= minTs && ts <= maxTs) {
+          candidates.push({
+            timestamp: ts,
+            source: isVideoAttachment ? 'video_script' : 'post_script',
+            actorId: actorId,
+            isPinned: false
+          });
+        }
+      }
     }
+  } catch (_) { }
+
+  // Quyết định timestamp tối ưu: So sánh giữa Pinned Post, Regular Post (Feed/Reels) và DOM
+  let targetTs = 0;
+  let postTag = '';
+
+  const firstDom = candidates.find(c => c.source === 'article_dom');
+
+  if (relayMaxTs > 0) {
+    targetTs = relayMaxTs;
+    if (targetTs === relayPinnedTs && relayPinnedTs > relayFeedTs) {
+      postTag = ' (Pinned)';
+    } else if (targetTs === relayFeedTs && relayFeedTs > 0) {
+      postTag = ' (Reels/Feed)';
+    }
+    // Nếu DOM có bài viết mới hơn nữa
+    if (firstDom && firstDom.timestamp > targetTs) {
+      targetTs = firstDom.timestamp;
+      postTag = '';
+    }
+  } else if (firstDom) {
+    targetTs = firstDom.timestamp;
+  } else if (candidates.length > 0) {
+    const postScripts = candidates.filter(c => c.source === 'post_script');
+    targetTs = postScripts.length > 0 ? postScripts[0].timestamp : candidates[0].timestamp;
+  }
+
+  if (targetTs >= minTs && targetTs <= maxTs) {
+    const dt = new Date(targetTs * 1000);
+    const pad = n => String(n).padStart(2, '0');
+    const formattedDate = `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}${postTag}`;
+
+    const diffSec = Math.max(0, nowSec - targetTs);
+    const diffDays = Math.floor(diffSec / 86400);
+    const relText = `${formatRelativeTime(targetTs)}${postTag}`;
+
+    const isActive = diffDays <= 60;
+    const actStatus = isActive ? '✓ TÍCH CỰC (Trại đang hoạt động)' : '⚠️ ÍT HOẠT ĐỘNG (> 60 ngày)';
 
     return {
-        timestamp: 0,
-        publishTime: 'Chưa bóc tách',
-        relativeTime: 'Gần đây',
-        activityStatus: 'Chưa có bài đăng',
-        isoTime: ''
+      timestamp: targetTs,
+      publishTime: formattedDate,
+      relativeTime: relText,
+      activityStatus: actStatus,
+      isoTime: dt.toISOString()
     };
+  }
+
+  return {
+    timestamp: 0,
+    publishTime: 'Chưa bóc tách',
+    relativeTime: 'Gần đây',
+    activityStatus: 'Chưa có bài đăng',
+    isoTime: ''
+  };
 }
 
 
 function extractFacebookID() {
-    let url = window.location.href;
-    let m = url.match(/[?&]id=(\d+)/) || url.match(/facebook\.com\/(?:people\/[^/]+\/)?(\d{8,})/);
-    if (m && m[1]) return m[1];
-    
-    let alAndroid = document.querySelector('meta[property="al:android:url"]');
-    if (alAndroid && alAndroid.content) {
-        let mAl = alAndroid.content.match(/fb:\/\/profile\/(\d+)/);
-        if (mAl && mAl[1]) return mAl[1];
-    }
-    
-    let html = document.documentElement ? document.documentElement.innerHTML : '';
-    let mUid = html.match(/"userID":"?(\d{8,})"?/) || 
-               html.match(/"profileID":"?(\d{8,})"?/) || 
-               html.match(/"entity_id":"?(\d{8,})"?/) ||
-               html.match(/profile_id[":=]+(\d{8,})/);
-    if (mUid && mUid[1]) return mUid[1];
+  let url = window.location.href;
+  let m = url.match(/[?&]id=(\d+)/) || url.match(/facebook\.com\/(?:people\/[^/]+\/)?(\d{8,})/);
+  if (m && m[1]) return m[1];
 
-    return '';
+  let alAndroid = document.querySelector('meta[property="al:android:url"]');
+  if (alAndroid && alAndroid.content) {
+    let mAl = alAndroid.content.match(/fb:\/\/profile\/(\d+)/);
+    if (mAl && mAl[1]) return mAl[1];
+  }
+
+  let html = document.documentElement ? document.documentElement.innerHTML : '';
+  let mUid = html.match(/"userID":"?(\d{8,})"?/) ||
+    html.match(/"profileID":"?(\d{8,})"?/) ||
+    html.match(/"entity_id":"?(\d{8,})"?/) ||
+    html.match(/profile_id[":=]+(\d{8,})/);
+  if (mUid && mUid[1]) return mUid[1];
+
+  return '';
 }
 
 const US_STATE_CODES = new Set([
@@ -1001,6 +1015,26 @@ const US_STATES = {
   'south dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT', 'vermont': 'VT',
   'virginia': 'VA', 'washington': 'WA', 'west virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY'
 };
+
+// BỘ LỌC STOPWORDS CHẶN TRIỆT ĐỂ VIỆC LẤY NHẦM BIO / MARKETING TEXT VÀO ĐỊA CHỈ
+const BIO_MARKETING_STOPWORDS = /\b(?:we are|we breed|family owned|raising|breeding|breeder|breeders|puppy|puppies|welcome to|our dogs|our goal|our passion|frenchies|doodles|poodles|retriever|shepherd|bulldog|corgi|akc registered|health tested|champion|bloodlines|take-home|application|contact us|follow us|specializing in|proud to|loving homes|furry friends|best friend|born and raised|call or text|available puppies|upcoming litters|adoption|adopt|stud service|good dog|screening process|meet the|about us|our story|dm for info|message us|ship nationwide|since \d{4}|for loving families|chuyên phối giống|nhân giống|chó con|bầy cún|thú cưng|cung cấp cún)\b/i;
+
+const STREET_ADDRESS_REGEX = /\b(?:\d{1,6}[A-Za-z]?|P\.?O\.?\s*Box\s*\d+)\s+[A-Za-z0-9\s.,'#-]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Drive|Dr|Lane|Ln|Way|Court|Ct|Circle|Cir|Highway|Hwy|Pkwy|Parkway|Plaza|Pl|Terrace|Ter|Square|Sq|Suite|Ste|Apt|Unit|Ranch|Trail|Trl|Pike|Loop|Trace)\b/i;
+
+const CITY_STATE_ZIP_REGEX = /\b[A-Za-z\s.-]{2,30},\s*([A-Z]{2})\b(?:\s*(\d{5}(?:-\d{4})?))?/i;
+
+function isLikelyAddress(s) {
+  if (!s || typeof s !== 'string') return false;
+  const str = s.trim();
+  if (str.length < 5 || str.length > 130) return false;
+  if (BIO_MARKETING_STOPWORDS.test(str)) return false;
+  if (str.split(/\s+/).length > 15) return false;
+  if (STREET_ADDRESS_REGEX.test(str)) return true;
+  const m = str.match(CITY_STATE_ZIP_REGEX);
+  if (m && m[1] && US_STATE_CODES.has(m[1].toUpperCase())) return true;
+  return false;
+}
+
 
 const POPULAR_US_NAMES = new Set([
   'james', 'john', 'robert', 'michael', 'william', 'david', 'richard', 'joseph', 'thomas', 'charles',
@@ -1127,22 +1161,26 @@ function cleanAddressText(raw) {
   if (!raw || typeof raw !== 'string') return '';
   let s = raw.trim();
 
-  // Loại bỏ ngay lập tức nếu chuỗi chứa các từ khóa giao diện / text rác
+  // Loại bỏ ngay lập tức nếu chuỗi chứa các từ khóa giao diện / text rác hoặc Bio stopwords
   if (/\b(?:cart|ship to vietnam|snoozed|live website inspector|quick add|years|litters|miles|vnd|calendar|milkshake|starred|items that ship|recommendations|imdb|movies|externalweblink|photo|best in|judge denk|running and playing|find your breed|dont stop me|dogsnsw|ankc)\b/i.test(s)) {
     return '';
   }
-  if (s.length >= 140) return '';
+  if (typeof BIO_MARKETING_STOPWORDS !== 'undefined' && BIO_MARKETING_STOPWORDS.test(s)) {
+    return '';
+  }
+  if (s.split(/\s+/).length > 15) return '';
+  if (s.length >= 250) return '';
 
   let prev = '';
   while (s !== prev) {
     prev = s;
     s = s.replace(/^(?:Chi tiết|Details|Trang|Page|详细信息|主页)\s*[:·•|—–-]?\s*/i, '')
-         .replace(/^(?:Chưa đánh giá(?:\s*\(\d+\s*lượt đánh giá\))?|No reviews(?:\s*yet)?|暂无评分|暂无评价|\d+(?:\.\d+)?\s*(?:đánh giá|reviews?|分)(?:\s*\(\d+\s*(?:lượt|条评价)\))?)\s*[:·•|—–-]?\s*/i, '')
-         .replace(/^\${1,4}\s*[:·•|—–-]?\s*/, '')
-         .replace(/^(?:Luôn mở cửa|Đang mở cửa|Đóng cửa|Mở cửa|Always open|Open now|Closed|Open hours|总是营业|营业中|已打烊|营业时间)\s*[:·•|—–-]?\s*/i, '')
-         .replace(/^(?:Địa chỉ|Address|Location|地址|所在地)\s*[:·•|—–-]?\s*/i, '')
-         .replace(/^(?:USA|US|Việt Nam|Vietnam|中国|美国)\s*[:·•|—–-]?\s*/i, '')
-         .trim();
+      .replace(/^(?:Chưa đánh giá(?:\s*\(\d+\s*lượt đánh giá\))?|No reviews(?:\s*yet)?|暂无评分|暂无评价|\d+(?:\.\d+)?\s*(?:đánh giá|reviews?|分)(?:\s*\(\d+\s*(?:lượt|条评价)\))?)\s*[:·•|—–-]?\s*/i, '')
+      .replace(/^\${1,4}\s*[:·•|—–-]?\s*/, '')
+      .replace(/^(?:Luôn mở cửa|Đang mở cửa|Đóng cửa|Mở cửa|Always open|Open now|Closed|Open hours|总是营业|营业中|已打烊|营业时间)\s*[:·•|—–-]?\s*/i, '')
+      .replace(/^(?:Địa chỉ|Address|Location|地址|所在地)\s*[:·•|—–-]?\s*/i, '')
+      .replace(/^(?:USA|US|Việt Nam|Vietnam|中国|美国)\s*[:·•|—–-]?\s*/i, '')
+      .trim();
   }
 
   // Nếu chuỗi chỉ là tên Nhóm / Cộng đồng Facebook (không phải địa chỉ thực) -> Bỏ
@@ -1157,13 +1195,13 @@ function cleanAddressText(raw) {
 
   s = s.replace(/\b(Avenue|Ave|Street|St|Road|Rd|Drive|Dr|Boulevard|Blvd|Way|Lane|Ln|Court|Ct|Circle|Cir|Highway|Hwy)(USA|US|United States)\b/gi, '$1, $2');
   s = s.replace(/,\s*(?:USA|United States),\s*([A-Za-z\s]+),\s*([A-Z]{2}),\s*(?:United States|USA),\s*\2\s*(?:United States|USA)?/gi, ', $1, $2, United States')
-       .replace(/([A-Z]{2}),\s*(?:United States|USA),\s*\1\s*(?:United States|USA)?\s*(\d{5})/gi, '$1 $2, United States')
-       .replace(/\b([A-Z]{2})\s+United States\s+(\d{5})\b/gi, '$1 $2, United States')
-       .replace(/,\s*,/g, ',')
-       .replace(/\s+/g, ' ');
+    .replace(/([A-Z]{2}),\s*(?:United States|USA),\s*\1\s*(?:United States|USA)?\s*(\d{5})/gi, '$1 $2, United States')
+    .replace(/\b([A-Z]{2})\s+United States\s+(\d{5})\b/gi, '$1 $2, United States')
+    .replace(/,\s*,/g, ',')
+    .replace(/\s+/g, ' ');
 
   s = s.replace(/^[\s,·•|:—–-]+|[\s,·•|:—–-]+$/g, '').trim();
-  if (s.length < 5) return '';
+  if (s.length < 5 || (typeof isLikelyAddress === 'function' && !isLikelyAddress(s))) return '';
 
   return s;
 }
@@ -1194,7 +1232,7 @@ function isValidOwnerCandidate(name) {
   for (const bad of JUNK_OWNER_STRINGS) {
     if (low === bad || low.startsWith(bad + ' ') || low.endsWith(' ' + bad)) return false;
   }
-  
+
   // Kiểm tra từ đầu tiên có phải là mạo từ, giới từ, đại từ, danh từ chung rác không
   const firstWord = low.split(/\s+/)[0];
   const BAD_FIRST_WORDS = new Set([
@@ -1221,10 +1259,10 @@ function isValidEmail(em) {
   if (!em) return false;
   let s = em.toLowerCase().trim();
   if (s.length < 6 || s.length > 70) return false;
-  
+
   // Sửa lỗi chính tả domain phổ biến
   s = s.replace(/@gmal\.com$/i, '@gmail.com').replace(/@yaho\.com$/i, '@yahoo.com').replace(/@hotmial\.com$/i, '@hotmail.com');
-  
+
   // Loại bỏ email nền tảng trung gian
   const badEmails = new Set([
     'akcmarketplace@akc.org',
@@ -1270,7 +1308,7 @@ function isThirdPartyFormService(u) {
     for (const h of THIRD_PARTY_FORM_HOSTS) {
       if (host === h || host.endsWith('.' + h)) return true;
     }
-  } catch (_) {}
+  } catch (_) { }
   return false;
 }
 
@@ -1412,7 +1450,281 @@ function parseAddressRightToLeft(addrStr, curCity = '', curState = '', curCountr
   }
   if (!parsedCountry) parsedCountry = curCountry || 'United States';
 
-  return { address: addrStr.trim(), city: parsedCity, state: parsedState, zip: parsedZip, country: parsedCountry };
+  // Bảo vệ không để nguyên đoạn Bio rinh vào trường Address
+  let cleanFinalAddr = '';
+  if (typeof isLikelyAddress === 'function' && isLikelyAddress(addrStr)) {
+    cleanFinalAddr = addrStr.trim();
+  } else if (parsedCity && parsedState) {
+    cleanFinalAddr = [parsedCity, parsedState, parsedZip, parsedCountry].filter(Boolean).join(', ');
+  }
+
+  return { address: cleanFinalAddr, city: parsedCity, state: parsedState, zip: parsedZip, country: parsedCountry };
+}
+
+/**
+ * TR\u00cdCH XU\u1ea4T NHANH TH\u00d4NG TIN LI\u00caN H\u1ec6 T\u1eea DOM HI\u1ec2N TH\u1eca C\u1ee6A FACEBOOK PAGE
+ * X\u1eed l\u00fd 2 layout th\u1ef1c t\u1ebf:
+ * 1. C\u00f3 \u0111\u0103ng nh\u1eadp: C\u00e1c section ri\u00eang "Gi\u1edbi thi\u1ec7u", "Chi ti\u1ebft", "Li\u00ean k\u1ebft", "Th\u00f4ng tin li\u00ean h\u1ec7"
+ * 2. Ch\u01b0a \u0111\u0103ng nh\u1eadp: T\u1ea5t c\u1ea3 trong 1 block "Gi\u1edbi thi\u1ec7u" t\u1ed5ng h\u1ee3p
+ */
+function extractPageContactsFromDOM() {
+  const result = { phone: '', email: '', website: '', instagram: '', bio: '', category: '', zip: '', address: '', social_links: [] };
+
+  // ===== HELPER: gi\u1ea3i m\u00e3 link shim =====
+  const decodeShim = (href) => {
+    if (!href) return '';
+    if (/(?:l|lm)\.facebook\.com\/l\.php|\/l\.php\?u=|\/flx\/warn\/\?u=/.test(href)) {
+      try {
+        const u = new URL(href, window.location.origin);
+        const real = u.searchParams.get('u');
+        if (real) return decodeURIComponent(real);
+      } catch (_) { }
+    }
+    return href;
+  };
+
+  // ===== 1. LAYOUT C\u00d3 LOGIN: T\u00ecm t\u1eebng section theo heading =====
+  // T\u00ecm m\u1ecdi heading-level element c\u00f3 n\u1ed9i dung kh\u1edbp
+  const allEls = Array.from(document.querySelectorAll('div[role="main"] span, div[role="main"] h2, div[role="main"] h3, div[role="main"] h4'));
+
+  // Helper: t\u00ecm container ch\u1ee9a heading
+  const findSectionBox = (headingEl) =>
+    headingEl.closest('div.x1n2onr6, div.x9f619, div.x78zum5, div.x1q0g3np') ||
+    headingEl.parentElement?.parentElement?.parentElement;
+
+  // --- 1A. Section "Gi\u1edbi thi\u1ec7u" / "Intro" \u2192 Bio ---
+  const bioHeadings = allEls.filter(el => {
+    const t = (el.innerText || '').trim();
+    return /^(?:Gi\u1edbi thi\u1ec7u|Intro|About|\u7b80\u4ecb)$/i.test(t) && el.children.length === 0;
+  });
+  for (const h of bioHeadings) {
+    const box = findSectionBox(h);
+    if (!box) continue;
+    const boxText = (box.innerText || box.textContent || '').trim();
+    const lines = boxText.split('\n').map(l => l.trim()).filter(l => l.length >= 8);
+    // Ph\u1ea7n bio l\u00e0 d\u00f2ng \u0111\u1ea7u ti\u00ean sau heading kh\u00f4ng ph\u1ea3i UI string
+    for (const line of lines) {
+      if (/^(?:Gi\u1edbi thi\u1ec7u|Intro|About|\u7b80\u4ecb|Ch\u1ec9nh s\u1eeda|Edit|\u7f16\u8f91|Th\u00eam ti\u1ec3u s\u1eed)$/i.test(line)) continue;
+      if (isFacebookUIString(line)) continue;
+      if (/^\d+(?:[.,]\d+)?[KkMm]?\s*(?:ng\u01b0\u1eddi|followers|l\u01b0\u1ee3t|likes)/i.test(line)) continue;
+      result.bio = line;
+      break;
+    }
+    if (result.bio) break;
+  }
+
+  // --- 1B. Section "Li\u00ean k\u1ebft" / "Links" / "Website" \u2192 Website ---
+  const linkHeadings = allEls.filter(el => {
+    const t = (el.innerText || '').trim();
+    return /^(?:Li\u00ean k\u1ebft|Links|Website|\u94fe\u63a5|Web)$/i.test(t) && el.children.length === 0;
+  });
+  for (const h of linkHeadings) {
+    const box = findSectionBox(h);
+    if (!box) continue;
+    const anchors = Array.from(box.querySelectorAll('a[href]'));
+    for (const a of anchors) {
+      const href = decodeShim(a.getAttribute('href') || a.href || '');
+      if (!href) continue;
+      if (/(?:instagram|pinterest|youtube|youtu\.be|tiktok|linkedin|twitter|x\.com)\//i.test(href)) continue;
+      if (isValidWebsite(href)) {
+        result.website = href.startsWith('http') ? href : 'https://' + href;
+        break;
+      }
+    }
+    // Fallback: text visible trong box
+    if (!result.website) {
+      const boxText = box.innerText || box.textContent || '';
+      const mDomain = boxText.match(/\b([a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]\.(?:com|org|net|us|co|biz|info|site|online|store|shop|pet|care|vet|tech|me|io|ca|uk|dog|kennel|farm|tv|app))\b/i);
+      if (mDomain && isValidWebsite(mDomain[1])) {
+        result.website = 'https://' + mDomain[1].toLowerCase();
+      }
+    }
+    if (result.website) break;
+  }
+
+  // --- 1C. Section "Th\u00f4ng tin li\u00ean h\u1ec7" / "Contact info" \u2192 Phone + Email + Social ---
+  const contactHeadings = allEls.filter(el => {
+    const t = (el.innerText || '').trim();
+    return /^(?:Th\u00f4ng tin li\u00ean h\u1ec7|Contact info|Contact Information|Li\u00ean h\u1ec7|\u8054\u7cfb\u65b9\u5f0f)$/i.test(t) && el.children.length === 0;
+  });
+  for (const h of contactHeadings) {
+    const box = findSectionBox(h);
+    if (!box) continue;
+
+    // Phone: a[href^="tel:"] ho\u1eb7c text kh\u1edbp regex
+    if (!result.phone) {
+      const telA = box.querySelector('a[href^="tel:"]');
+      if (telA) {
+        const p = cleanPhone(decodeURIComponent(telA.getAttribute('href').replace(/^tel:/i, '')));
+        if (p) result.phone = p;
+      }
+      if (!result.phone) {
+        const waA = box.querySelector('a[href*="wa.me/"], a[href*="whatsapp.com"]');
+        if (waA) {
+          const m = (waA.getAttribute('href') || '').match(/wa\.me\/(\d+)/i);
+          if (m) result.phone = cleanPhone(m[1]);
+        }
+      }
+      if (!result.phone) {
+        const boxText = box.innerText || '';
+        const mP = boxText.match(/(?:\+?[\d]{1,3}[\s.-]?)?(?:\([\d]{2,4}\)[\s.-]?)?[\d]{3,4}[\s.-][\d]{3,4}[\s.-]?[\d]{0,4}\b/);
+        if (mP) {
+          const p = cleanPhone(mP[0]);
+          if (p && p.replace(/\D/g, '').length >= 7) result.phone = p;
+        }
+      }
+    }
+
+    // Email: a[href^="mailto:"] ho\u1eb7c text kh\u1edbp regex
+    if (!result.email) {
+      const mailA = box.querySelector('a[href^="mailto:"]');
+      if (mailA) {
+        const raw = decodeURIComponent(mailA.getAttribute('href').replace(/^mailto:/i, '').split('?')[0]);
+        if (isValidEmail(raw)) result.email = raw.toLowerCase();
+      }
+      if (!result.email) {
+        const boxText = box.innerText || '';
+        const mE = boxText.match(/\b([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,})\b/);
+        if (mE && isValidEmail(mE[1])) result.email = mE[1].toLowerCase();
+      }
+    }
+
+    // Social links t\u1eeb t\u1ea5t c\u1ea3 anchor trong box
+    const socialAnchors = Array.from(box.querySelectorAll('a[href]'));
+    for (const a of socialAnchors) {
+      const href = decodeShim(a.getAttribute('href') || a.href || '');
+      if (!href) continue;
+      if (/instagram\.com\/([a-zA-Z0-9_.-]+)/i.test(href)) {
+        const m = href.match(/instagram\.com\/([a-zA-Z0-9_.-]+)/i);
+        if (m && !result.instagram) {
+          const handle = m[1].replace(/\/+$/, '').toLowerCase();
+          if (handle.length >= 3 && !handle.endsWith('.com') && !['explore', 'accounts', 'login', 'share', 'reels', 'stories'].includes(handle)) {
+            result.instagram = `https://www.instagram.com/${handle}/`;
+            if (!result.social_links.includes(result.instagram)) result.social_links.push(result.instagram);
+          }
+        }
+      } else if (/(?:youtube\.com|youtu\.be|tiktok\.com|linkedin\.com|twitter\.com|x\.com|pinterest\.com)\//i.test(href)) {
+        if (!result.social_links.includes(href)) result.social_links.push(href);
+      }
+    }
+    break; // ch\u1ec9 l\u1ea5y section "Th\u00f4ng tin li\u00ean h\u1ec7" \u0111\u1ea7u ti\u00ean
+  }
+
+  // --- 1D. Section "Chi ti\u1ebft" / "Details" \u2192 Zip + Address ---
+  const detailHeadings = allEls.filter(el => {
+    const t = (el.innerText || '').trim();
+    return /^(?:Chi ti\u1ebft|Details|\u8be6\u7ec6\u4fe1\u606f|Th\u00f4ng tin c\u00e1 nh\u00e2n)$/i.test(t) && el.children.length === 0;
+  });
+  for (const h of detailHeadings) {
+    const box = findSectionBox(h);
+    if (!box) continue;
+    const boxText = (box.innerText || '').trim();
+    if (!result.zip) {
+      const mZip = boxText.match(/\b(\d{5})\b/);
+      if (mZip && mZip[1] !== '00000') result.zip = mZip[1];
+    }
+    if (!result.address) {
+      // Tìm dòng có địa chỉ thực (bắt buộc khớp mẫu địa chỉ và không lấy nhầm Bio)
+      const addrLines = boxText.split('\n').map(l => l.trim());
+      for (const line of addrLines) {
+        if (line.length < 5) continue;
+        if (result.bio && (line.toLowerCase().includes(result.bio.toLowerCase().slice(0, 25)) || result.bio.toLowerCase().includes(line.toLowerCase().slice(0, 25)))) {
+          continue;
+        }
+        const cleaned = cleanAddressText(line);
+        if (cleaned && typeof isLikelyAddress === 'function' && isLikelyAddress(cleaned)) {
+          result.address = cleaned;
+          break;
+        }
+      }
+    }
+    if (result.zip || result.address) break;
+  }
+
+  // --- 1E. Category t\u1eeb "Trang \u00b7 [category]" ho\u1eb7c "Page \u00b7 [category]" pattern ---
+  if (!result.category) {
+    const bodyText = document.body ? (document.body.innerText || document.body.textContent || '') : '';
+    const mCat = bodyText.match(/(?:Trang|Page)\s*[\u00b7\u2022]\s*([^\n\r\u00b7\u2022]{3,60})/i);
+    if (mCat && mCat[1]) result.category = mCat[1].trim();
+  }
+
+  // ===== 2. LAYOUT KH\u00d4NG LOGIN: T\u1ea5t c\u1ea3 trong block "Gi\u1edbi thi\u1ec7u" =====
+  // N\u1ebfu ch\u01b0a l\u1ea5y \u0111\u01b0\u1ee3c data ch\u00ednh, qu\u00e9t to\u00e0n b\u1ed9 block Gi\u1edbi thi\u1ec7u
+  const hasEnoughData = result.phone || result.email || result.website;
+  if (!hasEnoughData) {
+    // C\u00e1c block Gi\u1edbi thi\u1ec7u c\u00f3 th\u1ec3 ch\u1ee9a t\u1ea5t c\u1ea3 th\u00f4ng tin li\u00ean h\u1ec7
+    const introBlocks = Array.from(document.querySelectorAll(
+      'div[role="main"] > div > div, div[role="complementary"] > div'
+    )).filter(el => {
+      const t = (el.innerText || '').toLowerCase();
+      // Block c\u00f3 c\u1ea3 phone/email v\u00e0 info kh\u00e1c
+      const tLen = (el.innerText || el.textContent || '').trim().length;
+      return (t.includes('@') || /\+?\d[\d\s().-]{6,}/.test(t)) && (el.offsetHeight > 50 || tLen > 30);
+    });
+
+    for (const block of introBlocks.slice(0, 3)) {
+      // Phone
+      if (!result.phone) {
+        const telA = block.querySelector('a[href^="tel:"]');
+        if (telA) {
+          const p = cleanPhone(decodeURIComponent(telA.getAttribute('href').replace(/^tel:/i, '')));
+          if (p) result.phone = p;
+        }
+        if (!result.phone) {
+          const t = block.innerText || '';
+          const mP = t.match(/(?:\+?[\d]{1,3}[\s.-]?)?(?:\([\d]{2,4}\)[\s.-]?)?[\d]{3,4}[\s.-][\d]{3,4}[\s.-]?[\d]{0,4}\b/);
+          if (mP) {
+            const p = cleanPhone(mP[0]);
+            if (p && p.replace(/\D/g, '').length >= 7) result.phone = p;
+          }
+        }
+      }
+      // Email
+      if (!result.email) {
+        const mailA = block.querySelector('a[href^="mailto:"]');
+        if (mailA) {
+          const raw = decodeURIComponent(mailA.getAttribute('href').replace(/^mailto:/i, '').split('?')[0]);
+          if (isValidEmail(raw)) result.email = raw.toLowerCase();
+        }
+        if (!result.email) {
+          const mE = (block.innerText || '').match(/\b([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,})\b/);
+          if (mE && isValidEmail(mE[1])) result.email = mE[1].toLowerCase();
+        }
+      }
+      // Website
+      if (!result.website) {
+        const anchors = Array.from(block.querySelectorAll('a[href]'));
+        for (const a of anchors) {
+          const href = decodeShim(a.getAttribute('href') || a.href || '');
+          if (/(?:instagram|pinterest|youtube|youtu\.be|tiktok|linkedin|twitter|x\.com)\//i.test(href)) continue;
+          if (isValidWebsite(href)) {
+            result.website = href.startsWith('http') ? href : 'https://' + href;
+            break;
+          }
+        }
+      }
+      // Social
+      const anchors = Array.from(block.querySelectorAll('a[href]'));
+      for (const a of anchors) {
+        const href = decodeShim(a.getAttribute('href') || a.href || '');
+        if (!href) continue;
+        if (/instagram\.com\/([a-zA-Z0-9_.-]+)/i.test(href)) {
+          const m = href.match(/instagram\.com\/([a-zA-Z0-9_.-]+)/i);
+          if (m && !result.instagram) {
+            const handle = m[1].replace(/\/+$/, '').toLowerCase();
+            if (handle.length >= 3 && !handle.endsWith('.com') && !['explore', 'accounts', 'login', 'share', 'reels', 'stories'].includes(handle)) {
+              result.instagram = `https://www.instagram.com/${handle}/`;
+              if (!result.social_links.includes(result.instagram)) result.social_links.push(result.instagram);
+            }
+          }
+        } else if (/(?:youtube\.com|youtu\.be|tiktok\.com|linkedin\.com|twitter\.com|x\.com|pinterest\.com)\//i.test(href)) {
+          if (!result.social_links.includes(href)) result.social_links.push(href);
+        }
+      }
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -1421,7 +1733,7 @@ function parseAddressRightToLeft(addrStr, curCity = '', curState = '', curCountr
  * Tương thích 100% khi người dùng chuyển đổi ngôn ngữ (Tiếng Việt / English / 中文)
  */
 function extractIntroAndContacts(leadName) {
-  let text = document.body ? document.body.innerText : '';
+  let text = document.body ? (document.body.innerText || document.body.textContent || '') : '';
   let fullHtml = document.documentElement ? document.documentElement.innerHTML : '';
 
   let phone = '';
@@ -1429,6 +1741,7 @@ function extractIntroAndContacts(leadName) {
   let website = '';
   let websiteScore = 0;
   let instagram = '';
+  const social_links = [];
   let city = '';
   let state = '';
   let zip = '';
@@ -1466,11 +1779,9 @@ function extractIntroAndContacts(leadName) {
           instagram = `https://www.instagram.com/${handle}/`;
         }
       }
-    } else if (isValidWebsite(rawU)) {
-      if (!website) {
-        website = rawU;
-        websiteScore = 15;
-      }
+    } else if (/(?:youtube\.com|youtu\.be|tiktok\.com|linkedin\.com|twitter\.com|x\.com|pinterest\.com)\//i.test(rawU)) {
+      const socialUrl = rawU.startsWith('http') ? rawU : `https://${rawU}`;
+      if (!social_links.includes(socialUrl)) social_links.push(socialUrl);
     }
   }
 
@@ -1509,25 +1820,50 @@ function extractIntroAndContacts(leadName) {
   // 1.4 Quét các trường JSON GraphQL trong <script data-sjs> CHỈ KHI có định dạng SĐT phân tách chuẩn
   if (!phone) {
     const phoneJsonPatterns = [
-      /["\\]*(?:telephone|formatted_phone_number|profile_field_phone)["\\]*\s*:\s*"([^"]+)"/gi,
-      /["\\]*phone_number["\\]*\s*:\s*\{[\s\S]{0,100}?["\\]*universal_number["\\]*\s*:\s*"([^"]+)"/gi
+      /["\\]*(?:telephone|formatted_phone_number|profile_field_phone|page_phone|phone_number_text)["\\]*\s*:\s*"([^"]+)"/gi,
+      /["\\]*phone_number["\\]*\s*:\s*\{[\s\S]{0,100}?["\\]*universal_number["\\]*\s*:\s*"([^"]+)"/gi,
+      // Facebook Page specific
+      /["\\]*phone["\\]*\s*:\s*"(\+?[\d\s().-]{7,20})"/gi,
+      /"profile_info"[\s\S]{0,300}?"phone"\s*:\s*"([^"]+)"/gi
     ];
     for (const src of scriptSources) {
       if (!src || src.length < 20) continue;
       for (const reg of phoneJsonPatterns) {
         for (const m of src.matchAll(reg)) {
           const raw = m[1].replace(/\\/g, '').trim();
-          if (/^(\+?1[\s.-]?)?\(?[2-9]\d{2}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/.test(raw)) {
-            const p = cleanPhone(raw);
-            if (p && !p.startsWith('0000000')) {
-              phone = p;
-              break;
-            }
+          const p = cleanPhone(raw);
+          if (p && !p.startsWith('0000000') && p.replace(/\D/g, '').length >= 7) {
+            phone = p;
+            break;
           }
         }
         if (phone) break;
       }
       if (phone) break;
+    }
+  }
+
+  // 1.5b Quét vùng 'Thông tin liên hệ' / 'Contact info' dành cho Page (Facebook Page About tab)
+  if (!phone) {
+    const contactSections = Array.from(document.querySelectorAll(
+      'div[data-pagelet*="PageInfo"], div[data-pagelet*="PageAbout"], div[data-pagelet*="PageIntro"], ' +
+      'div[aria-label*="Thông tin liên hệ"], div[aria-label*="Contact info"], div[aria-label*="Contact Information"]'
+    ));
+    for (const sec of contactSections) {
+      const secText = (sec.innerText || '').trim();
+      // Quét tel link trong section này trước
+      const telA = sec.querySelector('a[href^="tel:"]');
+      if (telA) {
+        const rawTel = decodeURIComponent((telA.getAttribute('href') || '').replace(/^tel:/i, ''));
+        const p = cleanPhone(rawTel);
+        if (p) { phone = p; break; }
+      }
+      // Fallback text regex
+      const mP = secText.match(/(?:\+?\d{1,3}[\s.-]?)?\(?\d{2,4}\)?[\s.-]\d{3,4}[\s.-]\d{3,4}\b/);
+      if (mP) {
+        const p = cleanPhone(mP[0]);
+        if (p && p.replace(/\D/g, '').length >= 7) { phone = p; break; }
+      }
     }
   }
 
@@ -1543,17 +1879,23 @@ function extractIntroAndContacts(leadName) {
   // 2. QUÉT EMAIL LIÊN HỆ
   // =========================================================================
   // 2.1 Quét thẻ a có link mailto:
-  const mailtoLink = document.querySelector('a[href^="mailto:"]');
-  if (mailtoLink) {
+  const mailtoLinks = Array.from(document.querySelectorAll('a[href^="mailto:"]'));
+  for (const mailtoLink of mailtoLinks) {
     const rawMail = decodeURIComponent((mailtoLink.getAttribute('href') || '').replace(/^mailto:/i, '').split('?')[0]);
-    if (isValidEmail(rawMail)) email = rawMail.trim().toLowerCase();
+    if (isValidEmail(rawMail)) {
+      email = rawMail.trim().toLowerCase();
+      break;
+    }
   }
 
   // 2.2 Quét JSON GraphQL trong <script data-sjs>
   if (!email) {
     const emailJsonPatterns = [
-      /["\\]*(?:email_address|profile_field_email)["\\]*\s*:\s*"([^"]+@[^"]+\.[a-zA-Z]{2,})"/gi,
-      /["\\]*email["\\]*\s*:\s*"([^"]+@[^"]+\.[a-zA-Z]{2,})"/gi
+      /["\\]*(?:email_address|profile_field_email|business_email|page_email)["\\]*\s*:\s*"([^"]+@[^"]+\.[a-zA-Z]{2,})"/gi,
+      /["\\]*email["\\]*\s*:\s*"([^"]+@[^"]+\.[a-zA-Z]{2,})"/gi,
+      // Facebook Page specific patterns
+      /"page_contact_info"[\s\S]{0,500}?"email"\s*:\s*"([^"]+@[^"]+\.[a-zA-Z]{2,})"/gi,
+      /"contact_fields"[\s\S]{0,500}?"value"\s*:\s*"([^"]+@[^"]+\.[a-zA-Z]{2,})"/gi
     ];
     for (const src of scriptSources) {
       if (!src || src.length < 20) continue;
@@ -1579,6 +1921,41 @@ function extractIntroAndContacts(leadName) {
     }
   }
 
+  // Một số giao diện Facebook chỉ render email như text/aria-label, không
+  // tạo mailto:. Quét riêng vùng main để không phụ thuộc vào link ẩn đầu tiên.
+  if (!email) {
+    const contactText = [
+      document.querySelector('div[role="main"]')?.innerText || '',
+      ...Array.from(document.querySelectorAll('div[role="main"] [aria-label], div[role="main"] [title]'))
+        .map(el => `${el.getAttribute('aria-label') || ''} ${el.getAttribute('title') || ''}`)
+    ].join('\n');
+    const candidates = contactText.match(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi) || [];
+    for (const candidate of candidates) {
+      if (isValidEmail(candidate)) {
+        email = candidate.toLowerCase();
+        break;
+      }
+    }
+  }
+
+  // 2.4 Quét vùng 'Thông tin liên hệ' / 'Contact info' dành cho Facebook Page
+  if (!email) {
+    const pageSections = Array.from(document.querySelectorAll(
+      'div[data-pagelet*="PageInfo"], div[data-pagelet*="PageAbout"], div[data-pagelet*="PageIntro"], ' +
+      'div[aria-label*="Thông tin liên hệ"], div[aria-label*="Contact info"], div[aria-label*="Contact Information"]'
+    ));
+    for (const sec of pageSections) {
+      const mailA = sec.querySelector('a[href^="mailto:"]');
+      if (mailA) {
+        const rawMail = decodeURIComponent((mailA.getAttribute('href') || '').replace(/^mailto:/i, '').split('?')[0]);
+        if (isValidEmail(rawMail)) { email = rawMail.trim().toLowerCase(); break; }
+      }
+      const secText = sec.innerText || '';
+      const mEmail = secText.match(/\b([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)\b/);
+      if (mEmail && isValidEmail(mEmail[1])) { email = mEmail[1].trim().toLowerCase(); break; }
+    }
+  }
+
   // =========================================================================
   // 3. QUÉT WEBSITE & INSTAGRAM (GIẢI MÃ LINK SHIM L.FACEBOOK.COM TRIỆT ĐỂ)
   // =========================================================================
@@ -1587,6 +1964,7 @@ function extractIntroAndContacts(leadName) {
     const t = (el.innerText || '').trim();
     return /^(?:Liên kết|Links|Website|链接|Web)$/i.test(t) && el.children.length === 0;
   });
+  const officialLinkAnchors = new Set();
 
   for (const h of linkHeadings) {
     const sectionBox = h.closest('div.x1n2onr6, div.x9f619, div.x78zum5') || h.parentElement?.parentElement;
@@ -1594,15 +1972,17 @@ function extractIntroAndContacts(leadName) {
       // Quét thẻ <a> trong khối liên kết
       const sectionLinks = Array.from(sectionBox.querySelectorAll('a[href]'));
       for (const a of sectionLinks) {
+        officialLinkAnchors.add(a);
         let hf = a.getAttribute('href') || a.href || '';
         if (/(?:l|lm)\.facebook\.com\/l\.php/i.test(hf) || hf.includes('/l.php?u=') || hf.includes('/flx/warn/?u=')) {
           try {
             const u = new URL(hf, window.location.origin);
             const real = u.searchParams.get('u');
             if (real) hf = decodeURIComponent(real);
-          } catch (_) {}
+          } catch (_) { }
         }
-        if (isValidWebsite(hf)) {
+        const isSocialLink = /(?:instagram\.com|pinterest\.com|youtube\.com|youtu\.be|tiktok\.com|linkedin\.com|twitter\.com|x\.com)\//i.test(hf);
+        if (isValidWebsite(hf) && !isSocialLink) {
           website = hf.startsWith('http') ? hf : 'https://' + hf;
           websiteScore = 20;
           break;
@@ -1612,7 +1992,8 @@ function extractIntroAndContacts(leadName) {
       if (!website) {
         const boxText = sectionBox.innerText || '';
         const mDomain = boxText.match(/\b([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.(?:com|org|net|us|co|biz|info|site|online|store|shop|pet|care|vet|tech|me|io|ca|uk|dog|kennel|farm))\b/i);
-        if (mDomain && isValidWebsite(mDomain[1])) {
+        const isSocialDomain = /^(?:instagram|pinterest|youtube|youtu|tiktok|linkedin|twitter|x)\.com$/i.test(mDomain?.[1] || '');
+        if (mDomain && !isSocialDomain && isValidWebsite(mDomain[1])) {
           website = 'https://' + mDomain[1].toLowerCase().trim() + '/';
           websiteScore = 18;
         }
@@ -1622,11 +2003,16 @@ function extractIntroAndContacts(leadName) {
   }
 
   // 3.2 Quét toàn bộ khối Giới thiệu / Thông tin cá nhân
-  let introContainer = document.querySelector('div[data-pagelet*="ProfileIntro"], div[data-pagelet*="Intro"], div[data-pagelet*="ProfileTilesFeed"]');
+  // Hỗ trợ cả Facebook Profile (ProfileIntro) VÀ Facebook Page (PageIntro, PageInfo)
+  let introContainer = document.querySelector(
+    'div[data-pagelet*="ProfileIntro"], div[data-pagelet*="Intro"], div[data-pagelet*="ProfileTilesFeed"], ' +
+    'div[data-pagelet*="PageIntro"], div[data-pagelet*="PageInfo"], div[data-pagelet*="PageAbout"], ' +
+    'div[data-pagelet*="PageTilesFeed"]'
+  );
   if (!introContainer) {
     const headings = Array.from(document.querySelectorAll('h2, h3, h4, span, div')).filter(el => {
       const t = (el.innerText || '').trim();
-      return /^(?:Giới thiệu|Intro|About|简介|Thông tin cá nhân|Personal info|Details|Chi tiết)$/i.test(t) && el.children.length === 0;
+      return /^(?:Giới thiệu|Intro|About|简介|Thông tin cá nhân|Personal info|Details|Chi tiết|Thông tin|Information)$/i.test(t) && el.children.length === 0;
     });
     for (const h of headings) {
       const p = h.closest('div.x1n2onr6, div[role="main"] > div, div.x9f619');
@@ -1635,6 +2021,60 @@ function extractIntroAndContacts(leadName) {
   }
   if (!introContainer) introContainer = document.querySelector('div[role="main"]') || document.body;
 
+  // 3.2.1 Quét JSON GraphQL cho website / page_website (Facebook Page)
+  if (!website) {
+    const websiteJsonPatterns = [
+      /["\\]*(?:website|page_website|external_url|website_url)["\\]*\s*:\s*"(https?:\/\/[^"]{5,200})"/gi,
+      /["\\]*(?:website|page_website|website_url)["\\]*\s*:\s*"([^"]{5,200})"/gi
+    ];
+    for (const src of scriptSources) {
+      if (!src || src.length < 20) continue;
+      for (const reg of websiteJsonPatterns) {
+        for (const m of src.matchAll(reg)) {
+          const raw = m[1].replace(/\\/g, '').trim();
+          if (isValidWebsite(raw)) {
+            website = raw.startsWith('http') ? raw : 'https://' + raw;
+            websiteScore = 15;
+            break;
+          }
+        }
+        if (website) break;
+      }
+      if (website) break;
+    }
+  }
+
+  // 3.2.2 Quét JSON GraphQL cho category, address, city, zip của Facebook Page
+  if (!category) {
+    const catPatterns = [
+      /["\\]*(?:category_name|page_category|primary_category)["\\]*\s*:\s*"([^"]{2,80})"/i,
+      /["\\]*category["\\]*\s*:\s*"([^"]{2,80})"/i
+    ];
+    for (const src of scriptSources) {
+      if (!src) continue;
+      for (const pat of catPatterns) {
+        const m = src.match(pat);
+        if (m && m[1] && m[1].length < 80) { category = m[1].replace(/\\/g, '').trim(); break; }
+      }
+      if (category) break;
+    }
+  }
+
+  if (!address) {
+    const addrPatterns = [
+      /["\\]*(?:single_line_address|formatted_address|street_address)["\\]*\s*:\s*"([^"]{5,200})"/i,
+      /["\\]*address["\\]*\s*:\s*\{[\s\S]{0,300}?["\\]*street["\\]*\s*:\s*"([^"]{5,200})"/i
+    ];
+    for (const src of scriptSources) {
+      if (!src) continue;
+      for (const pat of addrPatterns) {
+        const m = src.match(pat);
+        if (m && m[1]) { address = m[1].replace(/\\/g, '').trim(); break; }
+      }
+      if (address) break;
+    }
+  }
+
   const allLinks = Array.from(introContainer.querySelectorAll('a[href]')).filter(a => {
     // Loại trừ tuyệt đối các link nằm trong bài viết (feed post), comment hoặc gợi ý
     if (a.closest('div[role="article"], div[data-pagelet*="FeedUnit"], div[data-pagelet*="Comment"]')) {
@@ -1642,17 +2082,20 @@ function extractIntroAndContacts(leadName) {
     }
     return true;
   });
+  const contactLinks = Array.from(document.querySelectorAll('div[role="main"] a[href]'))
+    .filter(a => !a.closest('div[role="article"], div[data-pagelet*="FeedUnit"], div[data-pagelet*="Comment"]'));
+  const allContactLinks = Array.from(new Set([...allLinks, ...contactLinks]));
 
-  for (let a of allLinks) {
+  for (let a of allContactLinks) {
     let href = a.getAttribute('href') || a.href || '';
-    
+
     // GIẢI MÃ ĐẦY ĐỦ LINK SHIM l.facebook.com HOẶC lm.facebook.com HOẶC /l.php?u=
     if (/(?:l|lm)\.facebook\.com\/l\.php/i.test(href) || href.startsWith('/l.php?u=') || href.includes('/flx/warn/?u=')) {
       try {
         const u = new URL(href, window.location.origin);
         const real = u.searchParams.get('u');
         if (real) href = decodeURIComponent(real);
-      } catch (_) {}
+      } catch (_) { }
     }
 
     // 1. Kiểm tra nếu là liên kết Amazon Storefront / Wishlist / Product / Author
@@ -1682,10 +2125,14 @@ function extractIntroAndContacts(leadName) {
           'stories', 'explore', 'about', 'accounts', 'login', 'share'
         ]);
         if (!BROKEN_IG_HANDLES.has(handle) && !handle.endsWith('.com') && !handle.endsWith('.') && handle.length >= 3 && /^[a-zA-Z0-9_][a-zA-Z0-9_.]*[a-zA-Z0-9_]$/.test(handle)) {
-          if (!instagram) instagram = `https://www.instagram.com/${handle}/`;
+          const socialUrl = `https://www.instagram.com/${handle}/`;
+          if (!instagram) instagram = socialUrl;
+          if (!social_links.includes(socialUrl)) social_links.push(socialUrl);
         }
       }
-    } else if (isValidWebsite(href)) {
+    } else if (/(?:youtube\.com|youtu\.be|tiktok\.com|linkedin\.com|twitter\.com|x\.com|pinterest\.com)\//i.test(href)) {
+      if (!social_links.includes(href)) social_links.push(href);
+    } else if (officialLinkAnchors.has(a) && isValidWebsite(href)) {
       const isForm = isThirdPartyFormService(href);
       let candidateScore = 5;
       let cleanTarget = href;
@@ -1694,7 +2141,7 @@ function extractIntroAndContacts(leadName) {
         const u = new URL(href);
         const host = u.hostname.toLowerCase();
         const path = u.pathname.replace(/\/+$/, '');
-        
+
         if (isForm) {
           candidateScore = 1; // Biểu mẫu bên thứ ba (monday.com, jotform...) điểm thấp nhất
         } else if (host.includes('gooddog.com')) {
@@ -1706,7 +2153,7 @@ function extractIntroAndContacts(leadName) {
           candidateScore = 8; // Tên miền riêng có trang con (ví dụ: preciouspetcare.com/contact) -> Chuẩn hóa về trang chủ để vào được menu đầy đủ
           cleanTarget = u.origin + '/';
         }
-      } catch (_) {}
+      } catch (_) { }
 
       if (!website || candidateScore > (websiteScore || 0)) {
         website = cleanTarget;
@@ -1715,39 +2162,8 @@ function extractIntroAndContacts(leadName) {
     }
   }
 
-  // 3.3 Quét text toàn trang tìm tên miền nếu vẫn chưa có website
-  if (!website) {
-    const mainText = (introContainer.innerText || text || '');
-    const mAllDomains = mainText.match(/\b([a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.(?:com|org|net|us|co|biz|info|site|online|store|shop|pet|care|vet|tech|me|io|ca|uk|dog|kennel|farm))\b/gi);
-    if (mAllDomains) {
-      for (const d of mAllDomains) {
-        if (isValidWebsite(d)) {
-          website = 'https://' + d.toLowerCase().trim() + '/';
-          websiteScore = 6;
-          break;
-        }
-      }
-    }
-  }
-
-  // Quét JSON GraphQL cho Website nếu DOM Intro chưa có (Chỉ quét trên fullHtml của profile hiện tại)
-  if (!website) {
-    const jsonWebPatterns = [
-      /["\\]*websites["\\]*\s*:\s*\[[\s\S]{0,180}?["\\]*url["\\]*\s*:\s*"([^"]+)"/gi,
-      /["\\]*(?:website|external_url|external_link)["\\]*\s*:\s*"([^"]+)"/gi,
-      /["\\]*profile_intro_card["\\]*[\s\S]{0,400}?["\\]*url["\\]*\s*:\s*"([^"]+)"/gi
-    ];
-    for (const reg of jsonWebPatterns) {
-      for (const m of fullHtml.matchAll(reg)) {
-        const cleanU = m[1].replace(/\\/g, '').replace(/\\u0025/g, '%');
-        if (isValidWebsite(cleanU)) {
-          website = cleanU;
-          break;
-        }
-      }
-      if (website) break;
-    }
-  }
+  // Website chỉ được xác nhận từ khối "Liên kết". Không fallback sang text,
+  // script hoặc contact links vì các nguồn đó thường chứa social URLs.
 
   // Quét Instagram @handle trong text nếu chưa có link
   if (!instagram) {
@@ -1763,7 +2179,7 @@ function extractIntroAndContacts(leadName) {
   let country = '';
 
   // 4.1 Bóc tách từ query where1= trên link Bing Maps / Google Maps trong Intro
-  for (let a of allLinks) {
+  for (let a of allContactLinks) {
     const h = a.getAttribute('href') || a.href || '';
     const mWhere = h.match(/where1=([^&"'\\]+)/i);
     if (mWhere) {
@@ -1801,7 +2217,7 @@ function extractIntroAndContacts(leadName) {
             if (parsed.country) country = parsed.country;
           }
         }
-      } catch (_) {}
+      } catch (_) { }
       break;
     }
   }
@@ -1811,9 +2227,9 @@ function extractIntroAndContacts(leadName) {
     const allSpans = Array.from(document.querySelectorAll('div[role="main"] span, div[data-pagelet*="Intro"] span, div.x1n2onr6 span'));
     for (const el of allSpans) {
       const t = (el.innerText || '').trim();
-      if (t.length > 8 && t.length < 140 && /,?\s*(?:United States|USA|[A-Z]{2},?\s*\d{5}|Vietnam|Việt Nam|Hồ Chí Minh|Ho Chi Minh|Canada|Australia|United Kingdom)/i.test(t)) {
+      if (t.length > 8 && t.length < 130 && (typeof isLikelyAddress === 'function' ? isLikelyAddress(t) : true)) {
         const cleanDomAddr = cleanAddressText(t);
-        if (cleanDomAddr) {
+        if (cleanDomAddr && (typeof isLikelyAddress === 'function' ? isLikelyAddress(cleanDomAddr) : true)) {
           address = cleanDomAddr;
           if (/Vietnam|Việt Nam|Hồ Chí Minh|Ho Chi Minh/i.test(cleanDomAddr)) {
             country = 'Vietnam';
@@ -1904,13 +2320,20 @@ function extractIntroAndContacts(leadName) {
   // =========================================================================
   // 5. QUÉT TIỂU SỬ / GIỚI THIỆU (BIO) - ĐA TẦNG & ĐA NGÔN NGỮ (VI / EN / ZH)
   // =========================================================================
-  // 5.1 Quét JSON GraphQL
+  // 5.1 Quét JSON GraphQL (hỗ trợ cả Profile và Page)
   for (const src of scriptSources) {
     if (!src || src.length < 20) continue;
-    const mBioJson = src.match(/["\\]*(?:profile_intro_card|bio_text)["\\]*[\s\S]{0,250}?["\\]*text["\\]*\s*:\s*"([^"]{10,400})"/i);
+    const mBioJson =
+      src.match(/["\\]*(?:profile_intro_card|bio_text|page_about|about)["\\]*[\s\S]{0,250}?["\\]*text["\\]*\s*:\s*"([^"]{10,600})"/i) ||
+      src.match(/["\\]*(?:description|page_description|blurb)["\\]*\s*:\s*"([^"]{10,600})"/i) ||
+      src.match(/["\\]*about["\\]*\s*:\s*"([^"]{10,600})"/i);
     if (mBioJson) {
-      bio = mBioJson[1].replace(/\\n/g, ' ').replace(/\\/g, '').trim();
-      break;
+      const candidate = mBioJson[1].replace(/\\n/g, ' ').replace(/\\t/g, ' ').replace(/\\/g, '').trim();
+      // Lọc bỏ bio rác hệ thống
+      if (candidate.length >= 10 && !isValidEmail(candidate) && !isValidWebsite(candidate)) {
+        bio = candidate;
+        break;
+      }
     }
   }
 
@@ -1919,6 +2342,23 @@ function extractIntroAndContacts(leadName) {
     const domBio = findBioFromIntroDOM(introContainer);
     if (domBio) {
       bio = domBio;
+    }
+  }
+
+  // 5.2b Quét vùng Page 'About' nếu chưa có bio
+  if (!bio) {
+    const pageAboutSections = Array.from(document.querySelectorAll(
+      'div[data-pagelet*="PageAbout"], div[data-pagelet*="PageInfo"], div[data-pagelet*="PageIntro"]'
+    ));
+    for (const sec of pageAboutSections) {
+      const secText = (sec.innerText || '').trim();
+      // Tách phần bio thực sự - bỏ qua các dòng chỉ là số followers, links, labels
+      const lines = secText.split('\n').map(l => l.trim()).filter(l =>
+        l.length >= 10 &&
+        !/^(?:\d+[KkMm]?\s*(?:người|followers|lượt|likes|đánh giá|reviews)|(?:Giới thiệu|About|Intro|Information|Thông tin|Category|Danh mục|Website|Phone|Email|Address|Địa chỉ|Liên kết|Links)$)/i.test(l) &&
+        !isFacebookUIString(l)
+      );
+      if (lines.length > 0) { bio = lines[0]; break; }
     }
   }
 
@@ -1936,9 +2376,11 @@ function extractIntroAndContacts(leadName) {
   // =========================================================================
   // 6. QUÉT HẠNG MỤC TRANG (CATEGORY) - HỖ TRỢ VI, EN, ZH
   // =========================================================================
-  const mCat = text.match(/(?:Page|Trang|主页)\s*[·•:—–-]\s*([^\n\r·•]{3,50})/i) ||
-              fullHtml.match(/["\\]*category_name["\\]*\s*:\s*"([^"]+)"/i);
-  if (mCat) category = mCat[1].trim();
+  if (!category) {
+    const mCat = text.match(/(?:Page|Trang|主页)\s*[·•:—–-]\s*([^\n\r·•]{3,50})/i) ||
+      fullHtml.match(/["\\]*(?:category_name|page_category|primary_category)["\\]*\s*:\s*"([^"]+)"/i);
+    if (mCat) category = mCat[1].trim();
+  }
 
   // =========================================================================
   // 7. DEEP BIO SCRAPING: QUÉT SÂU BIO, INTRO VÀ BÀI ĐĂNG GẦN NHẤT TÌM BIO & AMAZON
@@ -1978,7 +2420,7 @@ function extractIntroAndContacts(leadName) {
           const u = new URL(aHref, window.location.origin);
           const real = u.searchParams.get('u');
           if (real) aHref = decodeURIComponent(real);
-        } catch (_) {}
+        } catch (_) { }
       }
       const vAmz = sanitizeAndValidateAmazonUrl(aHref);
       if (vAmz && !validAmazonUrlsList.includes(vAmz)) {
@@ -2022,13 +2464,25 @@ function extractIntroAndContacts(leadName) {
     city,
     state,
     zip,
-    address: cleanAddressText(address),
+    address: (() => {
+      let finalA = cleanAddressText(address);
+      if (finalA) {
+        if (bio && (finalA.toLowerCase().includes(bio.toLowerCase().slice(0, 25)) || bio.toLowerCase().includes(finalA.toLowerCase().slice(0, 25)))) {
+          return '';
+        }
+        if (typeof isLikelyAddress === 'function' && !isLikelyAddress(finalA)) {
+          return '';
+        }
+      }
+      return finalA;
+    })(),
     bio,
     category,
     country,
     amazon_url,
     has_amazon,
-    bio_links
+    bio_links,
+    social_links
   };
 }
 
@@ -2050,7 +2504,7 @@ function extractOwnerRepresentative(leadName, email, html, webOwnerName) {
   }
 
   const textOnly = (html || '').replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
-                               .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ');
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ');
   const mBio = textOnly.match(/(?:Owner|Breeder|Founder|Proprietor|Operated by|Run by|Owned by|Hi,?\s+I'm|Hello,?\s+I'm|I'm)\s*[:\-–]?\s*([A-Z][a-z]+(?:\s+[A-Z]\.?|\s+[A-Z][a-z]+)?)/i);
   if (mBio && mBio[1]) {
     const candidate = mBio[1].trim();
@@ -2115,9 +2569,9 @@ function extractOwnerRepresentative(leadName, email, html, webOwnerName) {
     }
 
     const cleanPrefix = clean.replace(/(yorkies|kennel|dogs|puppies|puppy|doodles|frenchies|corgis)/i, m => ' ' + m)
-                             .replace(/[._-]/g, ' ')
-                             .replace(/\s+/g, ' ')
-                             .trim();
+      .replace(/[._-]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
     if (cleanPrefix.length >= 3 && !/^(info|sales|contact|support|hello|admin|office|team|puppy|puppies)$/i.test(cleanPrefix)) {
       const titleCase = cleanPrefix.replace(/\b\w/g, l => l.toUpperCase());
       return {
@@ -2144,15 +2598,15 @@ function extractOwnerRepresentative(leadName, email, html, webOwnerName) {
  * Kiểm tra xem một URL avatar có phải silhouette mặc định hoặc ảnh rác của Facebook không
  */
 function isDefaultSilhouetteAvatar(url) {
-    if (!url || typeof url !== 'string') return true;
-    const lower = url.toLowerCase();
-    return lower.includes('t1.30497-1') ||
-           lower.includes('453178253_471506465671661') ||
-           lower.includes('blank_profile') ||
-           lower.includes('rsrc.php') ||
-           lower.includes('default_avatar') ||
-           lower.includes('default_profile') ||
-           lower.includes('unavatar.io');
+  if (!url || typeof url !== 'string') return true;
+  const lower = url.toLowerCase();
+  return lower.includes('t1.30497-1') ||
+    lower.includes('453178253_471506465671661') ||
+    lower.includes('blank_profile') ||
+    lower.includes('rsrc.php') ||
+    lower.includes('default_avatar') ||
+    lower.includes('default_profile') ||
+    lower.includes('unavatar.io');
 }
 
 /**
@@ -2160,133 +2614,133 @@ function isDefaultSilhouetteAvatar(url) {
  * Hỗ trợ trọn vẹn SVG Namespace xlink:href, el.href.baseVal, và không bị chặn bởi Graph API
  */
 function extractProfileAvatar() {
-    let found = '';
+  let found = '';
 
-    // 0. Xác định avatar của người đang đăng nhập trên thanh điều hướng để loại trừ triệt để
-    let viewerAvatar = '';
-    try {
-        const navImg = document.querySelector('div[role="banner"] image, div[role="banner"] img, div[role="navigation"] image, div[role="navigation"] img, header image');
-        if (navImg) {
-            viewerAvatar = navImg.href?.baseVal || 
-                           navImg.getAttributeNS('http://www.w3.org/1999/xlink', 'href') || 
-                           navImg.getAttribute('xlink:href') || 
-                           navImg.getAttribute('href') || 
-                           navImg.currentSrc || navImg.src || '';
-            viewerAvatar = viewerAvatar.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
+  // 0. Xác định avatar của người đang đăng nhập trên thanh điều hướng để loại trừ triệt để
+  let viewerAvatar = '';
+  try {
+    const navImg = document.querySelector('div[role="banner"] image, div[role="banner"] img, div[role="navigation"] image, div[role="navigation"] img, header image');
+    if (navImg) {
+      viewerAvatar = navImg.href?.baseVal ||
+        navImg.getAttributeNS('http://www.w3.org/1999/xlink', 'href') ||
+        navImg.getAttribute('xlink:href') ||
+        navImg.getAttribute('href') ||
+        navImg.currentSrc || navImg.src || '';
+      viewerAvatar = viewerAvatar.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
+    }
+  } catch (_) { }
+
+  const isValidCandidate = (url) => {
+    if (!url || typeof url !== 'string') return false;
+    if (!url.startsWith('http')) return false;
+    if (!url.includes('fbcdn.net') && !url.includes('fbsbx.com') && !url.includes('facebook.com')) return false;
+    if (isDefaultSilhouetteAvatar(url)) return false;
+    if (viewerAvatar && url === viewerAvatar) return false;
+    return true;
+  };
+
+  const getElSrc = (el) => {
+    if (!el) return '';
+    const s = el.href?.baseVal ||
+      el.getAttributeNS('http://www.w3.org/1999/xlink', 'href') ||
+      el.getAttribute('xlink:href') ||
+      el.getAttribute('href') ||
+      el.currentSrc ||
+      el.src || '';
+    return s.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
+  };
+
+  // 1. Quét trực tiếp ảnh đại diện trong vùng div[role="main"] (LOẠI TRỪ 100% role="banner" và header)
+  try {
+    const targetedSelectors = [
+      'div[role="main"] svg g mask ~ image',
+      'div[role="main"] svg mask image',
+      'div[role="main"] svg image[preserveAspectRatio]',
+      'div[role="main"] a[aria-label*="ảnh đại diện" i] image',
+      'div[role="main"] a[aria-label*="profile picture" i] image',
+      'div[role="main"] a[aria-label*="avatar" i] image',
+      'div[role="main"] a[aria-label*="头像" i] image',
+      'div[role="main"] a[aria-label*="头贴" i] image',
+      'div[role="main"] div[role="button"][aria-label*="ảnh đại diện" i] image',
+      'div[role="main"] div[aria-label*="Xem ảnh đại diện" i] image',
+      'div[role="main"] div[aria-label*="Hành động với ảnh đại diện" i] image',
+      'div[role="main"] svg[aria-label*="profile picture" i] image',
+      'div[role="main"] svg[aria-label*="ảnh đại diện" i] image',
+      'div[role="main"] svg image',
+      'div[role="main"] img[src*="t39.30808-1"]',
+      'div[role="main"] img[src*="t39.30808-6"]'
+    ];
+
+    for (const sel of targetedSelectors) {
+      const els = Array.from(document.querySelectorAll(sel));
+      for (const el of els) {
+        const rect = el.getBoundingClientRect();
+        const docTop = rect.top + window.scrollY;
+        if (docTop > 650) continue;
+        const clean = getElSrc(el);
+        if (isValidCandidate(clean)) {
+          found = clean;
+          break;
         }
-    } catch (_) {}
+      }
+      if (found) break;
+    }
+  } catch (_) { }
 
-    const isValidCandidate = (url) => {
-        if (!url || typeof url !== 'string') return false;
-        if (!url.startsWith('http')) return false;
-        if (!url.includes('fbcdn.net') && !url.includes('fbsbx.com') && !url.includes('facebook.com')) return false;
-        if (isDefaultSilhouetteAvatar(url)) return false;
-        if (viewerAvatar && url === viewerAvatar) return false;
-        return true;
-    };
-
-    const getElSrc = (el) => {
-        if (!el) return '';
-        const s = el.href?.baseVal || 
-                  el.getAttributeNS('http://www.w3.org/1999/xlink', 'href') || 
-                  el.getAttribute('xlink:href') || 
-                  el.getAttribute('href') || 
-                  el.currentSrc || 
-                  el.src || '';
-        return s.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
-    };
-
-    // 1. Quét trực tiếp ảnh đại diện trong vùng div[role="main"] (LOẠI TRỪ 100% role="banner" và header)
+  // 2. Thử các thẻ <img> hoặc <image> bất kỳ trong div[role="main"] nằm ở top < 550px
+  if (!found) {
     try {
-        const targetedSelectors = [
-            'div[role="main"] svg g mask ~ image',
-            'div[role="main"] svg mask image',
-            'div[role="main"] svg image[preserveAspectRatio]',
-            'div[role="main"] a[aria-label*="ảnh đại diện" i] image',
-            'div[role="main"] a[aria-label*="profile picture" i] image',
-            'div[role="main"] a[aria-label*="avatar" i] image',
-            'div[role="main"] a[aria-label*="头像" i] image',
-            'div[role="main"] a[aria-label*="头贴" i] image',
-            'div[role="main"] div[role="button"][aria-label*="ảnh đại diện" i] image',
-            'div[role="main"] div[aria-label*="Xem ảnh đại diện" i] image',
-            'div[role="main"] div[aria-label*="Hành động với ảnh đại diện" i] image',
-            'div[role="main"] svg[aria-label*="profile picture" i] image',
-            'div[role="main"] svg[aria-label*="ảnh đại diện" i] image',
-            'div[role="main"] svg image',
-            'div[role="main"] img[src*="t39.30808-1"]',
-            'div[role="main"] img[src*="t39.30808-6"]'
-        ];
-
-        for (const sel of targetedSelectors) {
-            const els = Array.from(document.querySelectorAll(sel));
-            for (const el of els) {
-                const rect = el.getBoundingClientRect();
-                const docTop = rect.top + window.scrollY;
-                if (docTop > 650) continue;
-                const clean = getElSrc(el);
-                if (isValidCandidate(clean)) {
-                    found = clean;
-                    break;
-                }
-            }
-            if (found) break;
+      const mainImgs = Array.from(document.querySelectorAll('div[role="main"] img, div[role="main"] image'));
+      for (const img of mainImgs) {
+        const rect = img.getBoundingClientRect();
+        const docTop = rect.top + window.scrollY;
+        if (docTop > 550) continue;
+        const clean = getElSrc(img);
+        if (isValidCandidate(clean)) {
+          if (clean.includes('t39.30808') || clean.includes('t1.6435-9') || clean.includes('t1.18169-1')) {
+            found = clean;
+            break;
+          }
         }
-    } catch (_) {}
+      }
+    } catch (_) { }
+  }
 
-    // 2. Thử các thẻ <img> hoặc <image> bất kỳ trong div[role="main"] nằm ở top < 550px
-    if (!found) {
-        try {
-            const mainImgs = Array.from(document.querySelectorAll('div[role="main"] img, div[role="main"] image'));
-            for (const img of mainImgs) {
-                const rect = img.getBoundingClientRect();
-                const docTop = rect.top + window.scrollY;
-                if (docTop > 550) continue;
-                const clean = getElSrc(img);
-                if (isValidCandidate(clean)) {
-                    if (clean.includes('t39.30808') || clean.includes('t1.6435-9') || clean.includes('t1.18169-1')) {
-                        found = clean;
-                        break;
-                    }
-                }
-            }
-        } catch (_) {}
-    }
+  // 3. Quét trong các thẻ <script> chứa Relay GraphQL profile_picture / profilePhoto
+  if (!found) {
+    try {
+      const scripts = Array.from(document.querySelectorAll('script:not([src])'));
+      for (const sc of scripts) {
+        const txt = sc.textContent || '';
+        if (!txt.includes('profile_picture') && !txt.includes('profilePhoto') && !txt.includes('profile_photo') && !txt.includes('t39.30808')) continue;
+        const m = txt.match(/"profile_picture"\s*:\s*\{\s*"uri"\s*:\s*"([^"]+)"/i) ||
+          txt.match(/"profilePhoto"\s*:\s*\{[^}]*"uri"\s*:\s*"([^"]+)"/i) ||
+          txt.match(/"profile_photo"\s*:\s*\{\s*"uri"\s*:\s*"([^"]+)"/i) ||
+          txt.match(/"(https?:\\\/\\\/[^"]*(?:fbcdn\.net|fbsbx\.com)[^"]*t39\.30808-[16][^"]*)"/i);
+        if (m && m[1]) {
+          let uri = m[1].replace(/\\u00253A/gi, ':').replace(/\\u00252F/gi, '/').replace(/\\u002526/gi, '&').replace(/\\\//g, '/');
+          const clean = uri.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
+          if (isValidCandidate(clean)) {
+            found = clean;
+            break;
+          }
+        }
+      }
+    } catch (_) { }
+  }
 
-    // 3. Quét trong các thẻ <script> chứa Relay GraphQL profile_picture / profilePhoto
-    if (!found) {
-        try {
-            const scripts = Array.from(document.querySelectorAll('script:not([src])'));
-            for (const sc of scripts) {
-                const txt = sc.textContent || '';
-                if (!txt.includes('profile_picture') && !txt.includes('profilePhoto') && !txt.includes('profile_photo') && !txt.includes('t39.30808')) continue;
-                const m = txt.match(/"profile_picture"\s*:\s*\{\s*"uri"\s*:\s*"([^"]+)"/i) ||
-                          txt.match(/"profilePhoto"\s*:\s*\{[^}]*"uri"\s*:\s*"([^"]+)"/i) ||
-                          txt.match(/"profile_photo"\s*:\s*\{\s*"uri"\s*:\s*"([^"]+)"/i) ||
-                          txt.match(/"(https?:\\\/\\\/[^"]*(?:fbcdn\.net|fbsbx\.com)[^"]*t39\.30808-[16][^"]*)"/i);
-                if (m && m[1]) {
-                    let uri = m[1].replace(/\\u00253A/gi, ':').replace(/\\u00252F/gi, '/').replace(/\\u002526/gi, '&').replace(/\\\//g, '/');
-                    const clean = uri.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
-                    if (isValidCandidate(clean)) {
-                        found = clean;
-                        break;
-                    }
-                }
-            }
-        } catch (_) {}
-    }
+  // 4. Fallback: Thẻ meta og:image
+  if (!found) {
+    try {
+      const ogImg = document.querySelector('meta[property="og:image"]')?.content || '';
+      const clean = ogImg.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
+      if (isValidCandidate(clean)) {
+        found = clean;
+      }
+    } catch (_) { }
+  }
 
-    // 4. Fallback: Thẻ meta og:image
-    if (!found) {
-        try {
-            const ogImg = document.querySelector('meta[property="og:image"]')?.content || '';
-            const clean = ogImg.replace(/ctp=[sp]\d+x\d+&?/, '').replace(/[&?]$/, '');
-            if (isValidCandidate(clean)) {
-                found = clean;
-            }
-        } catch (_) {}
-    }
-
-    return found;
+  return found;
 }
 
 /**
@@ -2294,135 +2748,136 @@ function extractProfileAvatar() {
  * mở Theater / Dialog để đọc timestamp gốc chính xác 100%, sau đó đóng lại an toàn.
  */
 async function inspectLatestPostMediaForPublishTime() {
-    const minTs = 1577836800; // 01/01/2020
-    const nowSec = Math.floor(Date.now() / 1000);
-    const maxTs = nowSec + 86400 * 2;
+  const minTs = 1577836800; // 01/01/2020
+  const nowSec = Math.floor(Date.now() / 1000);
+  const maxTs = nowSec + 86400 * 2;
 
-    try {
-        // 1. Tìm các bài viết trên timeline (lấy bài đầu tiên hiển thị, kể cả bài ghim)
-        const articles = Array.from(document.querySelectorAll(
-            'div[role="feed"] div[role="article"], div[data-pagelet^="ProfileTimeline"] div[role="article"], div[data-pagelet^="FeedUnit_"], div[role="article"]'
-        )).filter(el => {
-            if (el.closest('header, nav, [role="navigation"], [role="banner"], [aria-label*="Thông báo"], [aria-label*="Notification"]')) return false;
-            if (el.parentElement && el.parentElement.closest('div[role="article"]')) return false;
-            const r = el.getBoundingClientRect();
-            const docTop = r.top + window.scrollY;
-            return el.offsetHeight > 60 && docTop > 100;
-        });
+  try {
+    // 1. Tìm các bài viết trên timeline (lấy bài đầu tiên hiển thị, kể cả bài ghim)
+    const articles = Array.from(document.querySelectorAll(
+      'div[role="feed"] div[role="article"], div[data-pagelet^="ProfileTimeline"] div[role="article"], div[data-pagelet^="FeedUnit_"], div[role="article"]'
+    )).filter(el => {
+      if (el.closest('header, nav, [role="navigation"], [role="banner"], [aria-label*="Thông báo"], [aria-label*="Notification"]')) return false;
+      if (el.parentElement && el.parentElement.closest('div[role="article"]')) return false;
+      const r = el.getBoundingClientRect();
+      const docTop = r.top + window.scrollY;
+      const textLen = (el.innerText || el.textContent || '').trim().length;
+      return (el.offsetHeight > 50 || textLen > 25) && (docTop > 100 || r.top === 0 || textLen > 50);
+    });
 
-        if (articles.length === 0) {
-            console.log('[FB Scraper] Chưa tìm thấy bài viết nào trên timeline.');
-            return null;
-        }
-
-        // Chọn bài viết đầu tiên hiển thị trên timeline (Bài gần nhất / Bài đã ghim)
-        let targetArticle = articles[0];
-
-        // 2. TÌM TẤM ẢNH BÀI ĐĂNG (Photo Element):
-        // Trên bài viết của Kayla Parrish, có tấm ảnh feedback lớn (chứa chữ 'Most relevant' và ảnh cún Golden)
-        let postImg = targetArticle.querySelector('img[src*="fbcdn"]');
-        if (!postImg) {
-            const allImgs = Array.from(targetArticle.querySelectorAll('img')).filter(img => {
-                const r = img.getBoundingClientRect();
-                return r.width > 80 && r.height > 80;
-            });
-            if (allImgs.length > 0) postImg = allImgs[0];
-        }
-
-        // Tìm container click được của ảnh (thẻ a dẫn tới photo.php hoặc div[role="button"])
-        let clickTarget = null;
-        if (postImg) {
-            clickTarget = postImg.closest('a[href*="/photo"], a[href*="fbid="], a[href*="photo.php"]') ||
-                          postImg.closest('div[role="button"]') ||
-                          postImg.parentElement ||
-                          postImg;
-        }
-
-        // Nếu không có ảnh, tìm thẻ link thời gian bài viết
-        if (!clickTarget) {
-            const timeAnchor = targetArticle.querySelector(
-                'a[role="link"][href*="/posts/"], a[role="link"][href*="permalink"], a[role="link"][href*="story"], a[role="link"]'
-            );
-            clickTarget = timeAnchor;
-        }
-
-        // 3. HIỆU ỨNG TRỰC QUAN CHO NGƯỜI DÙNG:
-        // Cuộn tấm ảnh / bài viết vào giữa màn hình và tạo viền phát sáng xanh neon
-        const scrollTarget = postImg || targetArticle;
-        try {
-            scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            if (postImg) {
-                postImg.style.outline = '4px solid #38bdf8';
-                postImg.style.boxShadow = '0 0 30px rgba(56, 189, 248, 0.9)';
-                postImg.style.borderRadius = '8px';
-                postImg.style.transition = 'all 0.3s ease';
-            } else {
-                targetArticle.style.outline = '4px solid #38bdf8';
-                targetArticle.style.boxShadow = '0 0 30px rgba(56, 189, 248, 0.9)';
-                targetArticle.style.borderRadius = '12px';
-            }
-        } catch (_) {}
-
-        const updateBanner = (txt, color = '#0284c7') => {
-            const el = document.getElementById('funnel-status-badge');
-            if (el) { el.innerText = txt; el.style.background = color; }
-        };
-        updateBanner('⚡ Đang bóc tách bài đăng gần nhất (Chế độ An toàn 100% không click popup)...', '#0284c7');
-
-        // Bóc tách trực tiếp từ Header bài viết bằng DOM (TUYỆT ĐỐI KHÔNG CLICK VÀO ẢNH / COMMENT ĐỂ TRÁNH DÍNH POPUP VÀ TREO TAB)
-        let extractedFromMedia = extractTimeFromArticleElement(targetArticle);
-
-        // Tự động xóa viền sáng
-        if (postImg) {
-            postImg.style.outline = '';
-            postImg.style.boxShadow = '';
-        }
-        if (targetArticle) {
-            targetArticle.style.outline = '';
-            targetArticle.style.boxShadow = '';
-        }
-
-        // 5. ĐỐI CHIẾU VỚI RELAY GRAPHQL STORIES (Lấy max giữa Pinned Post và Feed Units/Reels)
-        let finalTs = extractedFromMedia ? extractedFromMedia.timestamp : null;
-        let postTypeTag = '';
-        try {
-            const relayTimes = extractRelayFeedAndPinnedTimestamps(currentProfileId);
-            const rMax = Math.max(relayTimes.pinnedTs || 0, relayTimes.latestFeedTs || 0);
-            if (rMax > 0) {
-                if (rMax === relayTimes.pinnedTs && relayTimes.pinnedTs > (relayTimes.latestFeedTs || 0)) {
-                    postTypeTag = ' (Pinned)';
-                } else if (rMax === relayTimes.latestFeedTs) {
-                    postTypeTag = ' (Reels/Feed)';
-                }
-                if (!finalTs || rMax > finalTs) {
-                    finalTs = rMax;
-                }
-            }
-        } catch (_) {}
-
-        if (finalTs && finalTs >= minTs && finalTs <= maxTs) {
-            const dt = new Date(finalTs * 1000);
-            const pad = n => String(n).padStart(2, '0');
-            const formattedDate = `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}${postTypeTag}`;
-            const relText = `${formatRelativeTime(finalTs)}${postTypeTag}`;
-            const diffDays = Math.floor(Math.max(0, nowSec - finalTs) / 86400);
-            const actStatus = diffDays <= 60 ? '✓ TÍCH CỰC (Trại đang hoạt động)' : '⚠️ ÍT HOẠT ĐỘNG (> 60 ngày)';
-
-            console.log(`[FB Scraper] 🏆 Bóc tách thành công bài đăng gần nhất: ${formattedDate} (${relText})`);
-            return {
-                timestamp: finalTs,
-                publishTime: formattedDate,
-                relativeTime: relText,
-                activityStatus: actStatus,
-                isoTime: dt.toISOString(),
-                fromMediaClick: true
-            };
-        }
-    } catch (err) {
-        console.warn('[FB Scraper] Lỗi khi inspect bài đăng:', err);
+    if (articles.length === 0) {
+      console.log('[FB Scraper] Chưa tìm thấy bài viết nào trên timeline.');
+      return null;
     }
 
-    return null;
+    // Chọn bài viết đầu tiên hiển thị trên timeline (Bài gần nhất / Bài đã ghim)
+    let targetArticle = articles[0];
+
+    // 2. TÌM TẤM ẢNH BÀI ĐĂNG (Photo Element):
+    // Trên bài viết của Kayla Parrish, có tấm ảnh feedback lớn (chứa chữ 'Most relevant' và ảnh cún Golden)
+    let postImg = targetArticle.querySelector('img[src*="fbcdn"]');
+    if (!postImg) {
+      const allImgs = Array.from(targetArticle.querySelectorAll('img')).filter(img => {
+        const r = img.getBoundingClientRect();
+        return r.width > 80 && r.height > 80;
+      });
+      if (allImgs.length > 0) postImg = allImgs[0];
+    }
+
+    // Tìm container click được của ảnh (thẻ a dẫn tới photo.php hoặc div[role="button"])
+    let clickTarget = null;
+    if (postImg) {
+      clickTarget = postImg.closest('a[href*="/photo"], a[href*="fbid="], a[href*="photo.php"]') ||
+        postImg.closest('div[role="button"]') ||
+        postImg.parentElement ||
+        postImg;
+    }
+
+    // Nếu không có ảnh, tìm thẻ link thời gian bài viết
+    if (!clickTarget) {
+      const timeAnchor = targetArticle.querySelector(
+        'a[role="link"][href*="/posts/"], a[role="link"][href*="permalink"], a[role="link"][href*="story"], a[role="link"]'
+      );
+      clickTarget = timeAnchor;
+    }
+
+    // 3. HIỆU ỨNG TRỰC QUAN CHO NGƯỜI DÙNG:
+    // Cuộn tấm ảnh / bài viết vào giữa màn hình và tạo viền phát sáng xanh neon
+    const scrollTarget = postImg || targetArticle;
+    try {
+      scrollTarget.scrollIntoView({ behavior: 'auto', block: 'center' });
+      if (postImg) {
+        postImg.style.outline = '4px solid #38bdf8';
+        postImg.style.boxShadow = '0 0 30px rgba(56, 189, 248, 0.9)';
+        postImg.style.borderRadius = '8px';
+        postImg.style.transition = 'all 0.3s ease';
+      } else {
+        targetArticle.style.outline = '4px solid #38bdf8';
+        targetArticle.style.boxShadow = '0 0 30px rgba(56, 189, 248, 0.9)';
+        targetArticle.style.borderRadius = '12px';
+      }
+    } catch (_) { }
+
+    const updateBanner = (txt, color = '#0284c7') => {
+      const el = document.getElementById('funnel-status-badge');
+      if (el) { el.innerText = txt; el.style.background = color; }
+    };
+    updateBanner('⚡ Đang bóc tách bài đăng gần nhất (Chế độ An toàn 100% không click popup)...', '#0284c7');
+
+    // Bóc tách trực tiếp từ Header bài viết bằng DOM (TUYỆT ĐỐI KHÔNG CLICK VÀO ẢNH / COMMENT ĐỂ TRÁNH DÍNH POPUP VÀ TREO TAB)
+    let extractedFromMedia = extractTimeFromArticleElement(targetArticle);
+
+    // Tự động xóa viền sáng
+    if (postImg) {
+      postImg.style.outline = '';
+      postImg.style.boxShadow = '';
+    }
+    if (targetArticle) {
+      targetArticle.style.outline = '';
+      targetArticle.style.boxShadow = '';
+    }
+
+    // 5. ĐỐI CHIẾU VỚI RELAY GRAPHQL STORIES (Lấy max giữa Pinned Post và Feed Units/Reels)
+    let finalTs = extractedFromMedia ? extractedFromMedia.timestamp : null;
+    let postTypeTag = '';
+    try {
+      const relayTimes = extractRelayFeedAndPinnedTimestamps(currentProfileId);
+      const rMax = Math.max(relayTimes.pinnedTs || 0, relayTimes.latestFeedTs || 0);
+      if (rMax > 0) {
+        if (rMax === relayTimes.pinnedTs && relayTimes.pinnedTs > (relayTimes.latestFeedTs || 0)) {
+          postTypeTag = ' (Pinned)';
+        } else if (rMax === relayTimes.latestFeedTs) {
+          postTypeTag = ' (Reels/Feed)';
+        }
+        if (!finalTs || rMax > finalTs) {
+          finalTs = rMax;
+        }
+      }
+    } catch (_) { }
+
+    if (finalTs && finalTs >= minTs && finalTs <= maxTs) {
+      const dt = new Date(finalTs * 1000);
+      const pad = n => String(n).padStart(2, '0');
+      const formattedDate = `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}${postTypeTag}`;
+      const relText = `${formatRelativeTime(finalTs)}${postTypeTag}`;
+      const diffDays = Math.floor(Math.max(0, nowSec - finalTs) / 86400);
+      const actStatus = diffDays <= 60 ? '✓ TÍCH CỰC (Trại đang hoạt động)' : '⚠️ ÍT HOẠT ĐỘNG (> 60 ngày)';
+
+      console.log(`[FB Scraper] 🏆 Bóc tách thành công bài đăng gần nhất: ${formattedDate} (${relText})`);
+      return {
+        timestamp: finalTs,
+        publishTime: formattedDate,
+        relativeTime: relText,
+        activityStatus: actStatus,
+        isoTime: dt.toISOString(),
+        fromMediaClick: true
+      };
+    }
+  } catch (err) {
+    console.warn('[FB Scraper] Lỗi khi inspect bài đăng:', err);
+  }
+
+  return null;
 }
 
 /**
@@ -2430,159 +2885,159 @@ async function inspectLatestPostMediaForPublishTime() {
  * Phục vụ phân tích nội dung Viral toàn cầu theo yêu cầu của Sếp (Reverse Engineering Facebook Reels)
  */
 function extractFacebookReelViralInsights() {
-    const nowSec = Math.floor(Date.now() / 1000);
-    const minTs = 1577836800; // 01/01/2020
-    const maxTs = nowSec + 60;
-    const pad = n => String(n).padStart(2, '0');
-    const formatDt = (ts) => {
-        if (!ts) return 'Chưa có Reels';
-        const dt = new Date(ts * 1000);
-        return `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
-    };
+  const nowSec = Math.floor(Date.now() / 1000);
+  const minTs = 1577836800; // 01/01/2020
+  const maxTs = nowSec + 60;
+  const pad = n => String(n).padStart(2, '0');
+  const formatDt = (ts) => {
+    if (!ts) return 'Chưa có Reels';
+    const dt = new Date(ts * 1000);
+    return `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
+  };
 
-    let reelCandidates = [];
+  let reelCandidates = [];
 
-    // 1. Quét trong <script> JSON của Facebook để lấy dữ liệu hậu trường EntVideoCreationStory
-    try {
-        const scripts = Array.from(document.querySelectorAll('script')).filter(s => {
-            const t = s.textContent || '';
-            return t.includes('EntVideoCreationStory') || t.includes('publish_time') || t.includes('playable_duration_in_ms');
+  // 1. Quét trong <script> JSON của Facebook để lấy dữ liệu hậu trường EntVideoCreationStory
+  try {
+    const scripts = Array.from(document.querySelectorAll('script')).filter(s => {
+      const t = s.textContent || '';
+      return t.includes('EntVideoCreationStory') || t.includes('publish_time') || t.includes('playable_duration_in_ms');
+    });
+
+    for (const s of scripts) {
+      const text = s.textContent || '';
+
+      // Bắt các khối EntVideoCreationStory (chứa publish_time chuẩn xác từng giây của Reel)
+      const videoStoryRegex = /"actor_id"\s*:\s*"(\d+)"[\s\S]{0,300}?"psn"\s*:\s*"EntVideoCreationStory"[\s\S]{0,200}?"publish_time"\s*:\s*(\d{9,11})/g;
+      for (const m of text.matchAll(videoStoryRegex)) {
+        const actorId = m[1];
+        const ts = parseInt(m[2], 10);
+        if (ts < minTs || ts > maxTs) continue;
+
+        // Tìm thêm ngữ cảnh xung quanh khối script này để bóc tách video_id, thời lượng, caption, hashtag...
+        const pos = m.index || 0;
+        const windowStart = Math.max(0, pos - 2500);
+        const windowEnd = Math.min(text.length, pos + 3500);
+        const chunk = text.slice(windowStart, windowEnd);
+
+        // Lấy video_id (Reel ID)
+        const vidMatch = chunk.match(/"video_id"\s*:\s*"(\d+)"/) || chunk.match(/"id"\s*:\s*"(\d{12,20})"/);
+        const videoId = vidMatch ? vidMatch[1] : '';
+
+        // Lấy thời lượng video (ms -> giây)
+        const durMatch = chunk.match(/"playable_duration_in_ms"\s*:\s*(\d+)/);
+        const durationSec = durMatch ? Math.round(parseInt(durMatch[1], 10) / 1000) : 0;
+
+        // Lấy Caption / Nội dung chữ của Reel
+        let caption = '';
+        const msgMatch = chunk.match(/"message"\s*:\s*\{\s*"text"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+        if (msgMatch && msgMatch[1]) {
+          try {
+            caption = JSON.parse(`"${msgMatch[1]}"`);
+          } catch (_) {
+            caption = msgMatch[1];
+          }
+        }
+
+        // Lấy số lượt phát / chia sẻ nếu có trong JSON
+        const playMatch = chunk.match(/"play_count"\s*:\s*(\d+)/) || chunk.match(/"video_view_count"\s*:\s*(\d+)/);
+        const playCount = playMatch ? parseInt(playMatch[1], 10) : 0;
+
+        reelCandidates.push({
+          reelTimestamp: ts,
+          reelActorId: actorId,
+          reelId: videoId,
+          reelUrl: videoId ? `https://www.facebook.com/reel/${videoId}` : '',
+          reelDurationSec: durationSec,
+          reelCaption: caption,
+          reelPlayCount: playCount
         });
-
-        for (const s of scripts) {
-            const text = s.textContent || '';
-
-            // Bắt các khối EntVideoCreationStory (chứa publish_time chuẩn xác từng giây của Reel)
-            const videoStoryRegex = /"actor_id"\s*:\s*"(\d+)"[\s\S]{0,300}?"psn"\s*:\s*"EntVideoCreationStory"[\s\S]{0,200}?"publish_time"\s*:\s*(\d{9,11})/g;
-            for (const m of text.matchAll(videoStoryRegex)) {
-                const actorId = m[1];
-                const ts = parseInt(m[2], 10);
-                if (ts < minTs || ts > maxTs) continue;
-
-                // Tìm thêm ngữ cảnh xung quanh khối script này để bóc tách video_id, thời lượng, caption, hashtag...
-                const pos = m.index || 0;
-                const windowStart = Math.max(0, pos - 2500);
-                const windowEnd = Math.min(text.length, pos + 3500);
-                const chunk = text.slice(windowStart, windowEnd);
-
-                // Lấy video_id (Reel ID)
-                const vidMatch = chunk.match(/"video_id"\s*:\s*"(\d+)"/) || chunk.match(/"id"\s*:\s*"(\d{12,20})"/);
-                const videoId = vidMatch ? vidMatch[1] : '';
-
-                // Lấy thời lượng video (ms -> giây)
-                const durMatch = chunk.match(/"playable_duration_in_ms"\s*:\s*(\d+)/);
-                const durationSec = durMatch ? Math.round(parseInt(durMatch[1], 10) / 1000) : 0;
-
-                // Lấy Caption / Nội dung chữ của Reel
-                let caption = '';
-                const msgMatch = chunk.match(/"message"\s*:\s*\{\s*"text"\s*:\s*"((?:[^"\\]|\\.)*)"/);
-                if (msgMatch && msgMatch[1]) {
-                    try {
-                        caption = JSON.parse(`"${msgMatch[1]}"`);
-                    } catch (_) {
-                        caption = msgMatch[1];
-                    }
-                }
-
-                // Lấy số lượt phát / chia sẻ nếu có trong JSON
-                const playMatch = chunk.match(/"play_count"\s*:\s*(\d+)/) || chunk.match(/"video_view_count"\s*:\s*(\d+)/);
-                const playCount = playMatch ? parseInt(playMatch[1], 10) : 0;
-
-                reelCandidates.push({
-                    reelTimestamp: ts,
-                    reelActorId: actorId,
-                    reelId: videoId,
-                    reelUrl: videoId ? `https://www.facebook.com/reel/${videoId}` : '',
-                    reelDurationSec: durationSec,
-                    reelCaption: caption,
-                    reelPlayCount: playCount
-                });
-            }
-        }
-    } catch (_) {}
-
-    // 2. Bổ sung thông tin từ DOM nếu đang đứng trực tiếp trên trang /reel/ hoặc bài post có nhúng Reel
-    try {
-        const reelLinks = Array.from(document.querySelectorAll('a[href*="/reel/"], a[href*="/videos/"]'));
-        const firstReelLink = reelLinks.find(a => /\/(reel|videos)\/\d+/.test(a.getAttribute('href') || ''));
-        const domReelUrl = firstReelLink ? firstReelLink.href.split('?')[0] : (window.location.href.includes('/reel/') ? window.location.href.split('?')[0] : '');
-
-        if (reelCandidates.length === 0 && domReelUrl) {
-            // Fallback nếu Facebook chưa đổ script EntVideoCreationStory
-            const vidIdMatch = domReelUrl.match(/\/(?:reel|videos)\/(\d+)/);
-            reelCandidates.push({
-                reelTimestamp: 0,
-                reelActorId: '',
-                reelId: vidIdMatch ? vidIdMatch[1] : '',
-                reelUrl: domReelUrl,
-                reelDurationSec: 0,
-                reelCaption: '',
-                reelPlayCount: 0
-            });
-        } else if (reelCandidates.length > 0 && !reelCandidates[0].reelUrl && domReelUrl) {
-            reelCandidates[0].reelUrl = domReelUrl;
-        }
-    } catch (_) {}
-
-    // 3. Tổng hợp kết quả trả về
-    if (reelCandidates.length > 0) {
-        const best = reelCandidates[0];
-        const ts = best.reelTimestamp;
-        const viralAgeDays = ts ? Math.max(0, Math.floor((nowSec - ts) / 86400)) : 0;
-
-        // Tách tự động danh sách Hashtags từ Caption để Sếp dễ phân tích từ khóa xu hướng
-        const hashtags = (best.reelCaption.match(/#[\p{L}\p{N}_]+/gu) || []).join(' ');
-
-        return {
-            hasReel: true,
-            reelPublishTime: ts ? formatDt(ts) : 'Chưa rõ ngày',
-            reelPublishTimestamp: ts,
-            reelRelativeTime: ts && typeof formatRelativeTime === 'function' ? formatRelativeTime(ts) : '',
-            reelViralAgeDays: viralAgeDays,
-            reelViralBadge: ts
-                ? (viralAgeDays >= 7 ? `🔥 Đề xuất bền bỉ (${viralAgeDays} ngày)` : `⚡ Mới lên xu hướng (${viralAgeDays} ngày)`)
-                : 'Có Video/Reel',
-            reelUrl: best.reelUrl,
-            reelId: best.reelId,
-            reelCreatorId: best.reelActorId,
-            reelDuration: best.reelDurationSec ? `${best.reelDurationSec}s` : '',
-            reelDurationSec: best.reelDurationSec || 0,
-            reelCaption: best.reelCaption || '',
-            reelHashtags: hashtags,
-            reelPlayCount: best.reelPlayCount || 0
-        };
+      }
     }
+  } catch (_) { }
 
-    return {
-        hasReel: false,
-        reelPublishTime: 'Không có Reel',
-        reelPublishTimestamp: 0,
-        reelRelativeTime: '',
-        reelViralAgeDays: 0,
-        reelViralBadge: 'Chưa có Reel',
-        reelUrl: '',
-        reelId: '',
-        reelCreatorId: '',
-        reelDuration: '',
+  // 2. Bổ sung thông tin từ DOM nếu đang đứng trực tiếp trên trang /reel/ hoặc bài post có nhúng Reel
+  try {
+    const reelLinks = Array.from(document.querySelectorAll('a[href*="/reel/"], a[href*="/videos/"]'));
+    const firstReelLink = reelLinks.find(a => /\/(reel|videos)\/\d+/.test(a.getAttribute('href') || ''));
+    const domReelUrl = firstReelLink ? firstReelLink.href.split('?')[0] : (window.location.href.includes('/reel/') ? window.location.href.split('?')[0] : '');
+
+    if (reelCandidates.length === 0 && domReelUrl) {
+      // Fallback nếu Facebook chưa đổ script EntVideoCreationStory
+      const vidIdMatch = domReelUrl.match(/\/(?:reel|videos)\/(\d+)/);
+      reelCandidates.push({
+        reelTimestamp: 0,
+        reelActorId: '',
+        reelId: vidIdMatch ? vidIdMatch[1] : '',
+        reelUrl: domReelUrl,
         reelDurationSec: 0,
         reelCaption: '',
-        reelHashtags: '',
         reelPlayCount: 0
+      });
+    } else if (reelCandidates.length > 0 && !reelCandidates[0].reelUrl && domReelUrl) {
+      reelCandidates[0].reelUrl = domReelUrl;
+    }
+  } catch (_) { }
+
+  // 3. Tổng hợp kết quả trả về
+  if (reelCandidates.length > 0) {
+    const best = reelCandidates[0];
+    const ts = best.reelTimestamp;
+    const viralAgeDays = ts ? Math.max(0, Math.floor((nowSec - ts) / 86400)) : 0;
+
+    // Tách tự động danh sách Hashtags từ Caption để Sếp dễ phân tích từ khóa xu hướng
+    const hashtags = (best.reelCaption.match(/#[\p{L}\p{N}_]+/gu) || []).join(' ');
+
+    return {
+      hasReel: true,
+      reelPublishTime: ts ? formatDt(ts) : 'Chưa rõ ngày',
+      reelPublishTimestamp: ts,
+      reelRelativeTime: ts && typeof formatRelativeTime === 'function' ? formatRelativeTime(ts) : '',
+      reelViralAgeDays: viralAgeDays,
+      reelViralBadge: ts
+        ? (viralAgeDays >= 7 ? `🔥 Đề xuất bền bỉ (${viralAgeDays} ngày)` : `⚡ Mới lên xu hướng (${viralAgeDays} ngày)`)
+        : 'Có Video/Reel',
+      reelUrl: best.reelUrl,
+      reelId: best.reelId,
+      reelCreatorId: best.reelActorId,
+      reelDuration: best.reelDurationSec ? `${best.reelDurationSec}s` : '',
+      reelDurationSec: best.reelDurationSec || 0,
+      reelCaption: best.reelCaption || '',
+      reelHashtags: hashtags,
+      reelPlayCount: best.reelPlayCount || 0
     };
+  }
+
+  return {
+    hasReel: false,
+    reelPublishTime: 'Không có Reel',
+    reelPublishTimestamp: 0,
+    reelRelativeTime: '',
+    reelViralAgeDays: 0,
+    reelViralBadge: 'Chưa có Reel',
+    reelUrl: '',
+    reelId: '',
+    reelCreatorId: '',
+    reelDuration: '',
+    reelDurationSec: 0,
+    reelCaption: '',
+    reelHashtags: '',
+    reelPlayCount: 0
+  };
 }
 
 /**
  * Quy trình cào Toàn Diện: Publish Time + Toàn bộ Intro + Website Owner (Lisa Z.)
  */
 async function scrapePublishTime(targetUrl, stt, taskId) {
-    let url = targetUrl || window.location.href;
+  let url = targetUrl || window.location.href;
 
-    // 1. Tạo thanh thông báo trực quan trên đầu trang cho user theo dõi
-    let banner = document.getElementById('fb-funnel-inspector-banner');
-    if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'fb-funnel-inspector-banner';
-        banner.style.cssText = `
+  // 1. Tạo thanh thông báo trực quan trên đầu trang cho user theo dõi
+  let banner = document.getElementById('fb-funnel-inspector-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'fb-funnel-inspector-banner';
+    banner.style.cssText = `
             position: fixed;
             top: 0;
             left: 0;
@@ -2600,243 +3055,373 @@ async function scrapePublishTime(targetUrl, stt, taskId) {
             box-shadow: 0 4px 15px rgba(0,0,0,0.6);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         `;
-        banner.innerHTML = `
+    banner.innerHTML = `
             <div style="display:flex; align-items:center; gap:10px;">
                 <span style="font-size:18px;">🔍</span>
                 <span><b>Facebook Intro & Funnel Inspector:</b> Đang quét thông tin Giới thiệu & Bài viết [Dòng #${stt || 1}]</span>
             </div>
             <div id="funnel-status-badge" style="background:#0284c7; color:#fff; padding:3px 10px; border-radius:12px; font-size:11px;">Đang cuộn nạp DOM sống...</div>
         `;
-        document.body.prepend(banner);
+    document.body.prepend(banner);
+  }
+
+  const updateBadge = (txt, color = '#0284c7') => {
+    const el = document.getElementById('funnel-status-badge');
+    if (el) { el.innerText = txt; el.style.background = color; }
+  };
+
+  // 2. Lấy tên Profile / Fanpage & FB ID & Avatar
+  let name = getProfileName();
+  let fb_id = extractFacebookID();
+  let avatarUrl = extractProfileAvatar();
+
+  // 3. Cuộn mượt để kích hoạt nạp bài đăng gần nhất trên Feed
+  window.scrollTo({ top: 850, behavior: 'auto' });
+  await sleep(1400);
+  window.scrollBy({ top: 450, behavior: 'auto' });
+  await sleep(1000);
+
+  // Cập nhật lại tên & avatar nếu DOM vừa nạp xong
+  let refinedName = getProfileName();
+  if (refinedName && refinedName !== 'Facebook User' && !isGarbageName(refinedName)) {
+    name = refinedName;
+  }
+  if (!fb_id) {
+    fb_id = extractFacebookID();
+  }
+  if (!avatarUrl) {
+    avatarUrl = extractProfileAvatar();
+  }
+
+  updateBadge('⚡ Đang bóc tách bài đăng gần nhất (Chế độ An toàn 100% không click)...', '#0284c7');
+
+  // 4. Bóc tách bài đăng gần nhất: An toàn 100%, không click ảnh/comment, chống treo tab
+  let timeInfo = await inspectLatestPostMediaForPublishTime();
+
+  // 4.1 Fallback quét DOM Feed & Relay JSON nếu bài viết chưa có timestamp
+  if (!timeInfo || !timeInfo.timestamp) {
+    updateBadge('Đang bóc tách Timestamps (Relay GraphQL & DOM Timeline)...', '#0284c7');
+    timeInfo = extractFacebookPublishTimeDetailed();
+  }
+
+  let publishTime = timeInfo.publishTime || 'Chưa bóc tách';
+  let publishTimestamp = timeInfo.timestamp || '';
+  let relativeTime = timeInfo.relativeTime || '';
+  let activityStatus = timeInfo.activityStatus || '✓ TÍCH CỰC (Trại đang hoạt động)';
+
+  // 5. BÓC TÁCH TOÀN BỘ PHẦN GIỚI THIỆU / LIÊN HỆ / ĐỊA CHỈ TRÊN TRANG
+  // 5.0 Bước ưu tiên: Extract nhanh từ DOM live (2 layout Facebook Page)
+  updateBadge('⚡ Đang bóc tách DOM sections (Thông tin liên hệ, Liên kết, Giới thiệu)...', '#059669');
+  const pageContacts = extractPageContactsFromDOM();
+  console.log('[FB Scraper] extractPageContactsFromDOM:', JSON.stringify(pageContacts));
+
+  let contacts = extractIntroAndContacts(name);
+  // Merge kết quả DOM nhanh vào contacts (ưu tiên DOM nhanh vì chính xác hơn regex)
+  for (const field of ['phone', 'email', 'website', 'instagram', 'bio', 'category', 'zip', 'address']) {
+    if (!contacts[field] && pageContacts[field]) contacts[field] = pageContacts[field];
+    // Ưu tiên kết quả DOM nếu contacts lấy được chuỗi rác ngắn hơn
+    if (contacts[field] && pageContacts[field] && field === 'bio' && pageContacts[field].length > contacts[field].length) {
+      contacts[field] = pageContacts[field];
     }
+  }
+  if (pageContacts.social_links && pageContacts.social_links.length > 0) {
+    contacts.social_links = Array.from(new Set([...(contacts.social_links || []), ...pageContacts.social_links]));
+  }
 
-    const updateBadge = (txt, color = '#0284c7') => {
-        const el = document.getElementById('funnel-status-badge');
-        if (el) { el.innerText = txt; el.style.background = color; }
-    };
+  // Facebook lazy-loads the contact card after the first scroll. Re-read it
+  // once so email, website and location are not lost when the card appears late.
+  await sleep(1800);
+  // Re-scrape sau khi lazy-load hoàn tất
+  const latePageContacts = extractPageContactsFromDOM();
+  const lateContacts = extractIntroAndContacts(name);
+  for (const field of ['phone', 'email', 'website', 'instagram', 'city', 'state', 'zip', 'address', 'bio', 'category', 'country']) {
+    if (!contacts[field] && lateContacts[field]) contacts[field] = lateContacts[field];
+    if (!contacts[field] && latePageContacts[field]) contacts[field] = latePageContacts[field];
+  }
+  contacts.bio_links = Array.from(new Set([...(contacts.bio_links || []), ...(lateContacts.bio_links || [])]));
+  contacts.social_links = Array.from(new Set([
+    ...(contacts.social_links || []),
+    ...(lateContacts.social_links || []),
+    ...(latePageContacts.social_links || [])
+  ]));
+  if (!contacts.amazon_url && lateContacts.amazon_url) {
+    contacts.amazon_url = lateContacts.amazon_url;
+    contacts.has_amazon = true;
+  }
 
-    // 2. Lấy tên Profile / Fanpage & FB ID & Avatar
-    let name = getProfileName();
-    let fb_id = extractFacebookID();
-    let avatarUrl = extractProfileAvatar();
-
-    // 3. Cuộn mượt để kích hoạt nạp bài đăng gần nhất trên Feed
-    window.scrollTo({ top: 850, behavior: 'smooth' });
-    await sleep(1400);
-    window.scrollBy({ top: 450, behavior: 'smooth' });
-    await sleep(1000);
-
-    // Cập nhật lại tên & avatar nếu DOM vừa nạp xong
-    let refinedName = getProfileName();
-    if (refinedName && refinedName !== 'Facebook User' && !isGarbageName(refinedName)) {
-        name = refinedName;
-    }
-    if (!fb_id) {
-        fb_id = extractFacebookID();
-    }
-    if (!avatarUrl) {
-        avatarUrl = extractProfileAvatar();
-    }
-
-    updateBadge('⚡ Đang bóc tách bài đăng gần nhất (Chế độ An toàn 100% không click)...', '#0284c7');
-
-    // 4. Bóc tách bài đăng gần nhất: An toàn 100%, không click ảnh/comment, chống treo tab
-    let timeInfo = await inspectLatestPostMediaForPublishTime();
-
-    // 4.1 Fallback quét DOM Feed & Relay JSON nếu bài viết chưa có timestamp
-    if (!timeInfo || !timeInfo.timestamp) {
-        updateBadge('Đang bóc tách Timestamps (Relay GraphQL & DOM Timeline)...', '#0284c7');
-        timeInfo = extractFacebookPublishTimeDetailed();
-    }
-
-    let publishTime = timeInfo.publishTime || 'Chưa bóc tách';
-    let publishTimestamp = timeInfo.timestamp || '';
-    let relativeTime = timeInfo.relativeTime || '';
-    let activityStatus = timeInfo.activityStatus || '✓ TÍCH CỰC (Trại đang hoạt động)';
-
-    // 5. BÓC TÁCH TOÀN BỘ PHẦN GIỚI THIỆU / LIÊN HỆ / ĐỊA CHỈ TRÊN TRANG
-    let contacts = extractIntroAndContacts(name);
-
-    // 5. NẾU CÓ WEBSITE (ĐẶC BIỆT LÀ GOOD DOG): GỌI BACKGROUND FETCH ĐỂ TÌM CHỦ TRẠI (ví dụ: Lisa Z.)
-    let webOwnerName = '';
-    if (contacts.website) {
+  // 5.1 FACEBOOK PAGE: Fetch tab /about để bổ sung dữ liệu bị thiếu (email, website, address, bio, category)
+  // Dùng action FETCH_PAGE_ABOUT_HTML để fetch raw HTML có cookie session đang đăng nhập
+  const missingFields = !contacts.email || !contacts.website || !contacts.bio || !contacts.address || !contacts.category;
+  if (missingFields) {
+    try {
+      updateBadge('🔍 Đang fetch tab About để bổ sung dữ liệu...', '#7c3aed');
+      let aboutUrl = '';
+      if (window.location.href.includes('profile.php')) {
         try {
-            const webRes = await new Promise(resolve => {
-                chrome.runtime.sendMessage({
-                    action: 'FETCH_EXTERNAL_URL',
-                    url: contacts.website
-                }, (response) => {
-                    resolve(response || {});
-                });
-            });
+          const u = new URL(window.location.href);
+          u.searchParams.set('sk', 'about');
+          aboutUrl = u.toString();
+        } catch (_) {
+          aboutUrl = window.location.href.replace(/([?&])sk=[^&]*/, '') + '&sk=about';
+        }
+      } else {
+        aboutUrl = window.location.origin + window.location.pathname.replace(/\/$/, '') + '/about';
+      }
+      const aboutRes = await new Promise(resolve => {
+        chrome.runtime.sendMessage({
+          action: 'FETCH_PAGE_ABOUT_HTML',
+          url: aboutUrl
+        }, response => resolve(response || {}));
+      });
 
-            if (webRes && webRes.ok) {
-                if (webRes.owner || webRes.breederName) {
-                    webOwnerName = webRes.owner || webRes.breederName;
-                }
-                if (webRes.phone && !contacts.phone) contacts.phone = webRes.phone;
-                if (webRes.email && !contacts.email) contacts.email = webRes.email;
-                if (webRes.address && !contacts.address) contacts.address = webRes.address;
-                if (webRes.city && !contacts.city) contacts.city = webRes.city;
-                if (webRes.state && !contacts.state) contacts.state = webRes.state;
-                if (webRes.zip && !contacts.zip) contacts.zip = webRes.zip;
-                if (webRes.country && (!contacts.country || contacts.country === 'United States')) contacts.country = webRes.country;
-                if (webRes.has_amazon && webRes.amazon_url && !contacts.amazon_url) {
-                    contacts.amazon_url = webRes.amazon_url;
-                    contacts.has_amazon = true;
-                }
-            } else if (webRes && webRes.breederName) {
-                webOwnerName = webRes.breederName;
-                if (!contacts.city && webRes.city) contacts.city = webRes.city;
-                if (!contacts.state && webRes.state) contacts.state = webRes.state;
-                if (!contacts.zip && webRes.zip) contacts.zip = webRes.zip;
+
+      if (aboutRes && aboutRes.ok && aboutRes.html) {
+        // Parse thông tin từ HTML của tab About
+        const aHtml = aboutRes.html;
+
+        // Email từ About
+        if (!contacts.email) {
+          const mAboutEmail = aHtml.match(/mailto:([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,})/) ||
+            aHtml.match(/"email"\s*:\s*"([^"]+@[^"]+\.[a-zA-Z]{2,})"/);
+          if (mAboutEmail && isValidEmail(mAboutEmail[1])) contacts.email = mAboutEmail[1].toLowerCase();
+        }
+
+        // Website từ About
+        if (!contacts.website) {
+          const mAboutWeb = aHtml.match(/"(?:website|external_url|page_website)"\s*:\s*"(https?:\/\/[^"]{5,200})"/);
+          if (mAboutWeb && isValidWebsite(mAboutWeb[1])) contacts.website = mAboutWeb[1];
+        }
+
+        // Phone từ About
+        if (!contacts.phone) {
+          const mAboutPhone = aHtml.match(/tel:([\d+\s().-]{7,20})/) ||
+            aHtml.match(/"(?:phone|telephone|page_phone)"\s*:\s*"([^"]+)"/);
+          if (mAboutPhone) {
+            const p = cleanPhone(mAboutPhone[1]);
+            if (p) contacts.phone = p;
+          }
+        }
+
+        // Address từ About
+        if (!contacts.address) {
+          const mAboutAddr = aHtml.match(/"(?:single_line_address|formatted_address)"\s*:\s*"([^"]{5,200})"/);
+          if (mAboutAddr) contacts.address = mAboutAddr[1].replace(/\\/g, '').trim();
+        }
+
+        // Bio / Description từ About
+        if (!contacts.bio) {
+          const mAboutBio = aHtml.match(/"(?:description|about|page_about|blurb)"\s*:\s*"([^"]{10,600})"/);
+          if (mAboutBio) {
+            const candidate = mAboutBio[1].replace(/\\n/g, ' ').replace(/\\/g, '').trim();
+            if (candidate.length >= 10) contacts.bio = candidate;
+          }
+        }
+
+        // Category từ About
+        if (!contacts.category) {
+          const mAboutCat = aHtml.match(/"(?:category_name|page_category|primary_category)"\s*:\s*"([^"]{2,80})"/);
+          if (mAboutCat) contacts.category = mAboutCat[1].replace(/\\/g, '').trim();
+        }
+
+        // Instagram từ About
+        if (!contacts.instagram) {
+          const mAboutIg = aHtml.match(/instagram\.com\/([a-zA-Z0-9_.-]{3,30})/);
+          if (mAboutIg) {
+            const handle = mAboutIg[1].replace(/\/+$/, '').toLowerCase();
+            if (handle.length >= 3 && !handle.endsWith('.com')) {
+              contacts.instagram = `https://www.instagram.com/${handle}/`;
             }
-        } catch (e) {
-            console.warn('[FB Scraper] Lỗi khi fetch external website:', e);
+          }
         }
+
+        console.log('[FB Scraper] ✅ Đã bổ sung dữ liệu từ About tab');
+      }
+    } catch (eAbout) {
+      console.warn('[FB Scraper] Không fetch được About tab:', eAbout);
     }
+  }
 
-    // 5.1 DEEP BIO SCRAPING: Nếu chưa tìm thấy Amazon và phát hiện link Bio (linktr.ee, hoo.be, direct.me, msha.ke)
-    if (!contacts.amazon_url && contacts.bio_links && contacts.bio_links.length > 0) {
-        const bioToVisit = contacts.bio_links.slice(0, 2);
-        for (const bUrl of bioToVisit) {
-            try {
-                const bioRes = await new Promise(resolve => {
-                    chrome.runtime.sendMessage({
-                        action: 'FETCH_EXTERNAL_URL',
-                        url: bUrl,
-                        isBioAggregator: true
-                    }, (response) => {
-                        resolve(response || {});
-                    });
-                });
-                if (bioRes && bioRes.has_amazon && bioRes.amazon_url) {
-                    contacts.amazon_url = bioRes.amazon_url;
-                    contacts.has_amazon = true;
-                    console.log(`[FB Scraper] 🎯 Đã tìm thấy link Amazon từ Bio aggregator (${bUrl}): ${contacts.amazon_url}`);
-                    break;
-                }
-            } catch (errBio) {
-                console.warn('[FB Scraper] Lỗi fetch bio link:', errBio);
-            }
+  // 5. NẾU CÓ WEBSITE (ĐẶC BIỆT LÀ GOOD DOG): GỌI BACKGROUND FETCH ĐỂ TÌM CHỦ TRẠI (ví dụ: Lisa Z.)
+  let webOwnerName = '';
+  if (contacts.website) {
+    try {
+      const webRes = await new Promise(resolve => {
+        chrome.runtime.sendMessage({
+          action: 'FETCH_EXTERNAL_URL',
+          url: contacts.website
+        }, (response) => {
+          resolve(response || {});
+        });
+      });
+
+      if (webRes && webRes.ok) {
+        if (webRes.owner || webRes.breederName) {
+          webOwnerName = webRes.owner || webRes.breederName;
         }
+        if (webRes.phone && !contacts.phone) contacts.phone = webRes.phone;
+        if (webRes.email && !contacts.email) contacts.email = webRes.email;
+        if (webRes.address && !contacts.address) contacts.address = webRes.address;
+        if (webRes.city && !contacts.city) contacts.city = webRes.city;
+        if (webRes.state && !contacts.state) contacts.state = webRes.state;
+        if (webRes.zip && !contacts.zip) contacts.zip = webRes.zip;
+        if (webRes.country && (!contacts.country || contacts.country === 'United States')) contacts.country = webRes.country;
+        if (webRes.has_amazon && webRes.amazon_url && !contacts.amazon_url) {
+          contacts.amazon_url = webRes.amazon_url;
+          contacts.has_amazon = true;
+        }
+      } else if (webRes && webRes.breederName) {
+        webOwnerName = webRes.breederName;
+        if (!contacts.city && webRes.city) contacts.city = webRes.city;
+        if (!contacts.state && webRes.state) contacts.state = webRes.state;
+        if (!contacts.zip && webRes.zip) contacts.zip = webRes.zip;
+      }
+    } catch (e) {
+      console.warn('[FB Scraper] Lỗi khi fetch external website:', e);
     }
+  }
 
-    // 6. XÁC ĐỊNH CHỦ SỞ HỮU / NGƯỜI NHÂN GIỐNG THEO THỨ BẬC ƯU TIÊN
-    let ownerInfo = extractOwnerRepresentative(name, contacts.email, document.documentElement.innerHTML, webOwnerName);
-
-    // 7. BÓC TÁCH RIÊNG LUỒNG 2: HẬU TRƯỜNG THUẬT TOÁN FACEBOOK REELS (REVERSE ENGINEERING VIRAL REELS)
-    let reelInsights = extractFacebookReelViralInsights();
-
-    // Gửi kết quả hoàn chỉnh về background kèm taskId để khóa trùng lặp
-    chrome.runtime.sendMessage({
-        action: 'PROFILE_RESULT',
-        data: {
-            taskId: taskId,
-            stt: stt,
-            fb_id: fb_id,
-            url: url,
-            name: name,
-            avatar_url: avatarUrl,
-            owner: ownerInfo.owner,
-            ownerConfidence: ownerInfo.confidence,
-            phone: contacts.phone,
-            email: contacts.email,
-            website: contacts.website,
-            instagram: contacts.instagram,
-            city: contacts.city,
-            state: contacts.state,
-            zip: contacts.zip,
-            address: contacts.address,
-            has_amazon: Boolean(contacts.has_amazon),
-            amazon_url: contacts.amazon_url || '',
-            bio_links: contacts.bio_links || [],
-            country: contacts.country || (contacts.state ? 'United States' : 'United States'),
-            bio: contacts.bio,
-            // Luồng 1: Bài đăng tường cá nhân (Dành cho Sales/CRM)
-            publishTime: publishTime,
-            publishTimestamp: publishTimestamp,
-            relativeTime: relativeTime,
-            // Luồng 2: Hậu trường Reels Viral (Dành cho R&D / Content Marketing bắt chước thuật toán)
-            hasReel: Boolean(reelInsights && reelInsights.hasReel),
-            reelPublishTime: reelInsights ? reelInsights.reelPublishTime : 'Không có Reel',
-            reelPublishTimestamp: reelInsights ? reelInsights.reelPublishTimestamp : 0,
-            reelRelativeTime: reelInsights ? reelInsights.reelRelativeTime : '',
-            reelViralAgeDays: reelInsights ? reelInsights.reelViralAgeDays : 0,
-            reelViralBadge: reelInsights ? reelInsights.reelViralBadge : 'Chưa có Reel',
-            reelUrl: reelInsights ? reelInsights.reelUrl : '',
-            reelId: reelInsights ? reelInsights.reelId : '',
-            reelCreatorId: reelInsights ? reelInsights.reelCreatorId : '',
-            reelDuration: reelInsights ? reelInsights.reelDuration : '',
-            reelDurationSec: reelInsights ? reelInsights.reelDurationSec : 0,
-            reelCaption: reelInsights ? reelInsights.reelCaption : '',
-            reelHashtags: reelInsights ? reelInsights.reelHashtags : '',
-            reelPlayCount: reelInsights ? reelInsights.reelPlayCount : 0
+  // 5.1 DEEP BIO SCRAPING: Nếu chưa tìm thấy Amazon và phát hiện link Bio (linktr.ee, hoo.be, direct.me, msha.ke)
+  if (!contacts.amazon_url && contacts.bio_links && contacts.bio_links.length > 0) {
+    const bioToVisit = contacts.bio_links.slice(0, 2);
+    for (const bUrl of bioToVisit) {
+      try {
+        const bioRes = await new Promise(resolve => {
+          chrome.runtime.sendMessage({
+            action: 'FETCH_EXTERNAL_URL',
+            url: bUrl,
+            isBioAggregator: true
+          }, (response) => {
+            resolve(response || {});
+          });
+        });
+        if (bioRes && bioRes.has_amazon && bioRes.amazon_url) {
+          contacts.amazon_url = bioRes.amazon_url;
+          contacts.has_amazon = true;
+          console.log(`[FB Scraper] 🎯 Đã tìm thấy link Amazon từ Bio aggregator (${bUrl}): ${contacts.amazon_url}`);
+          break;
         }
-    });
+      } catch (errBio) {
+        console.warn('[FB Scraper] Lỗi fetch bio link:', errBio);
+      }
+    }
+  }
+
+  // 6. XÁC ĐỊNH CHỦ SỞ HỮU / NGƯỜI NHÂN GIỐNG THEO THỨ BẬC ƯU TIÊN
+  let ownerInfo = extractOwnerRepresentative(name, contacts.email, document.documentElement.innerHTML, webOwnerName);
+
+  // 7. BÓC TÁCH RIÊNG LUỒNG 2: HẬU TRƯỜNG THUẬT TOÁN FACEBOOK REELS (REVERSE ENGINEERING VIRAL REELS)
+  let reelInsights = extractFacebookReelViralInsights();
+
+  // Gửi kết quả hoàn chỉnh về background kèm taskId để khóa trùng lặp
+  chrome.runtime.sendMessage({
+    action: 'PROFILE_RESULT',
+    data: {
+      taskId: taskId,
+      stt: stt,
+      fb_id: fb_id,
+      url: url,
+      name: name,
+      avatar_url: avatarUrl,
+      owner: ownerInfo.owner,
+      ownerConfidence: ownerInfo.confidence,
+      phone: contacts.phone,
+      email: contacts.email,
+      website: contacts.website,
+      instagram: contacts.instagram,
+      social_links: contacts.social_links || [],
+      city: contacts.city,
+      state: contacts.state,
+      zip: contacts.zip,
+      address: contacts.address,
+      has_amazon: Boolean(contacts.has_amazon),
+      amazon_url: contacts.amazon_url || '',
+      bio_links: contacts.bio_links || [],
+      country: contacts.country || (contacts.state ? 'United States' : 'United States'),
+      bio: contacts.bio,
+      // Luồng 1: Bài đăng tường cá nhân (Dành cho Sales/CRM)
+      publishTime: publishTime,
+      publishTimestamp: publishTimestamp,
+      relativeTime: relativeTime,
+      // Luồng 2: Hậu trường Reels Viral (Dành cho R&D / Content Marketing bắt chước thuật toán)
+      hasReel: Boolean(reelInsights && reelInsights.hasReel),
+      reelPublishTime: reelInsights ? reelInsights.reelPublishTime : 'Không có Reel',
+      reelPublishTimestamp: reelInsights ? reelInsights.reelPublishTimestamp : 0,
+      reelRelativeTime: reelInsights ? reelInsights.reelRelativeTime : '',
+      reelViralAgeDays: reelInsights ? reelInsights.reelViralAgeDays : 0,
+      reelViralBadge: reelInsights ? reelInsights.reelViralBadge : 'Chưa có Reel',
+      reelUrl: reelInsights ? reelInsights.reelUrl : '',
+      reelId: reelInsights ? reelInsights.reelId : '',
+      reelCreatorId: reelInsights ? reelInsights.reelCreatorId : '',
+      reelDuration: reelInsights ? reelInsights.reelDuration : '',
+      reelDurationSec: reelInsights ? reelInsights.reelDurationSec : 0,
+      reelCaption: reelInsights ? reelInsights.reelCaption : '',
+      reelHashtags: reelInsights ? reelInsights.reelHashtags : '',
+      reelPlayCount: reelInsights ? reelInsights.reelPlayCount : 0
+    }
+  });
 }
 
 /**
  * Xuất file CSV dự phòng từ content script với đầy đủ 18 cột chuẩn
  */
 function downloadCSV(dataArray, isPartial) {
-    if (!dataArray || dataArray.length === 0) return;
+  if (!dataArray || dataArray.length === 0) return;
 
-    let headers = [
-        'STT',
-        'FB_ID',
-        'Tên Profile/Fanpage',
-        'Chủ Sở Hữu (Owner/Breeder)',
-        'Độ Tin Cậy Chủ Sở Hữu',
-        'Số Điện Thoại (Phone)',
-        'Email',
-        'Website Chính Thức',
-        'Instagram URL',
-        'Thành Phố (City)',
-        'Bang (State)',
-        'Mã Zip (Zip Code)',
-        'Địa Chỉ (Address)',
-        'Giới Thiệu (Bio/Intro)',
-        'Thời Gian Đăng (Publish Time)',
-        'Timestamp',
-        'Thời Gian Tương Đối',
-        'URL Profile'
+  let headers = [
+    'STT',
+    'FB_ID',
+    'Tên Profile/Fanpage',
+    'Chủ Sở Hữu (Owner/Breeder)',
+    'Độ Tin Cậy Chủ Sở Hữu',
+    'Số Điện Thoại (Phone)',
+    'Email',
+    'Website Chính Thức',
+    'Instagram URL',
+    'Thành Phố (City)',
+    'Bang (State)',
+    'Mã Zip (Zip Code)',
+    'Địa Chỉ (Address)',
+    'Giới Thiệu (Bio/Intro)',
+    'Thời Gian Đăng (Publish Time)',
+    'Timestamp',
+    'Thời Gian Tương Đối',
+    'URL Profile'
+  ];
+  let csvContent = "\uFEFF" + headers.join(',') + '\n';
+
+  dataArray.forEach((row, idx) => {
+    let stt = row.stt !== undefined ? row.stt : (idx + 1);
+    let vals = [
+      `"${String(stt).replace(/"/g, '""')}"`,
+      `"${String(row.fb_id || '').replace(/"/g, '""')}"`,
+      `"${String(row.name || '').replace(/"/g, '""')}"`,
+      `"${String(row.owner || '').replace(/"/g, '""')}"`,
+      `"${String(row.ownerConfidence || '').replace(/"/g, '""')}"`,
+      `"${String(row.phone || '').replace(/"/g, '""')}"`,
+      `"${String(row.email || '').replace(/"/g, '""')}"`,
+      `"${String(row.website || '').replace(/"/g, '""')}"`,
+      `"${String(row.instagram || '').replace(/"/g, '""')}"`,
+      `"${String(row.city || '').replace(/"/g, '""')}"`,
+      `"${String(row.state || '').replace(/"/g, '""')}"`,
+      `"${String(row.zip || '').replace(/"/g, '""')}"`,
+      `"${String(row.address || '').replace(/"/g, '""')}"`,
+      `"${String(row.bio || '').replace(/"/g, '""')}"`,
+      `"${String(row.publishTime || '').replace(/"/g, '""')}"`,
+      `"${String(row.publishTimestamp || '').replace(/"/g, '""')}"`,
+      `"${String(row.relativeTime || '').replace(/"/g, '""')}"`,
+      `"${String(row.url || '').replace(/"/g, '""')}"`
     ];
-    let csvContent = "\uFEFF" + headers.join(',') + '\n';
+    csvContent += vals.join(',') + '\n';
+  });
 
-    dataArray.forEach((row, idx) => {
-        let stt = row.stt !== undefined ? row.stt : (idx + 1);
-        let vals = [
-            `"${String(stt).replace(/"/g, '""')}"`,
-            `"${String(row.fb_id || '').replace(/"/g, '""')}"`,
-            `"${String(row.name || '').replace(/"/g, '""')}"`,
-            `"${String(row.owner || '').replace(/"/g, '""')}"`,
-            `"${String(row.ownerConfidence || '').replace(/"/g, '""')}"`,
-            `"${String(row.phone || '').replace(/"/g, '""')}"`,
-            `"${String(row.email || '').replace(/"/g, '""')}"`,
-            `"${String(row.website || '').replace(/"/g, '""')}"`,
-            `"${String(row.instagram || '').replace(/"/g, '""')}"`,
-            `"${String(row.city || '').replace(/"/g, '""')}"`,
-            `"${String(row.state || '').replace(/"/g, '""')}"`,
-            `"${String(row.zip || '').replace(/"/g, '""')}"`,
-            `"${String(row.address || '').replace(/"/g, '""')}"`,
-            `"${String(row.bio || '').replace(/"/g, '""')}"`,
-            `"${String(row.publishTime || '').replace(/"/g, '""')}"`,
-            `"${String(row.publishTimestamp || '').replace(/"/g, '""')}"`,
-            `"${String(row.relativeTime || '').replace(/"/g, '""')}"`,
-            `"${String(row.url || '').replace(/"/g, '""')}"`
-        ];
-        csvContent += vals.join(',') + '\n';
-    });
-
-    let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement('a');
-    a.href = url;
-    let timestamp = new Date().getTime();
-    a.download = `FB_Profile_Funnel_CRM_${isPartial ? 'Part_' : ''}${timestamp}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement('a');
+  a.href = url;
+  let timestamp = new Date().getTime();
+  a.download = `FB_Profile_Funnel_CRM_${isPartial ? 'Part_' : ''}${timestamp}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }

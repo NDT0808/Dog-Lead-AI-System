@@ -84,6 +84,8 @@
           <input type="number" id="fromLineInput" min="1" value="1">
           <span id="txtToLine">Đến dòng / 到:</span>
           <input type="number" id="toLineInput" min="1" placeholder="Hết">
+          <span>Số tab / 并行:</span>
+          <input type="number" id="parallelTabsInput" min="1" max="5" value="1" title="Số tab Facebook chạy đồng thời / 并行标签页数量">
         </div>
 
         <button type="button" id="btnClearUrls" class="btn-secondary" title="Xóa trắng danh sách link / 清空链接">
@@ -172,7 +174,7 @@
     </div>
   </div>
 
-  <!-- Navigation Tabs: Master CRM Table vs Daily Activity Ledger Matrix -->
+  <!-- Navigation Tabs: Master CRM Table vs Daily Activity Ledger Matrix vs Sales Dispatch Filter -->
   <div class="dash-tabs-bar">
     <button type="button" class="tab-btn active" id="tabBtnCrmTable">
       <span>📋</span> <span id="txtTabCrm">Danh Sách Hồ Sơ CRM / 客户档案总表</span>
@@ -180,6 +182,10 @@
     <button type="button" class="tab-btn" id="tabBtnLedgerTable">
       <span>📅</span> <span id="txtTabLedger">Bảng Chấm Công Hoạt Động (Timesheet Ledger) / 每日考勤打卡</span>
       <span class="tab-badge" id="badgeLedgerActiveCount">210 Leads</span>
+    </button>
+    <button type="button" class="tab-btn" id="tabBtnSalesFilterTable">
+      <span>🎯</span> <span id="txtTabSalesFilter">Lọc Dữ Liệu Gửi Cho Team Sales (Khử Trùng Snov)</span>
+      <span class="tab-badge" id="badgeSalesFilterCount" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:#ffffff;">0 Leads</span>
     </button>
   </div>
 
@@ -286,6 +292,227 @@
             <!-- Injected dynamically by dashboard.js -->
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: SALES LEAD FILTER & SNOV DEDUPLICATION DISPATCH -->
+  <div id="viewSalesFilterTable" style="display:none;">
+    <!-- Hidden File Inputs -->
+    <input type="file" id="inputSalesMasterFile" accept=".json,.xlsx,.xls" style="display:none;">
+    <input type="file" id="inputSalesAppendFile" accept=".json,.xlsx,.xls" style="display:none;">
+    <input type="file" id="inputSalesFilteredFiles" accept=".xlsx,.xls,.json" multiple style="display:none;">
+
+    <!-- Sales KPI Metrics Summary Row -->
+    <div class="kpi-row" style="margin-bottom:18px;">
+      <div class="kpi-card blue">
+        <div class="kpi-label">Tổng Dữ Liệu Master / 总主数据</div>
+        <div class="kpi-val"><span id="salesKpiTotalMaster">0</span> <span class="kpi-sub">Leads</span></div>
+      </div>
+      <div class="kpi-card rose" style="border-left:4px solid #e11d48;">
+        <div class="kpi-label">Đã Gửi Mail (Snov = yes) / 已发邮件</div>
+        <div class="kpi-val"><span id="salesKpiSnovYes" style="color:#e11d48;">0</span> <span class="kpi-sub" id="salesKpiSnovYesRate">(0%)</span></div>
+      </div>
+      <div class="kpi-card emerald">
+        <div class="kpi-label">Chưa Gửi Mail / Sẵn Sàng Gửi (Hot)</div>
+        <div class="kpi-val"><span id="salesKpiSnovNull" style="color:#059669;">0</span> <span class="kpi-sub" id="salesKpiSnovNullRate">(100%)</span></div>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-label">Nguồn Đối Chiếu Đã Nạp / 对比源文件</div>
+        <div class="kpi-val"><span id="salesKpiFilteredSources">0</span> <span class="kpi-sub" id="salesKpiFilteredKeysCount">(0 ID / Email)</span></div>
+      </div>
+    </div>
+
+    <!-- Operations Control Panel -->
+    <div class="table-card" style="margin-bottom:18px; padding:16px 20px; background:#ffffff; border-radius:12px; border:1px solid #e2e8f0;">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
+        
+        <!-- Khối 1: Nạp & Quản Lý File Tổng -->
+        <div class="sales-op-box" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+          <div style="font-size:12.5px; font-weight:800; color:#0284c7; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <span>📁</span> <span>1. DỮ LIỆU TỔNG (MASTER DATASET)</span>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button type="button" id="btnSalesImportMaster" class="btn-primary" style="padding:7px 12px; font-size:12px; font-weight:700;" title="Nạp file JSON chuẩn leads_us_master... hoặc file Excel tổng">
+              <span>📥</span> <span>Nạp File Tổng (JSON / Excel)</span>
+            </button>
+            <button type="button" id="btnSalesAppendMaster" class="btn-secondary" style="padding:7px 12px; font-size:12px; font-weight:700;" title="Import thêm dữ liệu mới bổ sung vào file tổng (khử trùng STT/FB ID)">
+              <span>➕</span> <span>Nạp Thêm Vào File Tổng</span>
+            </button>
+            <button type="button" id="btnSalesExportMasterJson" class="btn-purple" style="padding:7px 12px; font-size:12px; font-weight:700;" title="Xuất lại toàn bộ file JSON tổng kèm trường snov ('yes' hoặc null) và ngày gửi">
+              <span>💾</span> <span>Xuất JSON Tổng (Kèm Snov & Ngày)</span>
+            </button>
+          </div>
+          <div style="font-size:11px; color:#64748b; margin-top:8px;">
+            Hỗ trợ chuẩn định dạng JSON <code>leads_us_master_merged_all_keys_v1_25-10.json</code> hoặc bảng Excel.
+          </div>
+        </div>
+
+        <!-- Khối 2: Đối Chiếu Khử Trùng Với File Đã Lọc / Đã Gửi Mail -->
+        <div class="sales-op-box" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+          <div style="font-size:12.5px; font-weight:800; color:#d97706; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <span>🔍</span> <span>2. ĐỐI CHIẾU KHỬ TRÙNG (SNOV / DEDUPLICATION)</span>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button type="button" id="btnSalesImportFilteredFiles" class="btn-secondary" style="padding:7px 12px; font-size:12px; font-weight:700; border-color:#cbd5e1;" title="Chọn 1 hoặc nhiều file Excel/JSON đã gửi mail trước đó để đối chiếu (lấy ngày gửi)">
+              <span>📂</span> <span>Nạp File Đã Gửi Mail (Nhiều file)</span>
+            </button>
+            <button type="button" id="btnSalesExecuteDeduplication" class="btn-primary" style="padding:7px 12px; font-size:12px; font-weight:700; background:#d97706; border-color:#b45309;" title="So khớp FB ID, Email, Phone, URL để gắn key snov='yes' và mốc thời gian đã gửi">
+              <span>⚡</span> <span>Khử Trùng & Gắn Ngày Đã Gửi</span>
+            </button>
+            <button type="button" id="btnSalesClearFilteredPool" class="btn-secondary" style="padding:7px 10px; font-size:11.5px;" title="Xóa danh sách file đã nạp đối chiếu">
+              <span>🧹</span> <span>Xóa Đối Chiếu</span>
+            </button>
+          </div>
+          <!-- File tags list -->
+          <div id="salesFilteredSourcesTags" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:5px; max-height:48px; overflow-y:auto;">
+            <span style="font-size:11px; color:#94a3b8; font-style:italic;">Chưa nạp file đã gửi mail nào để đối chiếu</span>
+          </div>
+        </div>
+
+        <!-- Khối 3: Xuất Bàn Giao Cho Team Sales -->
+        <div class="sales-op-box" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+          <div style="font-size:12.5px; font-weight:800; color:#059669; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <span>🚀</span> <span>3. XUẤT BÀN GIAO CHO TEAM SALES (20 CỘT CHUẨN)</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <select id="salesExportTargetSelect" class="filter-select" style="font-size:12px; font-weight:700; padding:6px 10px;">
+                <option value="READY_ONLY">⭐ Chỉ xuất Lead Chưa Gửi Mail (snov != yes)</option>
+                <option value="CURRENT_VIEW">👁️ Xuất toàn bộ Lead đang lọc trên bảng</option>
+                <option value="ALL_MASTER">📦 Xuất tất cả Master Dataset</option>
+              </select>
+              <div style="display:inline-flex; align-items:center; gap:5px; background:#f1f5f9; padding:3px 8px; border-radius:6px; border:1px solid #cbd5e1;">
+                <span style="font-size:11.5px; font-weight:700; color:#334155; white-space:nowrap;">Số lượng xuất:</span>
+                <input type="number" id="inputSalesExportLimit" placeholder="Tất cả (All)" min="1" step="1" style="width:105px; padding:4px 7px; font-size:12px; font-weight:700; border:1px solid #94a3b8; border-radius:4px; background:#ffffff;" title="Nhập số lượng lead muốn xuất (ví dụ: 100, 200, 500...). Để trống hoặc 0 = Xuất tất cả theo phạm vi">
+              </div>
+              <label style="font-size:11.5px; font-weight:700; color:#334155; display:inline-flex; align-items:center; gap:5px; cursor:pointer;" title="Khi xuất xong, tự động đánh dấu snov = yes (Đã gửi mail) kèm ngày hôm nay">
+                <input type="checkbox" id="chkSalesAutoMarkSnov" checked style="cursor:pointer;">
+                <span>Tự động đánh dấu snov = "yes" (Đã gửi) sau khi xuất</span>
+              </label>
+              <label style="font-size:11.5px; font-weight:700; color:#0f766e; display:inline-flex; align-items:center; gap:5px; cursor:pointer; background:#f0fdfa; padding:3px 8px; border-radius:6px; border:1px solid #99f6e4;" title="Chuẩn hóa dữ liệu: Xóa sạch chức vụ trong dấu ngoặc đơn () khỏi tên Chủ trại, điền đúng cột Chức vụ, và lấy 1 Email, 1 SĐT chuẩn nhất">
+                <input type="checkbox" id="chkSalesNormalizeSingle" checked style="cursor:pointer;">
+                <span>✨ Chuẩn hóa 1 giá trị (1 Email, 1 SĐT, xóa () ở Tên & tách Chức vụ)</span>
+              </label>
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <button type="button" id="btnSalesExportSingleExcel" class="btn-emerald" style="padding:7px 12px; font-size:12px; font-weight:700;" title="Xuất toàn bộ danh sách đã chọn vào 1 file Excel 20 cột duy nhất (kèm Website & Chức vụ)">
+                <span>📊</span> <span>Xuất 1 File Excel</span>
+              </button>
+              <button type="button" id="btnSalesExportSingleJson" class="btn-secondary" style="padding:7px 12px; font-size:12px; font-weight:700;" title="Xuất dữ liệu đã chọn ra file JSON">
+                <span>📄</span> <span>Xuất 1 File JSON</span>
+              </button>
+              <button type="button" id="btnSalesExportBatchParts" class="btn-primary" style="padding:7px 14px; font-size:12px; font-weight:800; background:linear-gradient(135deg, #f59e0b, #d97706); border:none; box-shadow:0 2px 6px rgba(217, 119, 6, 0.35);" title="Chia nhỏ mỗi file đúng 20 dòng (Top_Leads_Part_XX_of_YY.xlsx) và tải về">
+                <span>📦</span> <span>Xuất 20 Dòng / 1 File Excel (Batch Parts)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Table Card with Filter & Pagination -->
+    <div class="table-card">
+      <div class="filter-bar">
+        <!-- Search Input -->
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="salesSearchInput" class="search-input" placeholder="Tìm theo Tên trại, Chủ trại, SĐT, Email, FB ID, City, State, Sản phẩm...">
+        </div>
+
+        <!-- Filter Snov -->
+        <select id="salesFilterSnov" class="filter-select">
+          <option value="ALL">Trạng thái gửi mail: Tất cả / 全部状态</option>
+          <option value="NULL_ONLY" selected>⭐ Chưa gửi mail / Sẵn sàng gửi Sales (snov != yes)</option>
+          <option value="YES_ONLY">✓ Đã gửi mail trước đó (snov = yes)</option>
+        </select>
+
+        <!-- Filter Contactability -->
+        <select id="salesFilterContact" class="filter-select">
+          <option value="ALL">Liên hệ: Tất cả / 全部联系方式</option>
+          <option value="HAS_PHONE">📞 Có Số Điện Thoại (+1 US)</option>
+          <option value="HAS_EMAIL">✉️ Có Email Cá Nhân / Trại</option>
+          <option value="HAS_BOTH">🔥 Có Cả SĐT & Email</option>
+          <option value="HAS_FB_ID">🆔 Có Facebook ID Số Thuần</option>
+        </select>
+
+        <!-- Filter Tier -->
+        <select id="salesFilterTier" class="filter-select">
+          <option value="ALL">Xếp hạng: Tất cả Tier / 全部等级</option>
+          <option value="TIER_S_A">★ Ưu tiên cao: Tier S + Tier A (≥ 60đ)</option>
+          <option value="TIER_S">Tier S (Rất cao: 75đ - 98đ)</option>
+          <option value="TIER_A">Tier A (Cao: 60đ - 74đ)</option>
+          <option value="TIER_B">Tier B (Tiêu chuẩn)</option>
+        </select>
+
+        <!-- Filter Amazon -->
+        <select id="salesFilterAmazon" class="filter-select">
+          <option value="ALL">Kênh Amazon: Tất cả / 全部渠道</option>
+          <option value="HAS_AMAZON">Có Storefront Amazon</option>
+          <option value="NO_AMAZON">Chưa có Storefront Amazon</option>
+        </select>
+
+        <button type="button" id="btnSalesResetFilter" class="btn-secondary" style="padding:6px 12px; font-size:12px; font-weight:700;" title="Xóa toàn bộ bộ lọc và hiện lại mặc định">
+          <span>🔄</span> <span>Đặt Lại Lọc</span>
+        </button>
+
+        <div style="font-size:12px; font-weight:700; color:var(--text-muted); white-space:nowrap; margin-left:auto;">
+          <span>Hiển thị:</span> <strong style="color:#0284c7;" id="salesFilteredCount">0</strong> / <span id="salesTotalCount">0</span> Leads
+        </div>
+      </div>
+
+      <!-- Responsive Table for Master Leads -->
+      <div class="table-responsive">
+        <table class="crm-table sales-table">
+          <thead>
+            <tr>
+              <th style="min-width:110px;">STT / Mã Lead<span class="th-sub">序号 / 编号</span></th>
+              <th style="text-align:center; min-width:115px;">Trạng Thái Gửi Mail<span class="th-sub">已发邮件状态 / Snov</span></th>
+              <th style="min-width:160px;">Chủ Trại (Owner)<span class="th-sub">主理人</span></th>
+              <th style="min-width:180px;">Tên Trại / Page<span class="th-sub">犬舍 / 企业</span></th>
+              <th style="min-width:130px;">Facebook ID<span class="th-sub">社交数字ID</span></th>
+              <th style="min-width:170px;">SĐT & Email<span class="th-sub">电话 & 邮箱</span></th>
+              <th style="min-width:130px;">Vị Trí (City, State)<span class="th-sub">城市 / 州</span></th>
+              <th style="min-width:130px;">Website<span class="th-sub">官网链接</span></th>
+              <th style="min-width:130px;">Kênh Amazon<span class="th-sub">亚马逊渠道</span></th>
+              <th style="min-width:110px;">Xếp Hạng & Điểm<span class="th-sub">Tier / 得分</span></th>
+              <th style="min-width:180px;">Sản Phẩm Phù Hợp<span class="th-sub">推荐匹配产品</span></th>
+              <th style="min-width:220px;">Kịch Bản Sales (Remark)<span class="th-sub">话术与行动</span></th>
+              <th style="min-width:130px;">Bài Đăng Gần Nhất<span class="th-sub">最新发帖</span></th>
+              <th style="text-align:center; min-width:90px;">Thao Tác<span class="th-sub">快捷操作</span></th>
+            </tr>
+          </thead>
+          <tbody id="salesTableBody">
+            <!-- Injected dynamically by dashboard.js with virtualization/pagination -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Toolbar -->
+      <div class="sales-pagination-wrap" style="display:flex; justify-content:space-between; align-items:center; padding:14px 4px 6px 4px; border-top:1px solid #e2e8f0; margin-top:10px; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:12px; color:#64748b; font-weight:600;">Số dòng mỗi trang:</span>
+          <select id="salesPageSizeSelect" class="filter-select" style="padding:4px 8px; font-size:12px; font-weight:700;">
+            <option value="20" selected>20 dòng / trang</option>
+            <option value="50">50 dòng / trang</option>
+            <option value="100">100 dòng / trang</option>
+            <option value="200">200 dòng / trang</option>
+            <option value="500">500 dòng / trang</option>
+          </select>
+          <span id="salesPaginationRange" style="font-size:12px; color:#475569; font-weight:700; margin-left:10px;">Đang hiển thị dòng 0 - 0 trên 0 kết quả</span>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button type="button" id="btnSalesPageFirst" class="btn-secondary" style="padding:5px 10px; font-size:11.5px;" title="Về trang đầu">⏮ Đầu</button>
+          <button type="button" id="btnSalesPagePrev" class="btn-secondary" style="padding:5px 10px; font-size:11.5px;" title="Trang trước">◀ Trước</button>
+          <span style="font-size:12.5px; font-weight:700; color:#0f172a; padding:0 6px;">
+            Trang <span id="salesCurrentPageNum" style="color:#0284c7;">1</span> / <span id="salesTotalPagesNum">1</span>
+          </span>
+          <button type="button" id="btnSalesPageNext" class="btn-secondary" style="padding:5px 10px; font-size:11.5px;" title="Trang sau">Sau ▶</button>
+          <button type="button" id="btnSalesPageLast" class="btn-secondary" style="padding:5px 10px; font-size:11.5px;" title="Đến trang cuối">Cuối ⏭</button>
+        </div>
       </div>
     </div>
   </div>
@@ -482,6 +709,8 @@
         </div>
       </div>
     </div>
+  </div>
+
   <!-- Modal Soi Hậu Trường Reels Viral (Reverse Engineering Reels Algorithm) -->
   <div id="modalReelInsights" class="modal-backdrop" style="display:none;">
     <div class="modal-dialog" style="max-width:680px;">

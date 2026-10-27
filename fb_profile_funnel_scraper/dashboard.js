@@ -1274,6 +1274,9 @@ const STEP1_AVATAR_LOOKUP = {
 
     if (fromVal > urls.length) return alert(`Dòng bắt đầu (${fromVal}) vượt quá tổng số link (${urls.length})!`);
     if (fromVal > toVal) return alert('Dòng bắt đầu không thể lớn hơn dòng kết thúc!');
+    let parallelTabs = parseInt($('parallelTabsInput')?.value, 10);
+    if (isNaN(parallelTabs)) parallelTabs = 1;
+    parallelTabs = Math.max(1, Math.min(5, parallelTabs));
 
     // 1. Gửi trực tiếp nếu đang trong context Extension
     let sent = false;
@@ -1284,6 +1287,7 @@ const STEP1_AVATAR_LOOKUP = {
           urls: urls,
           startIndex: fromVal - 1,
           endIndex: toVal - 1,
+          maxParallel: parallelTabs,
           tabId: null
         }, () => {
           sent = true;
@@ -1300,7 +1304,8 @@ const STEP1_AVATAR_LOOKUP = {
       type: 'START_AUTO',
       urls: urls,
       startIndex: fromVal - 1,
-      endIndex: toVal - 1
+      endIndex: toVal - 1,
+      options: { maxParallel: parallelTabs }
     }, '*');
 
     isAutoRunning = true;
@@ -2058,29 +2063,38 @@ const STEP1_AVATAR_LOOKUP = {
   // =========================================================================
   // 📅 ACTIVITY LEDGER & ATTENDANCE TIMESHEET LOGIC (BẢNG CHẤM CÔNG HOẠT ĐỘNG)
   // =========================================================================
+  // 📅 NAVIGATION TABS: CRM vs ACTIVITY LEDGER vs SALES LEAD DISPATCH
+  // =========================================================================
   let ledgerData = { leads: {}, tracked_dates: [] };
 
   const tabBtnCrm = $('tabBtnCrmTable');
   const tabBtnLedger = $('tabBtnLedgerTable');
+  const tabBtnSales = $('tabBtnSalesFilterTable');
   const viewCrm = $('viewCrmTable');
   const viewLedger = $('viewLedgerTable');
+  const viewSales = $('viewSalesFilterTable');
 
-  if (tabBtnCrm && tabBtnLedger && viewCrm && viewLedger) {
-    tabBtnCrm.addEventListener('click', () => {
-      tabBtnCrm.classList.add('active');
-      tabBtnLedger.classList.remove('active');
-      viewCrm.style.display = 'block';
-      viewLedger.style.display = 'none';
-    });
+  function switchDashboardTab(targetTab) {
+    if (tabBtnCrm) tabBtnCrm.classList.toggle('active', targetTab === 'crm');
+    if (tabBtnLedger) tabBtnLedger.classList.toggle('active', targetTab === 'ledger');
+    if (tabBtnSales) tabBtnSales.classList.toggle('active', targetTab === 'sales');
 
-    tabBtnLedger.addEventListener('click', () => {
-      tabBtnLedger.classList.add('active');
-      tabBtnCrm.classList.remove('active');
-      viewCrm.style.display = 'none';
-      viewLedger.style.display = 'block';
+    if (viewCrm) viewCrm.style.display = (targetTab === 'crm') ? 'block' : 'none';
+    if (viewLedger) viewLedger.style.display = (targetTab === 'ledger') ? 'block' : 'none';
+    if (viewSales) viewSales.style.display = (targetTab === 'sales') ? 'block' : 'none';
+
+    if (targetTab === 'ledger') {
       loadLedgerData();
-    });
+    } else if (targetTab === 'sales') {
+      if (typeof initSalesFilterModule === 'function') {
+        initSalesFilterModule();
+      }
+    }
   }
+
+  if (tabBtnCrm) tabBtnCrm.addEventListener('click', () => switchDashboardTab('crm'));
+  if (tabBtnLedger) tabBtnLedger.addEventListener('click', () => switchDashboardTab('ledger'));
+  if (tabBtnSales) tabBtnSales.addEventListener('click', () => switchDashboardTab('sales'));
 
   // Tự động tạo dữ liệu Bảng Chấm Công (Ledger) trực tiếp từ mảng allLeads trên Client
   function generateLedgerDataFromLeads(leads) {
@@ -2479,15 +2493,1215 @@ const STEP1_AVATAR_LOOKUP = {
     });
   }
 
-  // Phơi bày hàm ra window
-  window.openEditLeadModal = openEditLeadModal;
-  window.openAddLeadModal = openAddLeadModal;
-  window.closeEditLeadModal = closeEditLeadModal;
-  window.deleteLead = deleteLead;
-  window.copyText = copyText;
-  window.handleAvatarClick = handleAvatarClick;
-  window.openTelesalePitchModal = openTelesalePitchModal;
-  window.loadLedgerData = loadLedgerData;
+  // =========================================================================
+  // 🎯 TAB 3: SALES LEAD FILTER & SNOV DEDUPLICATION DISPATCH MODULE
+  // =========================================================================
+  let salesMasterLeads = [];
+  let salesFilteredPool = {
+    fbIds: new Map(),   // cleanFbId -> dateStr
+    emails: new Map(),  // cleanEmail -> dateStr
+    phones: new Map(),  // cleanPhone -> dateStr
+    urls: new Map(),    // cleanUrl -> dateStr
+    files: []
+  };
+  let salesDisplayLeads = [];
+  let salesCurrentPage = 1;
+  let salesPageSize = 20;
+  let salesInitialized = false;
+
+  // 1. Data Cleaning & Normalization Helpers
+  function cleanEmail(e) {
+    if (!e) return '';
+    const s = String(e).trim().toLowerCase();
+    if (['none', 'nan', 'null', '', '邮箱地址', 'email'].includes(s)) return '';
+    const m = s.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+    return m ? m[0].toLowerCase() : '';
+  }
+
+  function cleanFbId(f) {
+    if (!f) return '';
+    let s = String(f).trim();
+    if (s.endsWith('.0')) s = s.slice(0, -2);
+    if (['none', 'nan', 'null', '', 'facebook id', 'fb_id', '0'].includes(s.toLowerCase())) return '';
+    const m = s.match(/\d{6,}/);
+    return m ? m[0] : '';
+  }
+
+  function extractFbIdFromUrl(u) {
+    if (!u || typeof u !== 'string') return '';
+    let m = u.match(/id=(\d{6,})/);
+    if (m) return m[1];
+    m = u.match(/facebook\.com\/(\d{6,})/);
+    if (m) return m[1];
+    return '';
+  }
+
+  function cleanPhone(p) {
+    if (!p) return '';
+    const digits = String(p).replace(/\D/g, '');
+    if (digits.length >= 10) return digits.slice(-10);
+    return digits;
+  }
+
+  function cleanUrl(u) {
+    if (!u) return '';
+    return String(u).trim().toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/^www\./, '')
+      .replace(/\/+$/, '');
+  }
+
+  const titleStopWords = new Set([
+    'chủ', 'trại', 'quản', 'lý', 'chuồng', 'cơ', 'sở', 'giống', 'sáng', 'lập',
+    'huấn', 'luyện', 'viên', 'trưởng', 'tác', 'giả', 'sở', 'hữu', 'phụ', 'trách',
+    'giám', 'đốc', 'tiếp', 'nhận', 'điều', 'phối', 'cứu', 'trợ', 'bảo', 'tồn',
+    'chăm', 'sóc', 'thú', 'y', 'bác', 'sĩ', 'chuyên', 'viên', 'nhân', 'viên',
+    'đại', 'diện', 'liên', 'hệ',
+    'breeder', 'owner', 'kennel', 'manager', 'head', 'trainer', 'facility',
+    'director', 'dog', 'commercial', 'general', 'managing', 'founder', 'team',
+    'contact', 'admin', 'administrator', 'staff', 'support', 'shelter', 'intake',
+    'rescue', 'coordinator', 'specialist', 'officer', 'vet', 'veterinarian'
+  ]);
+
+  const uiArtifactsRegex = /^(facebook|facebook user|more use tab|frequently asked questions|questions about|resources welcome click|puppy cart|akc|akc b|akc o|akcmarketplace|akc standards|null|undefined|none|n\/a|na|unknown|chưa rõ|chưa có|không có|-)$/i;
+
+  function cleanRoleFromPerson(person) {
+    if (!person) return '';
+    let str = String(person).trim();
+    // Remove parenthesized or bracketed titles: e.g. "Anastasiia Beaumont (Founder)" -> "Anastasiia Beaumont"
+    str = str.replace(/\s*\([^)]*\)/g, '').replace(/\s*\[[^\]]*\]/g, '').trim();
+    // Remove trailing or leading punctuation
+    str = str.replace(/^[-:–—\s]+|[-:–—\s]+$/g, '');
+    return str;
+  }
+
+  function isPlaceholderOwner(str) {
+    if (!str || typeof str !== 'string') return true;
+    const s = str.trim();
+    if (!s || s === '-') return true;
+
+    const lower = s.toLowerCase();
+    if (uiArtifactsRegex.test(lower)) return true;
+    if (lower.includes('frequently asked questions') || lower.includes('more use tab') || lower.includes('welcome click')) return true;
+
+    // If it's a kennel / company / UI name mistakenly placed in owner
+    if (/\b(kennel club|dog show|puppies home|puppy accessories)\b/i.test(lower)) return true;
+
+    const clean = cleanRoleFromPerson(s).toLowerCase();
+    if (!clean || clean === '-' || uiArtifactsRegex.test(clean)) return true;
+
+    const words = clean.split(/[\s/|,;]+/).filter(Boolean);
+    const nonTitleWords = words.filter(w => !titleStopWords.has(w));
+    return nonTitleWords.length === 0;
+  }
+
+  function extractFirstName(cleanOwner) {
+    if (!cleanOwner || typeof cleanOwner !== 'string') return 'Manager';
+    let s = cleanRoleFromPerson(cleanOwner);
+    if (/^manager of\b/i.test(s) || s.toLowerCase() === 'manager') return 'Manager';
+    if (isPlaceholderOwner(s)) return 'Manager';
+
+    // Strip honorifics: Dr., Mr., Mrs., Ms., Coach, Trainer, etc.
+    s = s.replace(/^(dr\.|mr\.|mrs\.|ms\.|coach|trainer|miss|prof\.)\s+/i, '').trim();
+
+    const words = s.split(/\s+/).filter(Boolean);
+    if (words.length === 0) return 'Manager';
+
+    const first = words[0];
+    const stopFirst = new Set(['the', 'manager', 'owner', 'breeder', 'kennel', 'dog', 'chủ', 'quản', 'giám', 'huấn', 'corgleone']);
+    if (first.length >= 2 && !stopFirst.has(first.toLowerCase())) {
+      return first;
+    }
+    return 'Manager';
+  }
+
+  function extractSingleEmail(emailStr) {
+    if (!emailStr) return '';
+    const parts = String(emailStr).split(/[|,;\s]+/);
+    for (const p of parts) {
+      const clean = p.trim().replace(/^mailto:/i, '');
+      if (clean.includes('@') && clean.includes('.')) {
+        return clean;
+      }
+    }
+    return String(emailStr).trim();
+  }
+
+  function extractSinglePhone(phoneStr) {
+    if (!phoneStr) return '';
+    const str = String(phoneStr).trim();
+    const parts = str.split(/[|/,;]+/);
+    if (parts.length > 1) {
+      const first = parts[0].trim();
+      const digits = first.replace(/\D/g, '');
+      if (digits.length >= 7) return first;
+    }
+    const allDigits = str.replace(/\D/g, '');
+    if (allDigits.length === 22 && allDigits.startsWith('1')) {
+      return '+' + allDigits.slice(0, 11);
+    }
+    if (allDigits.length === 20) {
+      return allDigits.slice(0, 10);
+    }
+    return str;
+  }
+
+  function extractSingleOwner(ownerStr, kennelName) {
+    const company = (kennelName || '').trim();
+    const defaultManager = company ? `Manager of ${company}` : 'Manager';
+    if (isPlaceholderOwner(ownerStr)) return defaultManager;
+
+    let str = String(ownerStr).trim();
+    // Handle delimiter with optional whitespace
+    const parts = str.split(/\s*[|;\n•]\s*/);
+    let primary = parts[0].trim();
+
+    // If it has colon e.g. "Chủ trại: Dan Reichert"
+    if (primary.includes(':')) {
+      const afterColon = primary.split(':')[1].trim();
+      if (afterColon) primary = afterColon;
+    }
+
+    // If primary has " & " or " and "
+    if (primary.includes(' & ')) {
+      const ampParts = primary.split(' & ').map(s => s.trim());
+      if (ampParts.length >= 2) {
+        const secondWords = ampParts[1].split(/\s+/);
+        if (secondWords.length >= 2 && !ampParts[0].includes(' ')) {
+          primary = `${ampParts[0]} ${secondWords.slice(1).join(' ')}`;
+        } else {
+          primary = ampParts[0];
+        }
+      }
+    }
+
+    primary = cleanRoleFromPerson(primary);
+    if (isPlaceholderOwner(primary)) return defaultManager;
+    return primary || defaultManager;
+  }
+
+  function extractRoleFromOwner(ownerStr) {
+    if (!ownerStr) return '';
+    const m = String(ownerStr).match(/\(([^)]+)\)/);
+    if (m && m[1]) {
+      const role = m[1].trim();
+      if (role && !uiArtifactsRegex.test(role.toLowerCase())) {
+        return role;
+      }
+    }
+    return '';
+  }
+
+  function resolveSalesOwnerNames(ownerStr, companyName, normalizeSingle = true) {
+    const company = (companyName || '').trim();
+    const defaultManager = company ? `Manager of ${company}` : 'Manager';
+    const fallbackTitle = '创始人兼繁育人 (Breeder & Owner)';
+
+    if (isPlaceholderOwner(ownerStr)) {
+      return { 
+        fullName: defaultManager, 
+        firstName: 'Manager',
+        jobTitle: fallbackTitle
+      };
+    }
+
+    // Extract role from the parentheses in owner string
+    const extractedRole = extractRoleFromOwner(ownerStr);
+    const jobTitle = extractedRole || fallbackTitle;
+
+    let fullName = '';
+    if (normalizeSingle) {
+      fullName = extractSingleOwner(ownerStr, company);
+    } else {
+      // Remove all parentheses from all owners in the string
+      fullName = cleanRoleFromPerson(ownerStr);
+    }
+
+    if (!fullName || isPlaceholderOwner(fullName)) {
+      fullName = defaultManager;
+    }
+
+    const firstName = extractFirstName(fullName);
+    return { fullName, firstName, jobTitle };
+  }
+
+  function extractCellText(cell) {
+    if (cell === null || cell === undefined) return '';
+    if (typeof cell === 'object') {
+      if (cell.text !== undefined) return String(cell.text).trim();
+      if (cell.result !== undefined) return String(cell.result).trim();
+      if (cell.hyperlink !== undefined) return String(cell.hyperlink).trim();
+      return JSON.stringify(cell);
+    }
+    return String(cell).trim();
+  }
+
+  function extractDateFromRow(r, fallbackDate) {
+    const dateKeys = ['添加日期', 'Add date', 'add_date', 'Add Date', 'date', 'Date', 'Ngày gửi', 'ngày gửi', 'send_date', 'sent_date', 'Thời gian gửi', 'time', 'Time'];
+    for (const k of dateKeys) {
+      if (r[k]) {
+        const val = extractCellText(r[k]);
+        if (val) {
+          const mIso = val.match(/\d{4}[-/]\d{1,2}[-/]\d{1,2}/);
+          if (mIso) return mIso[0].replace(/\//g, '-');
+          const mVn = val.match(/(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+          if (mVn) return `${mVn[3]}-${mVn[2].padStart(2, '0')}-${mVn[1].padStart(2, '0')}`;
+          return val.slice(0, 19);
+        }
+      }
+    }
+    return fallbackDate || new Date().toISOString().slice(0, 10);
+  }
+
+  function extractDateFromFileName(fileName) {
+    if (!fileName) return new Date().toISOString().slice(0, 10);
+    const mFull = fileName.match(/(\d{4})[-_](\d{2})[-_](\d{2})/);
+    if (mFull) return `${mFull[1]}-${mFull[2]}-${mFull[3]}`;
+    const mCompact = fileName.match(/(\d{4})(\d{2})(\d{2})/);
+    if (mCompact) return `${mCompact[1]}-${mCompact[2]}-${mCompact[3]}`;
+    const mShort = fileName.match(/(\d{1,2})[-_](\d{1,2})/);
+    if (mShort) {
+      const year = new Date().getFullYear();
+      return `${year}-${mShort[2].padStart(2, '0')}-${mShort[1].padStart(2, '0')}`;
+    }
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  // 2. Pure JavaScript Lightweight ZIP Packager (Store Mode, CRC32)
+  function createZipArchive(files) {
+    const crcTable = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      let c = i;
+      for (let k = 0; k < 8; k++) {
+        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      }
+      crcTable[i] = c;
+    }
+    function crc32(buf) {
+      let crc = 0 ^ (-1);
+      for (let i = 0; i < buf.length; i++) {
+        crc = (crc >>> 8) ^ crcTable[(crc ^ buf[i]) & 0xFF];
+      }
+      return (crc ^ (-1)) >>> 0;
+    }
+
+    const now = new Date();
+    const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+    const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+
+    const enc = new TextEncoder();
+    const parts = [];
+    const fileEntries = [];
+    let offset = 0;
+
+    for (const file of files) {
+      const nameBytes = enc.encode(file.name);
+      const dataBytes = new Uint8Array(file.data);
+      const crc = crc32(dataBytes);
+      const size = dataBytes.length;
+
+      // 1. Local File Header: 30 bytes + filename
+      const localHeader = new Uint8Array(30 + nameBytes.length);
+      const dv = new DataView(localHeader.buffer);
+      dv.setUint32(0, 0x04034b50, true);  // Local signature
+      dv.setUint16(4, 20, true);          // Version needed (2.0)
+      dv.setUint16(6, 0x0800, true);      // General purpose bit flag (UTF-8 filename)
+      dv.setUint16(8, 0, true);           // Compression method (0 = store)
+      dv.setUint16(10, dosTime, true);    // Mod time
+      dv.setUint16(12, dosDate, true);    // Mod date
+      dv.setUint32(14, crc, true);        // CRC-32
+      dv.setUint32(18, size, true);       // Compressed size
+      dv.setUint32(22, size, true);       // Uncompressed size
+      dv.setUint16(26, nameBytes.length, true); // Filename length
+      dv.setUint16(28, 0, true);          // Extra field length
+      localHeader.set(nameBytes, 30);
+
+      fileEntries.push({ nameBytes, crc, size, offset });
+      parts.push(localHeader);
+      parts.push(dataBytes);
+      offset += localHeader.length + dataBytes.length;
+    }
+
+    // 2. Central Directory
+    const centralStart = offset;
+    for (const fe of fileEntries) {
+      const cdHeader = new Uint8Array(46 + fe.nameBytes.length);
+      const dv = new DataView(cdHeader.buffer);
+      dv.setUint32(0, 0x02014b50, true);  // Central directory signature
+      dv.setUint16(4, 20, true);          // Version made by (2.0)
+      dv.setUint16(6, 20, true);          // Version needed (2.0)
+      dv.setUint16(8, 0x0800, true);      // UTF-8 filename flag
+      dv.setUint16(10, 0, true);          // Compression method (0 = store)
+      dv.setUint16(12, dosTime, true);    // Mod time
+      dv.setUint16(14, dosDate, true);    // Mod date (offset 14)
+      dv.setUint32(16, fe.crc, true);     // CRC-32 (offset 16)
+      dv.setUint32(20, fe.size, true);    // Compressed size (offset 20)
+      dv.setUint32(24, fe.size, true);    // Uncompressed size (offset 24)
+      dv.setUint16(28, fe.nameBytes.length, true); // Filename length (offset 28)
+      dv.setUint16(30, 0, true);          // Extra field length (offset 30)
+      dv.setUint16(32, 0, true);          // Comment length (offset 32)
+      dv.setUint16(34, 0, true);          // Disk number start (offset 34)
+      dv.setUint16(36, 0, true);          // Internal attributes (offset 36)
+      dv.setUint32(38, 0, true);          // External attributes (offset 38)
+      dv.setUint32(42, fe.offset, true);  // Relative offset of local header (offset 42)
+      cdHeader.set(fe.nameBytes, 46);
+
+      parts.push(cdHeader);
+      offset += cdHeader.length;
+    }
+
+    // 3. End of Central Directory (EOCD: 22 bytes)
+    const centralSize = offset - centralStart;
+    const eocd = new Uint8Array(22);
+    const dvEocd = new DataView(eocd.buffer);
+    dvEocd.setUint32(0, 0x06054b50, true); // EOCD signature
+    dvEocd.setUint16(4, 0, true);          // Disk number
+    dvEocd.setUint16(6, 0, true);          // Disk with CD
+    dvEocd.setUint16(8, fileEntries.length, true);  // Entries on disk
+    dvEocd.setUint16(10, fileEntries.length, true); // Total entries
+    dvEocd.setUint32(12, centralSize, true);        // CD size
+    dvEocd.setUint32(16, centralStart, true);       // CD offset
+    dvEocd.setUint16(20, 0, true);                 // Comment length
+    parts.push(eocd);
+
+    const totalLen = parts.reduce((acc, p) => acc + p.length, 0);
+    const result = new Uint8Array(totalLen);
+    let pOffset = 0;
+    for (const p of parts) {
+      result.set(p, pOffset);
+      pOffset += p.length;
+    }
+    return result;
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  // 3. Normalize Leads to Standard Master Schema
+  function normalizeMasterLead(item, index) {
+    const snovVal = (item.snov === 'yes' || item.snov === true) ? 'yes' : null;
+    const snovDate = item.snov_date || item.snov_time || item.sent_date || item['添加日期'] || item['Add date'] || null;
+    return {
+      stt: item.stt || item.lead_id || `LEAD-US-${String(index + 1).padStart(6, '0')}`,
+      lead_id: item.lead_id || item.stt || `LEAD-US-${String(index + 1).padStart(6, '0')}`,
+      snov: snovVal,
+      snov_date: (snovVal === 'yes') ? snovDate : null,
+      name: item.name || item['公司名称'] || item['Tên trại'] || '',
+      owner: item.owner || item['全名'] || item['名字'] || item['Chủ trại'] || '',
+      url: item.url || item['用户社交'] || item['url'] || '',
+      website: item.website || item['公司网址'] || '',
+      phone: item.phone || item['电话'] || '',
+      email: item.email || item['邮箱地址'] || item['Email'] || '',
+      address: item.address || item['地址'] || '',
+      city: item.city || item['城市'] || '',
+      state: item.state || item['州'] || '',
+      zip: item.zip || '',
+      country: item.country || item['国家'] || 'United States',
+      cat: item.cat || item['公司所在行业'] || item['行业'] || 'Dog Breeder / Commercial Kennel (B2B)',
+      cat_code: item.cat_code || 'breeder',
+      amz_cat: item.amz_cat || '',
+      amz_link: item.amz_link || item.amazon_url || '',
+      product_fit: item.product_fit || 'Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)',
+      score: (item.score !== undefined && item.score !== null) ? Number(item.score) : 75,
+      rank_tier: item.rank_tier || 'Tier S',
+      is_prio: Boolean(item.is_prio),
+      sales_action: item.sales_action || item.remark || '🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày',
+      fb_id: cleanFbId(item.fb_id || item['Facebook ID'] || item['fb_id']) || extractFbIdFromUrl(item.url),
+      avatar: item.avatar || null,
+      avatar_url: item.avatar_url || '',
+      bio: item.bio || null,
+      instagram: item.instagram || null,
+      ownerConfidence: item.ownerConfidence || item.owner_confidence || 'Tier 1 - Website Verified',
+      owner_confidence: item.owner_confidence || item.ownerConfidence || 'Tier 1 - Website Verified',
+      publishTime: item.publishTime || item.publish_time || '',
+      publish_time: item.publish_time || item.publishTime || '',
+      relativeTime: item.relativeTime || item.relative_time || '',
+      relative_time: item.relative_time || item.relativeTime || '',
+      amazon_channel: item.amazon_channel || item.amz_link || null,
+      has_amazon: Boolean(item.has_amazon || item.amazon_url || item.amz_link),
+      activity_status: item.activity_status || '✓ TÍCH CỰC'
+    };
+  }
+
+  // 4. Parse Excel File into Array of Objects
+  async function parseExcelToArray(arrayBuffer) {
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(arrayBuffer);
+    if (wb.worksheets.length === 0) return [];
+    const ws = wb.worksheets[0];
+    const headerRow = ws.getRow(1);
+    const headers = [];
+    headerRow.eachCell((cell, colNumber) => {
+      headers[colNumber] = extractCellText(cell);
+    });
+
+    const rows = [];
+    for (let r = 2; r <= ws.rowCount; r++) {
+      const row = ws.getRow(r);
+      let hasData = false;
+      const obj = {};
+      row.eachCell((cell, colNumber) => {
+        const header = headers[colNumber];
+        if (header) {
+          const val = extractCellText(cell);
+          if (val) hasData = true;
+          obj[header] = val;
+        }
+      });
+      if (hasData) rows.push(obj);
+    }
+    return rows;
+  }
+
+  // 5. Update KPI Cards & Badge
+  function updateSalesKpiSummary() {
+    const total = salesMasterLeads.length;
+    let snovYesCount = 0;
+    for (const l of salesMasterLeads) {
+      if (l.snov === 'yes') snovYesCount++;
+    }
+    const snovNullCount = total - snovYesCount;
+
+    const elTotal = $('salesKpiTotalMaster');
+    const elYes = $('salesKpiSnovYes');
+    const elYesRate = $('salesKpiSnovYesRate');
+    const elNull = $('salesKpiSnovNull');
+    const elNullRate = $('salesKpiSnovNullRate');
+    const elBadge = $('badgeSalesFilterCount');
+    const elSources = $('salesKpiFilteredSources');
+    const elKeys = $('salesKpiFilteredKeysCount');
+
+    if (elTotal) elTotal.textContent = total.toLocaleString();
+    if (elYes) elYes.textContent = snovYesCount.toLocaleString();
+    if (elYesRate) elYesRate.textContent = total > 0 ? `(${((snovYesCount / total) * 100).toFixed(1)}%)` : '(0%)';
+    if (elNull) elNull.textContent = snovNullCount.toLocaleString();
+    if (elNullRate) elNullRate.textContent = total > 0 ? `(${((snovNullCount / total) * 100).toFixed(1)}%)` : '(100%)';
+    if (elBadge) elBadge.textContent = `${snovNullCount.toLocaleString()} Hot Leads`;
+    if (elSources) elSources.textContent = String(salesFilteredPool.files.length);
+    if (elKeys) elKeys.textContent = `(${salesFilteredPool.fbIds.size} FB ID, ${salesFilteredPool.emails.size} Email)`;
+  }
+
+  // 6. Apply Filters & Render Table
+  function applySalesFilters() {
+    const searchVal = ($('salesSearchInput')?.value || '').trim().toLowerCase();
+    const filterSnov = $('salesFilterSnov')?.value || 'NULL_ONLY';
+    const filterContact = $('salesFilterContact')?.value || 'ALL';
+    const filterTier = $('salesFilterTier')?.value || 'ALL';
+    const filterAmazon = $('salesFilterAmazon')?.value || 'ALL';
+
+    salesDisplayLeads = salesMasterLeads.filter(l => {
+      // 1. Snov filter
+      if (filterSnov === 'NULL_ONLY' && l.snov === 'yes') return false;
+      if (filterSnov === 'YES_ONLY' && l.snov !== 'yes') return false;
+
+      // 2. Contact filter
+      if (filterContact === 'HAS_PHONE' && !l.phone) return false;
+      if (filterContact === 'HAS_EMAIL' && !l.email) return false;
+      if (filterContact === 'HAS_BOTH' && (!l.phone || !l.email)) return false;
+      if (filterContact === 'HAS_FB_ID' && !cleanFbId(l.fb_id)) return false;
+
+      // 3. Tier filter
+      const tier = String(l.rank_tier || '').toUpperCase();
+      const score = Number(l.score) || 0;
+      if (filterTier === 'TIER_S_A' && !tier.includes('TIER S') && !tier.includes('TIER A') && score < 60) return false;
+      if (filterTier === 'TIER_S' && !tier.includes('TIER S') && score < 75) return false;
+      if (filterTier === 'TIER_A' && !tier.includes('TIER A')) return false;
+      if (filterTier === 'TIER_B' && !tier.includes('TIER B')) return false;
+
+      // 4. Amazon filter
+      if (filterAmazon === 'HAS_AMAZON' && !l.has_amazon && !l.amazon_channel && !l.amz_link) return false;
+      if (filterAmazon === 'NO_AMAZON' && (l.has_amazon || l.amazon_channel || l.amz_link)) return false;
+
+      // 5. Search Text
+      if (searchVal) {
+        const pool = [
+          l.stt, l.name, l.owner, l.phone, l.email, l.fb_id,
+          l.city, l.state, l.product_fit, l.sales_action
+        ].join(' ').toLowerCase();
+        if (!pool.includes(searchVal)) return false;
+      }
+
+      return true;
+    });
+
+    salesCurrentPage = 1;
+    renderSalesTablePage();
+  }
+
+  function renderSalesTablePage() {
+    const tbody = $('salesTableBody');
+    if (!tbody) return;
+
+    const total = salesDisplayLeads.length;
+    const totalPages = Math.max(1, Math.ceil(total / salesPageSize));
+    if (salesCurrentPage > totalPages) salesCurrentPage = totalPages;
+    if (salesCurrentPage < 1) salesCurrentPage = 1;
+
+    const startIndex = (salesCurrentPage - 1) * salesPageSize;
+    const endIndex = Math.min(startIndex + salesPageSize, total);
+    const pageItems = salesDisplayLeads.slice(startIndex, endIndex);
+
+    // Update Counter & Pagination Indicators
+    const elFiltered = $('salesFilteredCount');
+    const elTotal = $('salesTotalCount');
+    const elRange = $('salesPaginationRange');
+    const elCurPage = $('salesCurrentPageNum');
+    const elTotalPages = $('salesTotalPagesNum');
+
+    if (elFiltered) elFiltered.textContent = total.toLocaleString();
+    if (elTotal) elTotal.textContent = salesMasterLeads.length.toLocaleString();
+    if (elRange) {
+      elRange.textContent = total === 0
+        ? 'Không tìm thấy dữ liệu phù hợp'
+        : `Đang hiển thị dòng ${(startIndex + 1).toLocaleString()} - ${endIndex.toLocaleString()} trên ${total.toLocaleString()} kết quả`;
+    }
+    if (elCurPage) elCurPage.textContent = String(salesCurrentPage);
+    if (elTotalPages) elTotalPages.textContent = String(totalPages);
+
+    // Update Pagination Buttons
+    const btnFirst = $('btnSalesPageFirst');
+    const btnPrev = $('btnSalesPagePrev');
+    const btnNext = $('btnSalesPageNext');
+    const btnLast = $('btnSalesPageLast');
+    if (btnFirst) btnFirst.disabled = (salesCurrentPage <= 1);
+    if (btnPrev) btnPrev.disabled = (salesCurrentPage <= 1);
+    if (btnNext) btnNext.disabled = (salesCurrentPage >= totalPages);
+    if (btnLast) btnLast.disabled = (salesCurrentPage >= totalPages);
+
+    if (pageItems.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="14" style="text-align:center; padding:32px; color:#64748b; font-size:13px;">
+            <div style="font-size:24px; margin-bottom:8px;">🔍</div>
+            <div>Không có dữ liệu phù hợp với bộ lọc hiện tại.</div>
+            <div style="font-size:11.5px; color:#94a3b8; margin-top:4px;">Hãy thử bấm "Đặt Lại Lọc" hoặc Nạp thêm file Master.</div>
+          </td>
+        </tr>`;
+      return;
+    }
+
+    const rowsHtml = pageItems.map((l) => {
+      const isSnovYes = (l.snov === 'yes');
+      const snovBadge = isSnovYes
+        ? `<div>
+             <span class="badge-snov-yes" title="Đã gửi mail vào ngày: ${escapeHtml(l.snov_date || '')}">✓ ĐÃ GỬI MAIL</span>
+             ${l.snov_date ? `<div class="snov-date-badge" title="Thời gian gửi mail">📅 ${escapeHtml(l.snov_date)}</div>` : ''}
+           </div>`
+        : `<span class="badge-snov-hot" title="Lead mới chưa gửi mail, sẵn sàng chuyển cho Sales">★ CHƯA GỬI</span>`;
+
+      const fbLink = l.url
+        ? `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" style="color:#0284c7; text-decoration:none; font-weight:700;" title="Mở trang Facebook">🔗 Mở FB</a>`
+        : `<span style="color:#cbd5e1;">-</span>`;
+
+      const webLink = l.website
+        ? `<a href="${escapeHtml(l.website)}" target="_blank" rel="noopener noreferrer" style="color:#059669; text-decoration:none; font-weight:600; display:inline-block; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(l.website)}">🌐 ${escapeHtml(l.website.replace(/^https?:\/\//, '').replace(/^www\./, ''))}</a>`
+        : `<span style="color:#cbd5e1;">-</span>`;
+
+      const amzBadge = (l.has_amazon || l.amazon_channel || l.amz_link)
+        ? `<span style="background:#fef3c7; color:#b45309; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:700;">🛒 Có Amazon</span>`
+        : `<span style="color:#94a3b8; font-size:11px;">Chưa có</span>`;
+
+      const contactHtml = `
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          ${l.phone ? `<span style="font-family:var(--font-mono); font-weight:700; color:#0284c7;">📞 ${escapeHtml(l.phone)}</span>` : '<span style="color:#cbd5e1; font-size:11px;">Chưa có SĐT</span>'}
+          ${l.email ? `<span style="font-size:11px; color:#475569;" title="${escapeHtml(l.email)}">✉️ ${escapeHtml(l.email)}</span>` : '<span style="color:#cbd5e1; font-size:11px;">Chưa có Email</span>'}
+        </div>`;
+
+      const locationStr = [l.city, l.state].filter(Boolean).join(', ') || '-';
+      const scoreStr = (l.score !== undefined && l.score !== null) ? `${l.score}đ` : '';
+
+      const isPlaceholder = isPlaceholderOwner(l.owner);
+      const { fullName: cleanOwnerName, jobTitle: ownerRole } = resolveSalesOwnerNames(l.owner, l.name, false);
+      const ownerDisplay = isPlaceholder
+        ? `<div style="font-weight:700; color:#d97706;" title="Chưa có tên riêng chủ trại (gốc: '${escapeHtml(l.owner || 'trống')}'). Khi xuất sẽ tự gán: Manager of ${escapeHtml(l.name || 'Kennel')}">👔 Manager of ${escapeHtml(l.name || 'Kennel')}</div>
+           <div style="font-size:10px; color:#b45309; font-weight:600;">⚡ Tự động gán Manager</div>`
+        : `<div style="font-weight:700; color:#0f172a;">${escapeHtml(cleanOwnerName || 'Chưa rõ')}</div>
+           ${ownerRole && ownerRole !== '创始人兼繁育人 (Breeder & Owner)' ? `<div style="font-size:10.5px; color:#0284c7; font-weight:700;">💼 ${escapeHtml(ownerRole)}</div>` : ''}
+           <div style="font-size:10.5px; color:#64748b;">${escapeHtml(l.ownerConfidence || '')}</div>`;
+
+      const resolvedOwnerForCopy = isPlaceholder ? (l.name ? `Manager of ${l.name}` : 'Manager') : cleanOwnerName;
+
+      return `
+        <tr>
+          <td><strong style="color:#0284c7; font-family:var(--font-mono);">${escapeHtml(l.stt)}</strong></td>
+          <td style="text-align:center;">${snovBadge}</td>
+          <td>${ownerDisplay}</td>
+          <td><div style="font-weight:600; color:#1e293b; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(l.name)}">${escapeHtml(l.name || '-')}</div></td>
+          <td>
+            ${l.fb_id ? `<span style="font-family:var(--font-mono); font-size:11.5px; color:#475569;">#${escapeHtml(l.fb_id)}</span> <button type="button" onclick="copyText('${escapeHtml(l.fb_id)}')" style="background:none; border:none; cursor:pointer; color:#0284c7; font-size:11px;" title="Sao chép ID">📋</button>` : '<span style="color:#cbd5e1;">-</span>'}
+          </td>
+          <td>${contactHtml}</td>
+          <td>${escapeHtml(locationStr)}</td>
+          <td>${webLink}</td>
+          <td>${amzBadge}</td>
+          <td>
+            <span style="background:#eff6ff; color:#1d4ed8; padding:2px 6px; border-radius:4px; font-weight:800; font-size:11px;">${escapeHtml(l.rank_tier || 'Tier S')}</span>
+            <span style="font-size:11px; color:#64748b; font-weight:700; margin-left:3px;">${scoreStr}</span>
+          </td>
+          <td><div style="font-size:11.5px; color:#334155; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(l.product_fit)}">${escapeHtml(l.product_fit || '-')}</div></td>
+          <td><div style="font-size:11px; color:#475569; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(l.sales_action)}">${escapeHtml(l.sales_action || '-')}</div></td>
+          <td><div style="font-size:11px; color:#059669; font-weight:600;">${escapeHtml(l.publishTime || l.publish_time || '-')}</div></td>
+          <td style="text-align:center; white-space:nowrap;">
+            ${fbLink}
+            <button type="button" onclick="copyText('${escapeHtml(resolvedOwnerForCopy)} | ${escapeHtml(l.phone)} | ${escapeHtml(l.email)} | ${escapeHtml(l.url)}')" style="background:none; border:none; cursor:pointer; color:#059669; font-size:11px; margin-left:4px;" title="Sao chép thông tin nhanh cho Sales">📋 Copy</button>
+          </td>
+        </tr>`;
+    }).join('');
+
+    tbody.innerHTML = rowsHtml;
+  }
+
+  // 7. Ingest Master File (JSON / Excel)
+  async function handleMasterFileSelect(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    appendTerminalLog(`[MASTER] Bắt đầu nạp file tổng: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)...`, 'info');
+    try {
+      let rawLeads = [];
+      const isJson = file.name.toLowerCase().endsWith('.json');
+      if (isJson) {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        rawLeads = Array.isArray(parsed) ? parsed : (parsed.leads || []);
+      } else {
+        const buf = await file.arrayBuffer();
+        rawLeads = await parseExcelToArray(buf);
+      }
+
+      if (!rawLeads || rawLeads.length === 0) {
+        alert('File không có dữ liệu hoặc định dạng không hợp lệ.');
+        return;
+      }
+
+      salesMasterLeads = rawLeads.map((item, idx) => normalizeMasterLead(item, idx));
+      updateSalesKpiSummary();
+      applySalesFilters();
+
+      appendTerminalLog(`[MASTER] ✅ Đã nạp thành công ${salesMasterLeads.length} leads vào bảng dữ liệu tổng!`, 'success');
+      alert(`✅ Đã nạp thành công ${salesMasterLeads.length} leads từ file ${file.name}!`);
+    } catch (err) {
+      console.error(err);
+      alert(`Lỗi đọc file: ${err.message}`);
+      appendTerminalLog(`[MASTER ERROR] Lỗi nạp file: ${err.message}`, 'error');
+    } finally {
+      e.target.value = '';
+    }
+  }
+
+  // 8. Append Extra Leads to Master Dataset
+  async function handleAppendMasterFileSelect(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    appendTerminalLog(`[APPEND] Đang đọc file bổ sung: ${file.name}...`, 'info');
+    try {
+      let newRaw = [];
+      if (file.name.toLowerCase().endsWith('.json')) {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        newRaw = Array.isArray(parsed) ? parsed : (parsed.leads || []);
+      } else {
+        const buf = await file.arrayBuffer();
+        newRaw = await parseExcelToArray(buf);
+      }
+
+      const existingFbIds = new Set();
+      const existingStts = new Set();
+      for (const l of salesMasterLeads) {
+        if (l.fb_id) existingFbIds.add(cleanFbId(l.fb_id));
+        if (l.stt) existingStts.add(l.stt);
+      }
+
+      let addedCount = 0;
+      let skippedCount = 0;
+      const startIndex = salesMasterLeads.length;
+
+      for (let i = 0; i < newRaw.length; i++) {
+        const norm = normalizeMasterLead(newRaw[i], startIndex + addedCount);
+        const fb = cleanFbId(norm.fb_id);
+        if ((fb && existingFbIds.has(fb)) || existingStts.has(norm.stt)) {
+          skippedCount++;
+        } else {
+          salesMasterLeads.push(norm);
+          if (fb) existingFbIds.add(fb);
+          existingStts.add(norm.stt);
+          addedCount++;
+        }
+      }
+
+      updateSalesKpiSummary();
+      applySalesFilters();
+      appendTerminalLog(`[APPEND] ✅ Đã thêm ${addedCount} lead mới (bỏ qua ${skippedCount} lead trùng). Tổng Master hiện tại: ${salesMasterLeads.length}`, 'success');
+      alert(`✅ Đã thêm ${addedCount} leads mới vào dữ liệu tổng (đã bỏ qua ${skippedCount} leads trùng).`);
+    } catch (err) {
+      alert(`Lỗi nạp bổ sung: ${err.message}`);
+    } finally {
+      e.target.value = '';
+    }
+  }
+
+  // 9. Ingest Filtered / Snov Files for Deduplication & Extract Sent Dates
+  async function handleFilteredFilesSelect(e) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    appendTerminalLog(`[DEDUP POOL] Bắt đầu đọc ${files.length} file đã gửi mail để đối chiếu thời gian...`, 'info');
+    let totalItemsParsed = 0;
+
+    for (let f = 0; f < files.length; f++) {
+      const file = files[f];
+      try {
+        let rows = [];
+        if (file.name.toLowerCase().endsWith('.json')) {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          rows = Array.isArray(parsed) ? parsed : (parsed.leads || []);
+        } else {
+          const buf = await file.arrayBuffer();
+          rows = await parseExcelToArray(buf);
+        }
+
+        const fileDefaultDate = extractDateFromFileName(file.name);
+        let fileKeysCount = 0;
+
+        for (const r of rows) {
+          const rowDate = extractDateFromRow(r, fileDefaultDate);
+
+          const em = cleanEmail(r.email || r.Email || r['邮箱地址'] || r['邮箱']);
+          if (em) { salesFilteredPool.emails.set(em, rowDate); fileKeysCount++; }
+
+          const fb = cleanFbId(r.fb_id || r['Facebook ID'] || r['Facebook ID 个人'] || r['fb_id']) ||
+                     extractFbIdFromUrl(r.url || r['用户社交'] || r['Company social']);
+          if (fb) { salesFilteredPool.fbIds.set(fb, rowDate); fileKeysCount++; }
+
+          const ph = cleanPhone(r.phone || r['电话'] || r['Phone']);
+          if (ph) { salesFilteredPool.phones.set(ph, rowDate); fileKeysCount++; }
+
+          const u = cleanUrl(r.website || r.url || r['公司网址'] || r['Company URL']);
+          if (u) { salesFilteredPool.urls.set(u, rowDate); }
+        }
+
+        salesFilteredPool.files.push({ name: file.name, count: rows.length, date: fileDefaultDate });
+        totalItemsParsed += rows.length;
+        appendTerminalLog(`[DEDUP POOL] + Đã nạp file: ${file.name} (${rows.length} records, mốc ngày: ${fileDefaultDate})`, 'info');
+      } catch (err) {
+        appendTerminalLog(`[DEDUP POOL] ⚠️ Lỗi đọc file ${file.name}: ${err.message}`, 'error');
+      }
+    }
+
+    renderFilteredSourcesTags();
+    updateSalesKpiSummary();
+    alert(`✅ Đã nạp thành công ${files.length} file đối chiếu (${totalItemsParsed.toLocaleString()} bản ghi)!\nHiện có: ${salesFilteredPool.fbIds.size} FB ID, ${salesFilteredPool.emails.size} Email kèm mốc thời gian đã gửi.`);
+    e.target.value = '';
+  }
+
+  function renderFilteredSourcesTags() {
+    const container = $('salesFilteredSourcesTags');
+    if (!container) return;
+    if (salesFilteredPool.files.length === 0) {
+      container.innerHTML = `<span style="font-size:11px; color:#94a3b8; font-style:italic;">Chưa nạp file đã gửi mail nào để đối chiếu</span>`;
+      return;
+    }
+
+    container.innerHTML = salesFilteredPool.files.map((f, idx) => `
+      <span class="sales-source-pill" title="${escapeHtml(f.name)} (${f.count} records, ngày: ${escapeHtml(f.date || '')})">
+        📄 ${escapeHtml(f.name)} [${escapeHtml(f.date || '')}]
+        <span class="pill-del" onclick="removeFilteredSource(${idx})" title="Bỏ file này">&times;</span>
+      </span>
+    `).join('');
+  }
+
+  window.removeFilteredSource = function(idx) {
+    salesFilteredPool.files.splice(idx, 1);
+    renderFilteredSourcesTags();
+    updateSalesKpiSummary();
+  };
+
+  function clearFilteredPool() {
+    salesFilteredPool = {
+      fbIds: new Map(),
+      emails: new Map(),
+      phones: new Map(),
+      urls: new Map(),
+      files: []
+    };
+    renderFilteredSourcesTags();
+    updateSalesKpiSummary();
+    alert('Đã xóa sạch toàn bộ danh sách file đối chiếu.');
+  }
+
+  // 10. Execute Deduplication & Tag Snov ("yes" / null) with Mail Sent Date
+  function executeDeduplication() {
+    if (salesMasterLeads.length === 0) {
+      alert('Vui lòng nạp File Dữ Liệu Tổng trước khi tiến hành khử trùng!');
+      return;
+    }
+    if (salesFilteredPool.fbIds.size === 0 && salesFilteredPool.emails.size === 0) {
+      alert('Chưa có nguồn file đã gửi mail nào trong bể đối chiếu! Hãy bấm "Nạp File Đã Gửi Mail" trước.');
+      return;
+    }
+
+    let newlyMatched = 0;
+    let totalYes = 0;
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    for (const l of salesMasterLeads) {
+      const fb = cleanFbId(l.fb_id) || extractFbIdFromUrl(l.url);
+      const em = cleanEmail(l.email);
+      const ph = cleanPhone(l.phone);
+
+      let matchedDate = null;
+      if (fb && salesFilteredPool.fbIds.has(fb)) matchedDate = salesFilteredPool.fbIds.get(fb);
+      else if (em && salesFilteredPool.emails.has(em)) matchedDate = salesFilteredPool.emails.get(em);
+      else if (ph && salesFilteredPool.phones.has(ph)) matchedDate = salesFilteredPool.phones.get(ph);
+
+      if (matchedDate !== null) {
+        if (l.snov !== 'yes') newlyMatched++;
+        l.snov = 'yes';
+        l.snov_date = matchedDate || l.snov_date || todayStr;
+        totalYes++;
+      } else {
+        l.snov = (l.snov === 'yes') ? 'yes' : null;
+        if (l.snov === 'yes') {
+          totalYes++;
+          if (!l.snov_date) l.snov_date = todayStr;
+        } else {
+          l.snov_date = null;
+        }
+      }
+    }
+
+    if (typeof allLeads !== 'undefined' && Array.isArray(allLeads)) {
+      const masterMap = new Map(salesMasterLeads.map(l => [l.stt, l]));
+      for (const al of allLeads) {
+        const ml = masterMap.get(al.stt);
+        if (ml) {
+          al.snov = ml.snov;
+          al.snov_date = ml.snov_date;
+        }
+      }
+      if (typeof saveLeadsToStorage === 'function') {
+        saveLeadsToStorage();
+      }
+    }
+
+    const unsent = salesMasterLeads.length - totalYes;
+    updateSalesKpiSummary();
+    applySalesFilters();
+
+    appendTerminalLog(`[DEDUP] ⚡ Khử trùng hoàn tất! Đã đánh dấu snov='yes' (Đã gửi mail) cho ${totalYes} leads (${newlyMatched} mới). Còn lại ${unsent} leads chưa gửi mail.`, 'success');
+    alert(`⚡ Khử trùng đối chiếu hoàn tất!\n- Đã đánh dấu "ĐÃ GỬI MAIL" (snov = "yes") kèm mốc ngày cho: ${totalYes.toLocaleString()} leads\n- Leads chưa gửi mail (sẵn sàng chuyển cho Sales): ${unsent.toLocaleString()} leads`);
+  }
+
+  // 11. Export Updated Master JSON with Key Snov & Sent Date
+  function exportMasterJsonWithSnov() {
+    if (salesMasterLeads.length === 0) {
+      alert('Chưa có dữ liệu tổng để xuất!');
+      return;
+    }
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const jsonStr = JSON.stringify(salesMasterLeads, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+    downloadBlob(blob, `leads_us_master_with_snov_status_${dateStr}.json`);
+    appendTerminalLog(`[EXPORT] Đã xuất file JSON Master kèm trường 'snov' và 'snov_date': leads_us_master_with_snov_status_${dateStr}.json`, 'success');
+  }
+
+  // 12. Build Excel Buffer for Sales (20 Standard Columns with Website & Extracted Job Title)
+  async function generateSalesExcelBuffer(leadsChunk) {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Sheet1');
+
+    // 20 Standard Sales Columns:
+    // 邮箱地址, 名字, 全名, 用户社交, 工作职位, 国家, 地址, 行业, 添加日期, 公司名称,
+    // 公司网址, 公司社交, 公司所处国家, 公司位置, 州, 城市, 公司所在行业, 电话, remark, fb_id
+    const headers = [
+      '邮箱地址', '名字', '全名', '用户社交', '工作职位',
+      '国家', '地址', '行业', '添加日期', '公司名称',
+      '公司网址', '公司社交', '公司所处国家', '公司位置', '州', '城市',
+      '公司所在行业', '电话', 'remark', 'fb_id'
+    ];
+
+    ws.addRow(headers);
+    const headerRow = ws.getRow(1);
+    headerRow.font = { name: 'Calibri', size: 11, bold: true };
+    headerRow.alignment = { vertical: 'middle' };
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const normalizeSingle = $('chkSalesNormalizeSingle')?.checked !== false;
+
+    for (const l of leadsChunk) {
+      const email = normalizeSingle ? extractSingleEmail(l.email) : (l.email || '');
+      const companyName = (l.name && !isPlaceholderOwner(l.name)) ? l.name : '';
+      const { fullName, firstName, jobTitle } = resolveSalesOwnerNames(l.owner, companyName, normalizeSingle);
+      const userSocial = l.url || '';
+      const country = l.country || 'United States';
+      const address = l.address || '';
+      const industry = '宠物繁育 / 狗舍 (Dog Breeder)';
+      const addDate = l.snov_date || todayStr;
+      const companyUrl = l.website || '';
+      const companySocial = l.url || '';
+      const companyCountry = l.country || 'United States';
+      const companyLocation = (l.city && l.state) ? `${l.city}, ${l.state}` : (l.city || l.state || '');
+      const state = l.state || '';
+      const city = l.city || '';
+      const companyIndustry = l.cat || 'Dog Breeder / Commercial Kennel (B2B)';
+      const phone = normalizeSingle ? extractSinglePhone(l.phone) : (l.phone || '');
+      const remark = `Product: ${l.product_fit || 'Puppy Starter Kit V2/V3 (Cỏ thoát nước + Khay Potty + Đồ chơi in logo)'} | Action: ${l.sales_action || '🔥 TELESALE: Gọi chốt Take-Home Kit in logo độc quyền ngay trong ngày'}`;
+      const fbId = l.fb_id || '';
+
+      ws.addRow([
+        email, firstName, fullName, userSocial, jobTitle,
+        country, address, industry, addDate, companyName,
+        companyUrl, companySocial, companyCountry, companyLocation, state, city,
+        companyIndustry, phone, remark, fbId
+      ]);
+    }
+
+    // Set nice column widths for 20 columns
+    ws.columns = [
+      { width: 28 }, { width: 14 }, { width: 26 }, { width: 32 }, { width: 28 },
+      { width: 16 }, { width: 28 }, { width: 25 }, { width: 14 }, { width: 28 },
+      { width: 32 }, { width: 32 }, { width: 16 }, { width: 22 }, { width: 10 }, { width: 16 },
+      { width: 34 }, { width: 18 }, { width: 48 }, { width: 22 }
+    ];
+
+    return await wb.xlsx.writeBuffer();
+  }
+
+  // 13. Export Sales Data (Mode 1: Single file, Mode 2: Batch 20 rows/file)
+  function getLeadsForSalesExport() {
+    const scope = $('salesExportTargetSelect')?.value || 'READY_ONLY';
+    let leads = [];
+    if (scope === 'READY_ONLY') {
+      leads = salesMasterLeads.filter(l => l.snov !== 'yes');
+    } else if (scope === 'CURRENT_VIEW') {
+      leads = [...salesDisplayLeads];
+    } else {
+      leads = [...salesMasterLeads];
+    }
+
+    // Apply custom export quantity/limit if entered
+    const limitInput = $('inputSalesExportLimit');
+    if (limitInput && limitInput.value) {
+      const limitVal = parseInt(limitInput.value.trim(), 10);
+      if (!isNaN(limitVal) && limitVal > 0 && limitVal < leads.length) {
+        leads = leads.slice(0, limitVal);
+      }
+    }
+
+    return leads;
+  }
+
+  function markLeadsExportedAsSnovYes(exportedLeads) {
+    if (!$('chkSalesAutoMarkSnov')?.checked) return;
+    const exportedSet = new Set(exportedLeads.map(l => l.stt));
+    const todayStr = new Date().toISOString().slice(0, 10);
+    for (const l of salesMasterLeads) {
+      if (exportedSet.has(l.stt)) {
+        l.snov = 'yes';
+        l.snov_date = todayStr;
+      }
+    }
+    if (typeof allLeads !== 'undefined' && Array.isArray(allLeads)) {
+      for (const al of allLeads) {
+        if (exportedSet.has(al.stt)) {
+          al.snov = 'yes';
+          al.snov_date = todayStr;
+        }
+      }
+      if (typeof saveLeadsToStorage === 'function') {
+        saveLeadsToStorage();
+      }
+    }
+    updateSalesKpiSummary();
+    applySalesFilters();
+  }
+
+  async function exportSalesSingleExcel() {
+    const leads = getLeadsForSalesExport();
+    if (leads.length === 0) {
+      alert('Không có lead nào thỏa mãn tiêu chí để xuất!');
+      return;
+    }
+
+    const btn = $('btnSalesExportSingleExcel');
+    if (btn) btn.innerHTML = `<span>⏳</span> <span>Đang tạo Excel...</span>`;
+    try {
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const buffer = await generateSalesExcelBuffer(leads);
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      downloadBlob(blob, `LEAD_SALES_READY_${dateStr}_(${leads.length}_leads).xlsx`);
+      markLeadsExportedAsSnovYes(leads);
+      appendTerminalLog(`[SALES EXPORT] ✅ Đã xuất thành công 1 file Excel (${leads.length} leads)`, 'success');
+      alert(`✅ Đã xuất thành công 1 file Excel chứa ${leads.length} leads gửi cho Team Sales!`);
+    } catch (err) {
+      alert(`Lỗi xuất Excel: ${err.message}`);
+    } finally {
+      if (btn) btn.innerHTML = `<span>📊</span> <span>Xuất 1 File Excel</span>`;
+    }
+  }
+
+  function exportSalesSingleJson() {
+    const leads = getLeadsForSalesExport();
+    if (leads.length === 0) {
+      alert('Không có lead nào để xuất!');
+      return;
+    }
+    const normalizeSingle = $('chkSalesNormalizeSingle')?.checked !== false;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const exportData = leads.map(l => {
+      const copy = { ...l };
+      const companyName = (copy.name && !isPlaceholderOwner(copy.name)) ? copy.name : '';
+      const { fullName, firstName, jobTitle } = resolveSalesOwnerNames(copy.owner, companyName, normalizeSingle);
+      copy.owner = fullName;
+      copy.first_name = firstName;
+      copy.job_title = jobTitle;
+      if (normalizeSingle) {
+        copy.email = extractSingleEmail(copy.email);
+        copy.phone = extractSinglePhone(copy.phone);
+      }
+      return copy;
+    });
+    const jsonStr = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+    downloadBlob(blob, `LEAD_SALES_READY_${dateStr}_(${leads.length}_leads).json`);
+    markLeadsExportedAsSnovYes(leads);
+    alert(`✅ Đã xuất thành công file JSON chứa ${leads.length} leads!`);
+  }
+
+  async function exportSalesBatchParts() {
+    const leads = getLeadsForSalesExport();
+    if (leads.length === 0) {
+      alert('Không có lead nào thỏa mãn để xuất chia nhỏ!');
+      return;
+    }
+
+    const batchSize = 20;
+    const totalParts = Math.ceil(leads.length / batchSize);
+    const btn = $('btnSalesExportBatchParts');
+    if (btn) btn.innerHTML = `<span>⏳</span> <span>Đang tạo ${totalParts} file part...</span>`;
+
+    try {
+      appendTerminalLog(`[BATCH EXPORT] Đang chia nhỏ ${leads.length} leads thành ${totalParts} file Excel (20 dòng/file)...`, 'info');
+      const filesForZip = [];
+      const dateStr = new Date().toISOString().slice(0, 10);
+
+      for (let p = 0; p < totalParts; p++) {
+        const chunk = leads.slice(p * batchSize, (p + 1) * batchSize);
+        const partStr = String(p + 1).padStart(2, '0');
+        const totalStr = String(totalParts).padStart(2, '0');
+        const fileName = `Top_Leads_Part_${partStr}_of_${totalStr}.xlsx`;
+
+        const buf = await generateSalesExcelBuffer(chunk);
+        filesForZip.push({ name: fileName, data: buf });
+      }
+
+      // Create ZIP containing all parts
+      const zipBytes = createZipArchive(filesForZip);
+      const zipBlob = new Blob([zipBytes], { type: 'application/zip' });
+      downloadBlob(zipBlob, `Top_Leads_Parts_${dateStr}_(${totalParts}_files_total_${leads.length}_leads).zip`);
+
+      markLeadsExportedAsSnovYes(leads);
+      appendTerminalLog(`[BATCH EXPORT] ✅ Đã hoàn tất đóng gói ${totalParts} file Excel vào gói ZIP và tải về!`, 'success');
+      alert(`🎉 Đã xuất thành công ${totalParts} file Excel (mỗi file 20 dòng) được đóng gói tiện lợi trong 1 file ZIP!\nTổng cộng: ${leads.length} leads.`);
+    } catch (err) {
+      console.error(err);
+      alert(`Lỗi chia nhỏ file: ${err.message}`);
+    } finally {
+      if (btn) btn.innerHTML = `<span>📦</span> <span>Xuất 20 Dòng / 1 File Excel (Batch Parts)</span>`;
+    }
+  }
+
+  // 14. Initialize Module Event Listeners
+  function initSalesFilterModule() {
+    if (salesInitialized) return;
+    salesInitialized = true;
+
+    // File Inputs
+    const inputMaster = $('inputSalesMasterFile');
+    const inputAppend = $('inputSalesAppendFile');
+    const inputFiltered = $('inputSalesFilteredFiles');
+
+    if (inputMaster) inputMaster.addEventListener('change', handleMasterFileSelect);
+    if (inputAppend) inputAppend.addEventListener('change', handleAppendMasterFileSelect);
+    if (inputFiltered) inputFiltered.addEventListener('change', handleFilteredFilesSelect);
+
+    // Buttons
+    $('btnSalesImportMaster')?.addEventListener('click', () => inputMaster?.click());
+    $('btnSalesAppendMaster')?.addEventListener('click', () => inputAppend?.click());
+    $('btnSalesImportFilteredFiles')?.addEventListener('click', () => inputFiltered?.click());
+    $('btnSalesClearFilteredPool')?.addEventListener('click', clearFilteredPool);
+    $('btnSalesExecuteDeduplication')?.addEventListener('click', executeDeduplication);
+    $('btnSalesExportMasterJson')?.addEventListener('click', exportMasterJsonWithSnov);
+    $('btnSalesExportSingleExcel')?.addEventListener('click', exportSalesSingleExcel);
+    $('btnSalesExportSingleJson')?.addEventListener('click', exportSalesSingleJson);
+    $('btnSalesExportBatchParts')?.addEventListener('click', exportSalesBatchParts);
+
+    // Filter controls
+    $('salesSearchInput')?.addEventListener('input', () => applySalesFilters());
+    $('salesFilterSnov')?.addEventListener('change', () => applySalesFilters());
+    $('salesFilterContact')?.addEventListener('change', () => applySalesFilters());
+    $('salesFilterTier')?.addEventListener('change', () => applySalesFilters());
+    $('salesFilterAmazon')?.addEventListener('change', () => applySalesFilters());
+
+    $('btnSalesResetFilter')?.addEventListener('click', () => {
+      const search = $('salesSearchInput'); if (search) search.value = '';
+      const fSnov = $('salesFilterSnov'); if (fSnov) fSnov.value = 'NULL_ONLY';
+      const fContact = $('salesFilterContact'); if (fContact) fContact.value = 'ALL';
+      const fTier = $('salesFilterTier'); if (fTier) fTier.value = 'ALL';
+      const fAmz = $('salesFilterAmazon'); if (fAmz) fAmz.value = 'ALL';
+      applySalesFilters();
+    });
+
+    // Pagination controls
+    $('salesPageSizeSelect')?.addEventListener('change', (e) => {
+      salesPageSize = parseInt(e.target.value, 10) || 20;
+      salesCurrentPage = 1;
+      renderSalesTablePage();
+    });
+
+    $('btnSalesPageFirst')?.addEventListener('click', () => {
+      salesCurrentPage = 1;
+      renderSalesTablePage();
+    });
+    $('btnSalesPagePrev')?.addEventListener('click', () => {
+      if (salesCurrentPage > 1) {
+        salesCurrentPage--;
+        renderSalesTablePage();
+      }
+    });
+    $('btnSalesPageNext')?.addEventListener('click', () => {
+      const totalPages = Math.max(1, Math.ceil(salesDisplayLeads.length / salesPageSize));
+      if (salesCurrentPage < totalPages) {
+        salesCurrentPage++;
+        renderSalesTablePage();
+      }
+    });
+    $('btnSalesPageLast')?.addEventListener('click', () => {
+      const totalPages = Math.max(1, Math.ceil(salesDisplayLeads.length / salesPageSize));
+      salesCurrentPage = totalPages;
+      renderSalesTablePage();
+    });
+
+    // If allLeads already loaded in memory from Step 2 CRM, populate default
+    if (salesMasterLeads.length === 0 && Array.isArray(allLeads) && allLeads.length > 0) {
+      salesMasterLeads = allLeads.map((item, idx) => normalizeMasterLead(item, idx));
+      updateSalesKpiSummary();
+      applySalesFilters();
+    }
+  }
+
+  // Expose initSalesFilterModule
+  window.initSalesFilterModule = initSalesFilterModule;
 
   loadInitialData();
   loadLedgerData();

@@ -13,6 +13,14 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script>
+    if (typeof XLSX === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>');
+    }
+    if (typeof JSZip === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"><\/script>');
+    }
+  </script>
   <style>
     :root {
       --bg: #f4f6fb;
@@ -1206,10 +1214,14 @@
       inset: 0;
       background: rgba(15, 23, 42, .45);
       backdrop-filter: blur(3px);
-      z-index: 100;
+      z-index: 99999;
       align-items: center;
       justify-content: center;
       padding: 1.25rem
+    }
+
+    .modal-overlay.active {
+      display: flex !important;
     }
 
     .modal-box {
@@ -2398,6 +2410,7 @@
           </div>
         </form>
       </div>
+    </div>
   </div>
 
   <!-- MODAL XUẤT SNOV.IO HÀNG LOẠT (BATCH 20 KHÁCH/FILE & CHỐNG TRÙNG) -->
@@ -3629,7 +3642,7 @@
       if (!el) return;
       navigator.clipboard.writeText(el.innerText).then(() => alert(t('modalCopied')));
     }
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeWeatherModal(); closeAvatarModal(); closeCrudModal(); } });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeWeatherModal(); closeAvatarModal(); closeCrudModal(); closeSnovBatchExportModal(); } });
 
     /* ============================ 导入 leads.json ============================ */
     const LEAD_FIELDS = ['stt', 'name', 'owner', 'url', 'website', 'phone', 'email', 'address', 'city', 'state',
@@ -4204,15 +4217,26 @@
 
     async function openSnovBatchExportModal() {
       const modal = $('snovExportModalOverlay');
-      if (!modal) return;
+      if (!modal) {
+        console.error('Không tìm thấy snovExportModalOverlay');
+        return;
+      }
+      modal.style.display = 'flex';
       modal.classList.add('active');
-      await updateSnovBatchModalKpis();
+      try {
+        await updateSnovBatchModalKpis();
+      } catch (err) {
+        console.error('Lỗi nạp thống kê Snov:', err);
+      }
     }
 
     function closeSnovBatchExportModal(ev) {
-      if (ev && ev.target && ev.target.classList.contains('modal-box')) return;
+      if (ev && ev.target && ev.target.closest && ev.target.closest('.modal-box') && !ev.target.classList.contains('modal-close-btn')) return;
       const modal = $('snovExportModalOverlay');
-      if (modal) modal.classList.remove('active');
+      if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+      }
       const prog = $('snovProgressWrap');
       if (prog) prog.style.display = 'none';
     }
@@ -4321,6 +4345,11 @@
 
       if (candidates.length === 0) {
         toast(isVi() ? '❌ Không còn khách hàng mới có Email chưa từng gửi trong Database!' : '❌ 数据库中暂无新的未发送邮箱客户！', 'error');
+        return;
+      }
+
+      if (typeof XLSX === 'undefined') {
+        toast(isVi() ? '❌ Thư viện SheetJS (XLSX) chưa tải xong! Vui lòng kiểm tra lại kết nối mạng.' : '❌ SheetJS 组件尚未加载完成，请检查网络！', 'error');
         return;
       }
 
@@ -4449,6 +4478,20 @@
           body: JSON.stringify({ filename: 'snov_export_history.json', content: history })
         });
       } catch (_) {}
+
+      // Cập nhật ngay trong bộ nhớ để giao diện đổi huy hiệu Snov
+      const candidateEmails = new Set(candidates.map(c => String(c.email || '').trim().toLowerCase()));
+      const candidateFbids = new Set(candidates.map(c => String(c.fb_id || '').trim()).filter(Boolean));
+      (S.leads || []).forEach(l => {
+        const em = String(l.email || '').trim().toLowerCase();
+        const fb = String(l.fb_id || '').trim();
+        if (candidateEmails.has(em) || (fb && candidateFbids.has(fb))) {
+          l.is_snov_exported = true;
+          l.snov_exported_file = history.exported_emails[em] || (fb ? history.exported_fbids[fb] : '') || 'Snov_Batch';
+          l.snov_exported_date = todayStr;
+        }
+      });
+      if (typeof onFilterChange === 'function') onFilterChange();
 
       // Hoàn tất
       if (progBar) progBar.style.width = '100%';

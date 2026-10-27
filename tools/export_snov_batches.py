@@ -50,8 +50,9 @@ def load_export_history():
         except Exception as e:
             print(f"[!] Lỗi đọc {HISTORY_FILE}: {e}")
 
-    # 2. Quét quét bù tất cả file Top_Leads_Part_*.xlsx cũ để không sót lead nào
+    # 2. Quét quét bù tất cả file .xlsx trong DATA_DIR và các thư mục snov_batches_*
     existing_files = glob.glob(os.path.join(DATA_DIR, "Top_Leads_Part_*.xlsx"))
+    existing_files.extend(glob.glob(os.path.join(DATA_DIR, "snov_batches_*", "*.xlsx")))
     scanned_emails = 0
     scanned_fbids = 0
     for fpath in existing_files:
@@ -62,13 +63,14 @@ def load_export_history():
                 em = ws.cell(r, 1).value
                 fb = ws.cell(r, 20).value
                 if em:
-                    clean_em = str(em).strip().lower()
-                    if clean_em not in history["exported_emails"]:
-                        history["exported_emails"][clean_em] = os.path.basename(fpath)
-                        scanned_emails += 1
+                    for sub_em in str(em).split("|"):
+                        clean_em = sub_em.strip().lower()
+                        if clean_em and "@" in clean_em and clean_em not in history["exported_emails"]:
+                            history["exported_emails"][clean_em] = os.path.basename(fpath)
+                            scanned_emails += 1
                 if fb:
                     clean_fb = str(fb).strip()
-                    if clean_fb not in history["exported_fbids"]:
+                    if clean_fb and clean_fb.isdigit() and clean_fb not in history["exported_fbids"]:
                         history["exported_fbids"][clean_fb] = os.path.basename(fpath)
                         scanned_fbids += 1
         except Exception:
@@ -141,13 +143,20 @@ def extract_candidate_leads(target_count=500):
         if any(ign in em for ign in ['example.com', 'none', 'null', 'test@']):
             continue
 
+        # Tách danh sách email nếu có dấu |
+        email_list = [e.strip().lower() for e in em.split('|') if '@' in e and '.' in e]
+        if not email_list:
+            continue
+
         # 2. KIỂM TRA TRÙNG LẶP LỊCH SỬ (ANTI-DUPLICATION)
-        if em in seen_emails or em in current_batch_emails:
+        # Nếu bất kỳ email nào đã xuất thì bỏ qua
+        if any(e in seen_emails or e in current_batch_emails for e in email_list):
             continue
         if fb and (fb in seen_fbids or fb in current_batch_fbids):
             continue
 
-        current_batch_emails.add(em)
+        for e in email_list:
+            current_batch_emails.add(e)
         if fb:
             current_batch_fbids.add(fb)
 
@@ -204,7 +213,12 @@ def export_to_excel_parts(leads, history, batch_size=20):
             raw_owner = lead.get('owner') or 'Chủ trại'
             biz_name = lead.get('name') or 'Trại cún'
             first_name = clean_first_name(raw_owner, biz_name)
-            email_val = str(lead.get('email') or '').strip().lower()
+            # Tách email chính và email phụ nếu có
+            raw_email_str = str(lead.get('email') or '').strip().lower()
+            emails_split = [e.strip() for e in raw_email_str.split('|') if '@' in e and '.' in e]
+            primary_email = emails_split[0] if emails_split else raw_email_str
+            alt_emails = ", ".join(emails_split[1:]) if len(emails_split) > 1 else ""
+
             fb_id_val = str(lead.get('fb_id') or '').strip()
             phone_val = lead.get('phone') or ''
             web_val = lead.get('website') or ''
@@ -215,9 +229,11 @@ def export_to_excel_parts(leads, history, batch_size=20):
             remark_val = lead.get('sales_action') or f"Score {lead.get('score')} | {lead.get('rank_tier')}"
             if lead.get('has_amazon') or lead.get('amazon_url'):
                 remark_val += " | Có Amazon Storefront"
+            if alt_emails:
+                remark_val += f" | Email phụ: {alt_emails}"
 
             row_data = [
-                email_val,                                           # 1. 邮箱地址
+                primary_email,                                       # 1. 邮箱地址 (Email chính chuẩn)
                 first_name,                                          # 2. 名字
                 raw_owner if raw_owner != 'Chủ trại' else biz_name,  # 3. 全名
                 url_val,                                             # 4. 用户社交
@@ -244,11 +260,14 @@ def export_to_excel_parts(leads, history, batch_size=20):
                 cell.font = data_font
                 cell.border = border_thin
 
-            # Ghi nhận vào sổ cái lịch sử
-            history["exported_emails"][email_val] = filename
+            # Ghi nhận toàn bộ email vào sổ cái lịch sử
+            for em_item in emails_split:
+                history["exported_emails"][em_item] = filename
+            if not emails_split and primary_email:
+                history["exported_emails"][primary_email] = filename
             if fb_id_val:
                 history["exported_fbids"][fb_id_val] = filename
-            now_batch_records.append({"email": email_val, "fb_id": fb_id_val, "file": filename})
+            now_batch_records.append({"email": primary_email, "alt_emails": alt_emails, "fb_id": fb_id_val, "file": filename})
 
         # Điều chỉnh độ rộng cột tự động
         for col in ws.columns:
